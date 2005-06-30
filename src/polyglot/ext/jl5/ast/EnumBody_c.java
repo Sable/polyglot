@@ -26,14 +26,42 @@ public class EnumBody_c extends ClassBody_c implements EnumBody {
         for (int i = 0; i < l.size(); i++){
             EnumConstant ei = (EnumConstant) l.get(i);
 
-            for (int j = 0; j < l.size(); j++){
+            for (int j = i+1; j < l.size(); j++){
                 EnumConstant ej = (EnumConstant) l.get(j);
 
                 if (ei.name().equals(ej.name())){
-                    throw new SemanticException("Duplicate enum constant \"" + ej + "\" at " + ej.position());
+                    throw new SemanticException("Duplicate enum constant \"" + ej + "\" at ", ej.position());
                 }
             }
         }
     }
 
+    public void prettyPrint(CodeWriter w, PrettyPrinter tr){
+        if (!members.isEmpty()) {
+            w.newline(4);
+            w.begin(0);
+
+            boolean lastWasEnum = false;
+            for (Iterator i = members.iterator(); i.hasNext(); ) {
+                ClassMember member = (ClassMember) i.next();
+                if (!(member instanceof EnumConstant) && lastWasEnum){
+                    w.write(";");
+                    w.newline(0);
+                    lastWasEnum = false;
+                }
+                printBlock(member, w, tr);
+                if (member instanceof EnumConstant){
+                    w.write(",");
+                    lastWasEnum = true;
+                }
+                if (i.hasNext()) {
+                    w.newline(0);
+                    w.newline(0);
+                }
+            }
+
+            w.end();
+            w.newline(0);
+        } 
+    }
 }
