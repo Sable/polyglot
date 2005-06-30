@@ -1,8 +1,8 @@
 package polyglot.ext.jl5.types;
 
-//import polyglot.types.*;
+import polyglot.types.*;
 import polyglot.frontend.*;
-import polyglot.ext.jl.types.TypeSystem_c;
+import polyglot.ext.jl.types.*;
 import polyglot.types.Flags;
 import polyglot.types.SemanticException;
 
@@ -33,7 +33,7 @@ public class JL5TypeSystem_c extends TypeSystem_c implements JL5TypeSystem {
 
     public ParsedClassType createClassType(LazyClassInitializer init, Source fromSource){
         System.out.println("creating JL5 ParsedClassType");
-        return new polyglot.ext.jl5.types.ParsedClassType_c(this, init, fromSource);
+        return new JL5ParsedClassType_c(this, init, fromSource);
     }
 
     /*public*/ /*polyglot.ext.jl5.types.*//*LazyClassInitializer defaultClassInitializer(){

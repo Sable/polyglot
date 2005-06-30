@@ -491,6 +491,16 @@ ext=""
       <param name="base.parser" value="polyglot/ext/jl/parse/java12.cup"/>
     </antcall>
   </target>
+  
+  <!-- JL5 ext -->
+  <target name="jl5" depends="jl">
+    <antcall target="standard-ext">
+      <param name="ext" value="jl5"/>
+      <param name="parser.type" value="ppg"/>
+      <param name="base.parser" value="polyglot/ext/jl/parse/java12.cup"/>
+    </antcall>
+  </target>
+
 
   <!-- SKEL: When using the newext script, copy and modify this target by
        replacing the name "skel" with the new extension name. -->

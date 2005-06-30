@@ -20,7 +20,7 @@ public class EnumBody_c extends ClassBody_c implements EnumBody {
     }
 
     protected void duplicateEnumConstantCheck(TypeChecker tc) throws SemanticException {
-        polyglot.ext.jl5.types.ParsedClassType type = (polyglot.ext.jl5.types.ParsedClassType)tc.context().currentClass();
+        JL5ParsedClassType type = (JL5ParsedClassType)tc.context().currentClass();
 
         ArrayList l = new ArrayList(type.enumConstants());
         for (int i = 0; i < l.size(); i++){

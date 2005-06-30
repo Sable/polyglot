@@ -13,18 +13,19 @@ import polyglot.util.Position;
 import polyglot.util.TypedList;
 import polyglot.visit.*;
 import polyglot.ext.jl5.types.*;
+import polyglot.ext.jl.ast.*;
 
 /**
  * A <code>ClassDecl</code> is the definition of a class, abstract class,
  * or interface. It may be a public or other top-level class, or an inner
  * named class, or an anonymous class.
  */
-public class ClassDecl_c extends polyglot.ext.jl.ast.ClassDecl_c implements ClassDecl
+public class JL5ClassDecl_c extends ClassDecl_c implements ClassDecl
 {
 
-    protected polyglot.ext.jl5.types.ParsedClassType type;
+    protected JL5ParsedClassType type;
     
-    public ClassDecl_c(Position pos, Flags flags, String name,
+    public JL5ClassDecl_c(Position pos, Flags flags, String name,
                        TypeNode superClass, List interfaces, ClassBody body) {
 	    super(pos, flags, name, superClass, interfaces, body);
     }
@@ -76,7 +77,7 @@ public class ClassDecl_c extends polyglot.ext.jl.ast.ClassDecl_c implements Clas
     }
 
     public Node buildTypes(TypeBuilder tb) throws SemanticException {
-        polyglot.ext.jl5.types.ParsedClassType type = (polyglot.ext.jl5.types.ParsedClassType)tb.currentClass();
+        JL5ParsedClassType type = (JL5ParsedClassType)tb.currentClass();
         if (type != null){
             return type(type).flags(type.flags());
         }

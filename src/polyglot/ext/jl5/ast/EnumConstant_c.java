@@ -6,7 +6,7 @@ import polyglot.types.*;
 import polyglot.ext.jl.ast.*;
 import polyglot.visit.*;
 import polyglot.util.*;
-
+import polyglot.ext.jl5.types.*;
 /**
  * An immutable representation of a Java language extended <code>for</code>
  * statement.  Contains a statement to be executed and an expression
@@ -113,7 +113,7 @@ public class EnumConstant_c extends Term_c implements EnumConstant
     }
 
     public NodeVisitor addMembersEnter(AddMemberVisitor am){
-        polyglot.ext.jl5.types.ParsedClassType ct = (polyglot.ext.jl5.types.ParsedClassType_c)am.context().currentClassScope();
+        JL5ParsedClassType ct = (JL5ParsedClassType_c)am.context().currentClassScope();
 
         ct.addEnumConstant(this);
         return am.bypassChildren(this);

@@ -5,12 +5,13 @@ import polyglot.ext.jl5.ast.*;
 import polyglot.util.*;
 import polyglot.types.*;
 import polyglot.frontend.*;
+import polyglot.ext.jl.types.*;
 
-public class ParsedClassType_c extends polyglot.ext.jl.types.ParsedClassType_c implements ParsedClassType{
+public class JL5ParsedClassType_c extends ParsedClassType_c implements JL5ParsedClassType{
     
     protected List enumConstants;
    
-    public ParsedClassType_c( TypeSystem ts, LazyClassInitializer init, Source fromSource){
+    public JL5ParsedClassType_c( TypeSystem ts, LazyClassInitializer init, Source fromSource){
         super(ts, init, fromSource);
     }
     
