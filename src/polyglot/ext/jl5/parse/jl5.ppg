@@ -1,0 +1,136 @@
+include "../../jl/parse/java12.cup"
+
+package polyglot.ext.jl5.parse;
+
+import polyglot.ext.jl5.types.*;
+import polyglot.ext.jl5.ast.*;
+import polyglot.ext.jl.parse.Name;
+
+parser Grm extends polyglot.ext.jl.parse.Grm {:
+    public final JL5TypeSystem ts;
+    public final JL5NodeFactory nf;
+
+    public Grm(Lexer l, TypeSystem t, NodeFactory n, ErrorQueue q) {
+        super(l, t, n, q);
+        ts = (JL5TypeSystem) t;
+        nf = (JL5NodeFactory) n;
+    }
+:};
+
+terminal Token ENUM; // enum class declaration
+non terminal ExtendedFor for_each_statement, for_each_statement_no_short_if;
+non terminal ClassBody enum_body;
+non terminal List enum_constants_opt;
+non terminal List enum_constants;
+non terminal List arguments_opt;
+non terminal EnumConstant enum_constant;
+non terminal List enum_body_declarations_opt;
+
+start with goal;
+
+// TODO: modify the default Java grammar using PPG operations
+
+extend statement ::=
+    for_each_statement:a
+        {: RESULT  = a; :}
+;        
+
+extend statement_no_short_if ::=
+    for_each_statement_no_short_if:a
+        {: RESULT = a; :}
+;        
+
+for_each_statement ::= 
+    FOR:n LPAREN type:b variable_declarator_id:c COLON expression:d RPAREN statement:e
+    {: RESULT = parser.nf.ExtendedFor(parser.pos(n,e), Flags.NONE, b, c.name, d, e); :}
+    |
+    FOR:n LPAREN FINAL type:b variable_declarator_id:c COLON expression:d RPAREN statement:e
+    {: RESULT = parser.nf.ExtendedFor(parser.pos(n,e), Flags.FINAL, b, c.name, d, e); :}
+    
+;
+
+for_each_statement_no_short_if ::= 
+    FOR:n LPAREN type:b variable_declarator_id:c COLON expression:d RPAREN statement_no_short_if:e
+    {: RESULT = parser.nf.ExtendedFor(parser.pos(n,e), Flags.NONE, b, c.name, d, e); :}
+    |
+    FOR:n LPAREN FINAL type:b variable_declarator_id:c COLON expression:d RPAREN statement_no_short_if:e
+    {: RESULT = parser.nf.ExtendedFor(parser.pos(n,e), Flags.FINAL, b, c.name, d, e); :}
+;
+
+/*extend import_declaration ::=
+    single_static_import_declaration:a
+        {: RESULT = a; :}
+    | 
+    static_import_on_demand_declaration:a
+        {: RESULT = a; :}
+;
+
+single_static_import_declaration ::=
+    IMPORT:a STATIC:b qualified_name:c DOT:d IDENTIFIER:e SEMICOLON:f
+        {: RESULT = parser.nf.StaticImport(parser.pos(a,f), StaticImport.FIELD, c.toString(), e.getIdentifier()); :}
+;        
+
+static_import_on_demand_declaration ::=
+    IMPORT:a STATIC:b qualified_name:c DOT:d MULT:e SEMICOLON:d
+        {: RESULT = parser.nf.StaticImport(parser.pos(a,d), StaticImport.ALL_FIELD, c.toString()); :}
+;       
+*/
+
+extend class_declaration ::=
+    modifiers_opt:a ENUM:n IDENTIFIER:b interfaces_opt:c enum_body:d
+        {: RESULT = parser.nf.ClassDecl(parser.pos(n, d), a.set(JL5Flags.ENUM), b.getIdentifier(),  c, d); :}
+;
+
+enum_body ::=
+    /*LBRACE:n enum_constants_opt:a COMMA enum_body_declarations_opt:b RBRACE:c
+        {: a.addAll(b);
+           RESULT = parser.nf.ClassBody(parser.pos(n,c), a); :}
+    | */   
+    LBRACE:n enum_constants_opt:a enum_body_declarations_opt:b RBRACE:c
+        {: a.addAll(b);
+           RESULT = parser.nf.EnumBody(parser.pos(n,c), a); :}
+;        
+
+enum_constants_opt ::=
+    
+        {: RESULT = new TypedList(new LinkedList(), ClassMember.class, false); :}
+    |
+    enum_constants:a
+        {: RESULT = a; :}
+;
+
+enum_constants ::=
+    enum_constant:a
+        {: List l = new TypedList(new LinkedList(), ClassMember.class, false);
+           l.add(a);
+           RESULT = l; :}
+    |
+    enum_constants:a COMMA enum_constant:b
+        {: List l = a;
+           l.add(b);
+           RESULT = l; :}
+;
+
+enum_constant ::=
+    IDENTIFIER:a arguments_opt:b class_body:c
+        {: RESULT = parser.nf.EnumConstant(parser.pos(a,c), a.getIdentifier(), b, c); :}
+    |
+    IDENTIFIER:a arguments_opt:b
+        {: RESULT = parser.nf.EnumConstant(parser.pos(a,b), a.getIdentifier(), b);
+ :}
+;
+
+arguments_opt ::=
+    
+    |
+    LPAREN argument_list_opt:b RPAREN
+        {: RESULT = b; :}
+;    
+        
+enum_body_declarations_opt ::=
+    
+    | 
+    SEMICOLON class_body_declarations_opt:a
+        {: RESULT = a; :}
+;       
+

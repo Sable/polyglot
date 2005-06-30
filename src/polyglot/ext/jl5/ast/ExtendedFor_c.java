@@ -1,0 +1,178 @@
+package polyglot.ext.jl5.ast;
+
+import polyglot.ast.*;
+import polyglot.types.*;
+import polyglot.visit.*;
+import polyglot.util.*;
+import java.util.*;
+import polyglot.ext.jl.*;
+import polyglot.ext.jl.ast.*;
+
+/**
+ * An immutable representation of a Java language extended <code>for</code>
+ * statement.  Contains a type and id and an expression
+ * to be iterated over.
+ */
+public class ExtendedFor_c extends Loop_c implements ExtendedFor
+{
+    protected Flags flags;
+    protected TypeNode type;
+    protected String name;
+    protected Expr expr;
+    protected Stmt body;
+
+    public ExtendedFor_c(Position pos, Flags flags, TypeNode type, String name, Expr expr, Stmt body) {
+	    super(pos);
+	    this.flags = flags;
+	    this.type = type;
+	    this.name = name;
+        this.expr = expr;
+	    this.body = body;
+    }
+
+    public ExtendedFor flags(Flags flags){
+        ExtendedFor_c n = (ExtendedFor_c) copy();
+        n.flags = flags;
+        return n;
+    }
+
+    public Flags flags(){
+        return flags;
+    }
+
+    public ExtendedFor type(TypeNode type){
+        if (type == this.type) return this;
+        ExtendedFor_c n = (ExtendedFor_c) copy();
+        n.type = type;
+        return n;
+    }
+    
+    public TypeNode type(){
+        return type;
+    }
+
+    public ExtendedFor name(String name){
+        if (name.equals(this.name)) return this;
+        ExtendedFor_c n = (ExtendedFor_c) copy();
+        n.name = name;
+        return n;
+    }
+   
+    public String name(){
+        return name;
+    }
+    
+    /** Loop body */
+    public Stmt body() {
+	    return this.body;
+    }
+
+    /** Set the body of the statement. */
+    public ExtendedFor body(Stmt body) {
+	    ExtendedFor_c n = (ExtendedFor_c) copy();
+	    n.body = body;
+	    return n;
+    }
+
+    /** Reconstruct the statement. */
+    protected ExtendedFor_c reconstruct(Flags flags, TypeNode type, String name, Expr expr, Stmt body) {
+	    if (flags != this.flags || type != this.type || !(name.equals(this.name)) || expr != this.expr || body != this.body) {
+	        ExtendedFor_c n = (ExtendedFor_c) copy();
+            n.flags = flags;
+            n.type = type;
+            n.name = name;
+            n.expr = expr;
+	        n.body = body;
+	        return n;
+	    }
+
+	    return this;
+    }
+
+    /** Reconstruct the statement. */
+    protected ExtendedFor_c reconstruct(TypeNode type, Expr expr, Stmt body) {
+	    if (type != this.type || expr != this.expr || body != this.body) {
+	        ExtendedFor_c n = (ExtendedFor_c) copy();
+            n.type = type;
+            n.expr = expr;
+	        n.body = body;
+	        return n;
+	    }
+
+	    return this;
+    }
+
+    /** Visit the children of the statement. */
+    public Node visitChildren(NodeVisitor v) {
+        TypeNode type = (TypeNode) visitChild(this.type, v);
+        Expr expr = (Expr) visitChild(this.expr, v);
+	    Stmt body = (Stmt) visitChild(this.body, v);
+	    return reconstruct(type, expr, body);
+    }
+
+    public Context enterScope(Context c) {
+	    return c.pushBlock();
+    }
+
+    /** Type check the statement. */
+    public Node typeCheck(TypeChecker tc) throws SemanticException {
+	    TypeSystem ts = tc.typeSystem();
+
+        // Check that the expr is an array or of type Iterable
+        Type t = expr.type();
+        if (t.isArray()){
+            ArrayType aType = (ArrayType)t;
+            if (!aType.base().isImplicitCastValid(type.type())){
+                throw new SemanticException("Type mismatch in EnhancedFor, array or collection of "+type.type()+" expected.", expr.position());
+            }
+        }
+        
+        // Check that type is the same as elements in expr
+        
+	    return this;
+    }
+
+    public Type childExpectedType(Expr child, AscriptionVisitor av) {
+        return child.type();
+    }
+
+    /** Write the statement to an output file. */
+    public void prettyPrint(CodeWriter w, PrettyPrinter tr) {
+        w.write("for (");
+        w.write(flags.translate());
+        print(type, w, tr);
+        w.write(" ");
+        w.write(name);
+        w.write(" : ");
+        print(expr, w, tr);
+        w.write(")");
+        printSubStmt(body, w, tr);
+    }
+
+    public String toString() {
+	    return "for (...) ...";
+    }
+
+    public Term entry() {
+        return expr;
+    }
+
+    public List acceptCFG(CFGBuilder v, List succs) {
+        v.visitCFG(expr, FlowGraph.EDGE_KEY_TRUE, body.entry(), FlowGraph.EDGE_KEY_FALSE, this);
+
+        v.push(this).visitCFG(body, expr);
+        return succs;
+    }
+
+    public Term continueTarget() {
+        return body.entry();
+    }
+
+    public boolean condIsConstant(){
+        return false;
+    }
+
+    public Expr cond(){
+        return null;
+    }
+}
