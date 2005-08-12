@@ -2,7 +2,6 @@ polyglot.ast
 polyglot.ext.coffer
 polyglot.ext.coffer.ast
 polyglot.ext.coffer.extension
-polyglot.ext.coffer.parse
 polyglot.ext.coffer.types
 polyglot.ext.coffer.visit
 polyglot.ext.jl
@@ -10,10 +9,13 @@ polyglot.ext.jl.ast
 polyglot.ext.jl.parse
 polyglot.ext.jl.qq
 polyglot.ext.jl.types
+polyglot.ext.jl5
+polyglot.ext.jl5.ast
+polyglot.ext.jl5.parse
+polyglot.ext.jl5.types
 polyglot.ext.pao
 polyglot.ext.pao.ast
 polyglot.ext.pao.extension
-polyglot.ext.pao.parse
 polyglot.ext.pao.runtime
 polyglot.ext.pao.types
 polyglot.ext.pao.visit

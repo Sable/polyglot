@@ -23,7 +23,7 @@ non terminal ClassBody enum_body;
 non terminal List enum_constants_opt;
 non terminal List enum_constants;
 non terminal List arguments_opt;
-non terminal EnumConstant enum_constant;
+non terminal EnumConstantDecl enum_constant;
 non terminal List enum_body_declarations_opt;
 
 start with goal;
@@ -41,20 +41,20 @@ extend statement_no_short_if ::=
 ;        
 
 for_each_statement ::= 
-    FOR:n LPAREN type:b variable_declarator_id:c COLON expression:d RPAREN statement:e
-    {: RESULT = parser.nf.ExtendedFor(parser.pos(n,e), Flags.NONE, b, c.name, d, e); :}
+    FOR:n LPAREN type:b variable_declarators:c COLON expression:d RPAREN statement:e
+    {: RESULT = parser.nf.ExtendedFor(parser.pos(n,e), parser.variableDeclarators(b, c, Flags.NONE), d, e); :}
     |
-    FOR:n LPAREN FINAL type:b variable_declarator_id:c COLON expression:d RPAREN statement:e
-    {: RESULT = parser.nf.ExtendedFor(parser.pos(n,e), Flags.FINAL, b, c.name, d, e); :}
+    FOR:n LPAREN FINAL type:b variable_declarators:c COLON expression:d RPAREN statement:e
+    {: RESULT = parser.nf.ExtendedFor(parser.pos(n,e), parser.variableDeclarators(b, c, Flags.FINAL), d, e); :}
     
 ;
 
 for_each_statement_no_short_if ::= 
-    FOR:n LPAREN type:b variable_declarator_id:c COLON expression:d RPAREN statement_no_short_if:e
-    {: RESULT = parser.nf.ExtendedFor(parser.pos(n,e), Flags.NONE, b, c.name, d, e); :}
+    FOR:n LPAREN type:b variable_declarators:c COLON expression:d RPAREN statement_no_short_if:e
+    {: RESULT = parser.nf.ExtendedFor(parser.pos(n,e), parser.variableDeclarators(b, c, Flags.NONE), d, e); :}
     |
-    FOR:n LPAREN FINAL type:b variable_declarator_id:c COLON expression:d RPAREN statement_no_short_if:e
-    {: RESULT = parser.nf.ExtendedFor(parser.pos(n,e), Flags.FINAL, b, c.name, d, e); :}
+    FOR:n LPAREN FINAL type:b variable_declarators:c COLON expression:d RPAREN statement_no_short_if:e
+    {: RESULT = parser.nf.ExtendedFor(parser.pos(n,e), parser.variableDeclarators(b, c, Flags.FINAL), d, e); :}
 ;
 
 /*extend import_declaration ::=
@@ -78,7 +78,7 @@ static_import_on_demand_declaration ::=
 
 extend class_declaration ::=
     modifiers_opt:a ENUM:n IDENTIFIER:b interfaces_opt:c enum_body:d
-        {: RESULT = parser.nf.ClassDecl(parser.pos(n, d), a.set(JL5Flags.ENUM), b.getIdentifier(),  c, d); :}
+        {: RESULT = parser.nf.JL5ClassDecl(parser.pos(n, d), a.set(JL5Flags.ENUM), b.getIdentifier(),  c, d); :}
 ;
 
 enum_body ::=
@@ -88,7 +88,7 @@ enum_body ::=
     | */   
     LBRACE:n enum_constants_opt:a enum_body_declarations_opt:b RBRACE:c
         {: a.addAll(b);
-           RESULT = parser.nf.EnumBody(parser.pos(n,c), a); :}
+           RESULT = parser.nf.JL5ClassBody(parser.pos(n,c), a); :}
 ;        
 
 enum_constants_opt ::=
@@ -113,24 +113,125 @@ enum_constants ::=
 
 enum_constant ::=
     IDENTIFIER:a arguments_opt:b class_body:c
-        {: RESULT = parser.nf.EnumConstant(parser.pos(a,c), a.getIdentifier(), b, c); :}
+        {: RESULT = parser.nf.EnumConstantDecl(parser.pos(a,a), a.getIdentifier(), b, c); :}
     |
     IDENTIFIER:a arguments_opt:b
-        {: RESULT = parser.nf.EnumConstant(parser.pos(a,b), a.getIdentifier(), b);
+        {: RESULT = parser.nf.EnumConstantDecl(parser.pos(a,a), a.getIdentifier(), b);
  :}
 ;
 
 arguments_opt ::=
-    
+        {: RESULT = new TypedList(new LinkedList(), Expr.class, false); :} 
     |
     LPAREN argument_list_opt:b RPAREN
         {: RESULT = b; :}
 ;    
         
 enum_body_declarations_opt ::=
-    
+        {: RESULT = new TypedList(new LinkedList(), ClassMember.class, false); :}
     | 
     SEMICOLON class_body_declarations_opt:a
         {: RESULT = a; :}
 ;       
 
+extend class_member_declaration ::=
+    modifiers_opt:a ENUM:n IDENTIFIER:b interfaces_opt:c enum_body:d
+        {: List l = new TypedList(new LinkedList(), ClassMember.class, false);
+           l.add(parser.nf.JL5ClassDecl(parser.pos(n, d), a.set(JL5Flags.ENUM), b.getIdentifier(),  c, d));
+           RESULT = l; :}
+;    
+    
+override class_body ::=
+    LBRACE:n class_body_declarations_opt:a RBRACE:b
+        {: RESULT = parser.nf.JL5ClassBody(parser.pos(n, b), a); :}
+;
+
+override interface_body ::=
+    LBRACE:n interface_member_declarations_opt:a RBRACE:d
+        {: RESULT = parser.nf.JL5ClassBody(parser.pos(n, d), a); :}
+;
+
+override constructor_body ::=
+    LBRACE:n explicit_constructor_invocation:a block_statements:b RBRACE:d
+        {: List l = new TypedList(new LinkedList(), Stmt.class, false);
+           l.add(a);
+           l.addAll(b);
+           RESULT = parser.nf.Block(parser.pos(n, d), l); :}
+    |   
+    LBRACE:n explicit_constructor_invocation:a RBRACE:d
+        {: RESULT = parser.nf.Block(parser.pos(n, d), a); :}
+    |   
+    LBRACE:n block_statements:a RBRACE:d
+        {: RESULT = parser.nf.JL5Block(parser.pos(n, d), a); :}
+    |   
+    LBRACE:n RBRACE:d
+        {: RESULT = parser.nf.JL5Block(parser.pos(n, d), new TypedList(new LinkedList(), Stmt.class, false)); :}
+;
+
+override constructor_declaration ::=
+    modifiers_opt:m simple_name:a LPAREN formal_parameter_list_opt:b RPAREN
+        throws_opt:c constructor_body:d
+        {: RESULT = parser.nf.JL5ConstructorDecl(parser.pos(a, d), m, a.toString(), b, c, d); :}
+;
+
+override class_instance_creation_expression ::=
+    NEW:n class_type:a LPAREN argument_list_opt:b RPAREN:d
+        {: RESULT = parser.nf.JL5New(parser.pos(n, d), a, b); :}
+    |   
+    NEW:n class_type:a LPAREN argument_list_opt:b RPAREN class_body:c
+        {: RESULT = parser.nf.JL5New(parser.pos(n, c), a, b, c); :}
+    |   
+    primary:a DOT NEW simple_name:b LPAREN argument_list_opt:c RPAREN:d
+        {: RESULT = parser.nf.JL5New(parser.pos(a, d), a,
+                      b.toType(), c); :}
+    |   
+    primary:a DOT NEW simple_name:b LPAREN argument_list_opt:c RPAREN class_body:d
+        {: RESULT = parser.nf.JL5New(parser.pos(a, d), a,
+                      b.toType(), c, d); :}
+    |   
+    name:a DOT NEW simple_name:b LPAREN argument_list_opt:c RPAREN:d
+        {: RESULT = parser.nf.JL5New(parser.pos(a, d), a.toExpr(),
+                      b.toType(), c); :}
+    |   
+    name:a DOT NEW simple_name:b LPAREN argument_list_opt:c RPAREN class_body:d
+        {: RESULT = parser.nf.JL5New(parser.pos(a, d), a.toExpr(),
+                      b.toType(), c, d); :}
+;
+
+override field_access ::=
+    primary:a DOT IDENTIFIER:b
+        {: RESULT = parser.nf.JL5Field(parser.pos(a, b, b), a, b.getIdentifier()); :}
+    |   
+    SUPER:n DOT IDENTIFIER:a
+        {: RESULT = parser.nf.JL5Field(parser.pos(a), parser.nf.Super(parser.pos(n)), a.getIdentifier()); :}
+    |   
+    name:a DOT SUPER:n DOT IDENTIFIER:b
+        {: RESULT = parser.nf.JL5Field(parser.pos(b), parser.nf.Super(parser.pos(n), a.toType()), b.getIdentifier()); :}
+;
+     
+override simple_name ::=
+    IDENTIFIER:a
+        {: RESULT = new JL5Name(parser, parser.pos(a), a.getIdentifier()); :}
+;
+
+override qualified_name ::=
+    name:a DOT IDENTIFIER:b
+        {: RESULT = new JL5Name(parser, parser.pos(a, b), a, b.getIdentifier()); :}
+;
+
+override identifier_opt ::=
+    /* empty */
+        {: RESULT = null; :}
+    |
+    IDENTIFIER:a
+        {: RESULT = new JL5Name(parser, parser.pos(a), a.getIdentifier()); :}
+;        
+
+override switch_label ::=
+    CASE:n constant_expression:a COLON:d
+        {: RESULT = parser.nf.JL5Case(parser.pos(n, d), a); :}
+    |   
+    DEFAULT:n COLON:d
+        {: RESULT = parser.nf.Default(parser.pos(n, d)); :}
+;
+ 

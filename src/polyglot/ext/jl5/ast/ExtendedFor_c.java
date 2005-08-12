@@ -15,22 +15,24 @@ import polyglot.ext.jl.ast.*;
  */
 public class ExtendedFor_c extends Loop_c implements ExtendedFor
 {
-    protected Flags flags;
+    protected List varDecls;
+    /*protected Flags flags;
     protected TypeNode type;
-    protected String name;
+    protected String name;*/
     protected Expr expr;
     protected Stmt body;
 
-    public ExtendedFor_c(Position pos, Flags flags, TypeNode type, String name, Expr expr, Stmt body) {
+    public ExtendedFor_c(Position pos, List varDecls, Expr expr, Stmt body) {
 	    super(pos);
-	    this.flags = flags;
+	    /*this.flags = flags;
 	    this.type = type;
-	    this.name = name;
+	    this.name = name;*/
+        this.varDecls = varDecls;
         this.expr = expr;
 	    this.body = body;
     }
 
-    public ExtendedFor flags(Flags flags){
+    /*public ExtendedFor flags(Flags flags){
         ExtendedFor_c n = (ExtendedFor_c) copy();
         n.flags = flags;
         return n;
@@ -60,7 +62,7 @@ public class ExtendedFor_c extends Loop_c implements ExtendedFor
    
     public String name(){
         return name;
-    }
+    }*/
     
     /** Loop body */
     public Stmt body() {
@@ -75,12 +77,13 @@ public class ExtendedFor_c extends Loop_c implements ExtendedFor
     }
 
     /** Reconstruct the statement. */
-    protected ExtendedFor_c reconstruct(Flags flags, TypeNode type, String name, Expr expr, Stmt body) {
-	    if (flags != this.flags || type != this.type || !(name.equals(this.name)) || expr != this.expr || body != this.body) {
+    protected ExtendedFor_c reconstruct(List varDecls /*Flags flags, TypeNode type, String name*/, Expr expr, Stmt body) {
+	    if (! CollectionUtil.equals(varDecls, this.varDecls) /*flags != this.flags || type != this.type || !(name.equals(this.name))*/ || expr != this.expr || body != this.body) {
 	        ExtendedFor_c n = (ExtendedFor_c) copy();
-            n.flags = flags;
+            /*n.flags = flags;
             n.type = type;
-            n.name = name;
+            n.name = name;*/
+            n.varDecls = varDecls;
             n.expr = expr;
 	        n.body = body;
 	        return n;
@@ -90,24 +93,25 @@ public class ExtendedFor_c extends Loop_c implements ExtendedFor
     }
 
     /** Reconstruct the statement. */
-    protected ExtendedFor_c reconstruct(TypeNode type, Expr expr, Stmt body) {
-	    if (type != this.type || expr != this.expr || body != this.body) {
+    /*protected ExtendedFor_c reconstruct(List varDecls, Expr expr, Stmt body) {
+	    if (!CollectionUtil.equals(varDecl, this.VarDecl) || expr != this.expr || body != this.body) {
 	        ExtendedFor_c n = (ExtendedFor_c) copy();
-            n.type = type;
+            n.varDecls = varDecls;
             n.expr = expr;
 	        n.body = body;
 	        return n;
 	    }
 
 	    return this;
-    }
+    }*/
 
     /** Visit the children of the statement. */
     public Node visitChildren(NodeVisitor v) {
-        TypeNode type = (TypeNode) visitChild(this.type, v);
+        //TypeNode type = (TypeNode) visitChild(this.type, v);
+        List varDecls = visitList(this.varDecls, v);
         Expr expr = (Expr) visitChild(this.expr, v);
 	    Stmt body = (Stmt) visitChild(this.body, v);
-	    return reconstruct(type, expr, body);
+	    return reconstruct(varDecls, expr, body);
     }
 
     public Context enterScope(Context c) {
@@ -122,9 +126,9 @@ public class ExtendedFor_c extends Loop_c implements ExtendedFor
         Type t = expr.type();
         if (t.isArray()){
             ArrayType aType = (ArrayType)t;
-            if (!aType.base().isImplicitCastValid(type.type())){
+            /*if (!aType.base().isImplicitCastValid(type.type())){
                 throw new SemanticException("Type mismatch in EnhancedFor, array or collection of "+type.type()+" expected.", expr.position());
-            }
+            }*/
         }
         
         // Check that type is the same as elements in expr
@@ -136,13 +140,26 @@ public class ExtendedFor_c extends Loop_c implements ExtendedFor
         return child.type();
     }
 
+    public void printVarDecl(Object decl, CodeWriter w, PrettyPrinter tr){
+        if (decl instanceof LocalDecl){
+            LocalDecl ld = (LocalDecl)decl;
+            w.write(ld.flags().translate());
+            print(ld.type(), w, tr);
+            w.write(" ");
+            w.write(ld.name());
+        }
+    }
+
     /** Write the statement to an output file. */
     public void prettyPrint(CodeWriter w, PrettyPrinter tr) {
         w.write("for (");
-        w.write(flags.translate());
+        for (Iterator it = varDecls.iterator(); it.hasNext();){
+            printVarDecl(it.next(), w, tr);
+        }
+        /*w.write(flags.translate());
         print(type, w, tr);
         w.write(" ");
-        w.write(name);
+        w.write(name);*/
         w.write(" : ");
         print(expr, w, tr);
         w.write(")");

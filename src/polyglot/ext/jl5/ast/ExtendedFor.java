@@ -11,22 +11,22 @@ import polyglot.types.*;
 public interface ExtendedFor extends Loop 
 {    
     /** set modifiers */
-    ExtendedFor flags(Flags flags);
+    //ExtendedFor flags(Flags flags);
 
     /** get modifiers */
-    Flags flags();
+    //Flags flags();
 
     /** set type of elements */
-    ExtendedFor type(TypeNode type);
+    //ExtendedFor type(TypeNode type);
     
     /** get type of elements */
-    TypeNode type();
+    //TypeNode type();
 
     /** set name */
-    ExtendedFor name(String name);
+    //ExtendedFor name(String name);
 
     /** get name */
-    String name();
+    //String name();
     
     /** Set the loop body */
     ExtendedFor body(Stmt body);

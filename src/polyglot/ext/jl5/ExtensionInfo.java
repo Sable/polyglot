@@ -26,7 +26,7 @@ public class ExtensionInfo extends polyglot.ext.jl.ExtensionInfo {
     }
 
     public String defaultFileExtension() {
-        return "jl5";
+        return "java";
     }
 
     public String compilerName() {
@@ -48,6 +48,7 @@ public class ExtensionInfo extends polyglot.ext.jl.ExtensionInfo {
     }
 
     public List passes(Job job) {
+        getOptions().serialize_type_info = false;
         List passes = super.passes(job);
         // TODO: add passes as needed by your compiler
         return passes;

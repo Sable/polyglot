@@ -23,11 +23,73 @@ import polyglot.ext.jl.ast.*;
 public class JL5ClassDecl_c extends ClassDecl_c implements ClassDecl
 {
 
-    protected JL5ParsedClassType type;
-    
     public JL5ClassDecl_c(Position pos, Flags flags, String name,
                        TypeNode superClass, List interfaces, ClassBody body) {
 	    super(pos, flags, name, superClass, interfaces, body);
+    }
+
+    public Node typeCheck(TypeChecker tc) throws SemanticException {
+        if (JL5Flags.isEnumModifier(flags()) && flags().isAbstract()){
+            throw new SemanticException("Enum types cannot have abstract modifier", this.position());
+        }
+        if (JL5Flags.isEnumModifier(flags()) && flags().isPrivate()){
+            throw new SemanticException("Enum types cannot have explicit final modifier", this.position());
+        }
+        return super.typeCheck(tc);    
+    }
+   
+    /*public Node addMembers(AddMemberVisitor tc) throws SemanticException {
+        TypeSystem ts = tc.typeSystem();
+        NodeFactory nf = tc.nodeFactory();
+        addGenEnumMembersIfNeeded(ts, nf);
+        return super.addMembers(tc);
+    }
+    
+    protected void addGenEnumMembersIfNeeded(TypeSystem ts, NodeFactory nf){
+        if (JL5Flags.isEnumModifier(type.flags())){
+            MethodInstance valuesMi = ts.methodInstance(position(), this, Flags.PUBLIC, ts.Void(), "values" 
+        }
+    }*/
+    
+    protected Node addDefaultConstructor(TypeSystem ts, NodeFactory nf) {
+        ConstructorInstance ci = ts.defaultConstructor(position(), this.type);
+        this.type.addConstructor(ci);
+        Block block = null;
+        if (this.type.superType() instanceof ClassType && !JL5Flags.isEnumModifier(type.flags())) {
+            ConstructorInstance sci = ts.defaultConstructor(position(),
+                                                (ClassType) this.type.superType());
+            ConstructorCall cc = nf.SuperCall(position(), 
+                                              Collections.EMPTY_LIST);
+            cc = cc.constructorInstance(sci);
+            block = nf.Block(position(), cc);
+        }
+        else {
+            block = nf.Block(position());
+        }
+        
+        ConstructorDecl cd;
+        if (!JL5Flags.isEnumModifier(type.flags())){
+            cd = nf.ConstructorDecl(position(), Flags.PUBLIC,
+                                                name, Collections.EMPTY_LIST,
+                                                Collections.EMPTY_LIST,
+                                                block);
+        }
+        else {
+            cd = nf.ConstructorDecl(position(), Flags.PRIVATE,
+                                                name, Collections.EMPTY_LIST,
+                                                Collections.EMPTY_LIST,
+                                                block);
+        }
+        cd = (ConstructorDecl) cd.constructorInstance(ci);
+        return body(body.addMember(cd));
+    }
+
+    protected void disambiguateSuperType(AmbiguityRemover ar) throws SemanticException {
+        TypeSystem ts = ar.typeSystem();
+        if (this.superClass == null && JL5Flags.isEnumModifier(this.type().flags())) {
+            this.type.superType(((JL5TypeSystem)ts).Enum());
+        }
+        super.disambiguateSuperType(ar);
     }
 
 
@@ -76,19 +138,5 @@ public class JL5ClassDecl_c extends ClassDecl_c implements ClassDecl
         w.write(" {");
     }
 
-    public Node buildTypes(TypeBuilder tb) throws SemanticException {
-        JL5ParsedClassType type = (JL5ParsedClassType)tb.currentClass();
-        if (type != null){
-            return type(type).flags(type.flags());
-        }
-        return this;
-    }
 
-    public Context enterScope(Node child, Context c){
-        if (child == this.body) {
-            TypeSystem ts = c.typeSystem();
-            c = c.pushClass(type, ts.staticTarget(type).toClass());
-        }
-        return super.enterScope(child, c);
-    }
 }

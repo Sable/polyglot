@@ -1,30 +1,23 @@
 package polyglot.ext.jl5.ast;
 
-import java.util.*;
 import polyglot.ast.*;
-import polyglot.types.*;
-/**
- * An immutable representation of a Java language extended <code>for</code>
- * statement.  Contains a statement to be executed and an expression
- * to be tested indicating whether to reexecute the statement.
- */
-public interface EnumConstant extends ClassMember
-{    
-    /** get args */
-    List args();
+import polyglot.ext.jl5.types.*;
 
-    /** set args */
-    EnumConstant args(List args);
+public interface EnumConstant extends Field{
 
-    /** set name */
-    EnumConstant name(String name);
+    /*EnumInstance enumInstance();
 
-    /** get name */
+    EnumConstant enumConstant(EnumInstance ei);
+
+    Receiver target();
+
+    EnumConstant target(Receiver target);
+
+    boolean isTargetImplicit();
+
+    EnumConstant targetImplicit(boolean implicit);
+
     String name();
-    
-    /** set body */
-    EnumConstant body(ClassBody body);
 
-    /** get body */
-    ClassBody body();
+    EnumConstant name(String name);*/
 }

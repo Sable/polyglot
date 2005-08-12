@@ -15,14 +15,14 @@ public class JL5ParsedClassType_c extends ParsedClassType_c implements JL5Parsed
         super(ts, init, fromSource);
     }
     
-    public void addEnumConstant(EnumConstant ec){
-        enumConstants().add(ec);
+    public void addEnumConstant(EnumInstance ei){
+        enumConstants().add(ei);
     }
 
     public List enumConstants(){
         if (enumConstants == null){
-            enumConstants = new TypedList(new LinkedList(), EnumConstant.class, false);
-            //init.initEnumConstants(this);
+            enumConstants = new TypedList(new LinkedList(), EnumInstance.class, false);
+            //init.initEnumConstantDecls(this);
             freeInit();
         }
         return enumConstants;
@@ -31,4 +31,15 @@ public class JL5ParsedClassType_c extends ParsedClassType_c implements JL5Parsed
     protected boolean initialized(){
         return super.initialized() && this.enumConstants != null;
     }
+    
+    public EnumInstance enumConstantNamed(String name){
+        for(Iterator it = enumConstants().iterator(); it.hasNext();){
+            EnumInstance ei = (EnumInstance)it.next();
+            if (ei.name().equals(name)){
+                return ei;
+            }
+        }
+        return null;
+    }
 }
+
