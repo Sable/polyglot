@@ -1,8 +1,6 @@
 package polyglot.ext.jl5.ast;
 
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 
 import polyglot.ast.*;
 import polyglot.main.Report;
@@ -22,12 +20,50 @@ import polyglot.ext.jl.ast.*;
  */
 public class JL5ClassDecl_c extends ClassDecl_c implements ClassDecl
 {
+    protected List annotations;
 
-    public JL5ClassDecl_c(Position pos, Flags flags, String name,
+    public JL5ClassDecl_c(Position pos, FlagAnnotations flags, String name,
                        TypeNode superClass, List interfaces, ClassBody body) {
-	    super(pos, flags, name, superClass, interfaces, body);
+	    super(pos, flags.classicFlags(), name, superClass, interfaces, body);
+        if (flags.annotations() != null){
+            this.annotations = TypedList.copyAndCheck(flags.annotations(), AnnotationElem.class, false);
+        }
+        else {
+            this.annotations = new TypedList(new LinkedList(), AnnotationElem.class, false);
+        }
+        
     }
 
+    public List annotations(){
+        return this.annotations;
+    }
+    
+    public ClassDecl annotations(List annotations){
+        JL5ClassDecl_c n = (JL5ClassDecl_c) copy();
+        n.annotations = annotations;
+        return n;
+    }
+    
+    protected ClassDecl reconstruct(TypeNode superClass, List interfaces, ClassBody body, List annotations){
+        if (superClass != this.superClass || !CollectionUtil.equals(interfaces, this.interfaces) || body != this.body || !CollectionUtil.equals(annotations, this.annotations)){
+            JL5ClassDecl_c n = (JL5ClassDecl_c) copy();
+            n.superClass = superClass;
+            n.interfaces = TypedList.copyAndCheck(interfaces, TypeNode.class, true);
+            n.body = body;
+            n.annotations = TypedList.copyAndCheck(annotations, AnnotationElem.class, true);
+            return n;
+        }
+        return this;
+    }
+
+    public Node visitChildren(NodeVisitor v){
+        TypeNode superClass = (TypeNode) visitChild(this.superClass, v);
+        List interfaces = visitList(this.interfaces, v);
+        ClassBody body = (ClassBody) visitChild(this.body, v);
+        List annots = visitList(this.annotations, v); 
+        return reconstruct(superClass, interfaces, body, annots);
+    }
+    
     public Node typeCheck(TypeChecker tc) throws SemanticException {
         if (JL5Flags.isEnumModifier(flags()) && flags().isAbstract()){
             throw new SemanticException("Enum types cannot have abstract modifier", this.position());
@@ -38,18 +74,55 @@ public class JL5ClassDecl_c extends ClassDecl_c implements ClassDecl
         return super.typeCheck(tc);    
     }
    
-    /*public Node addMembers(AddMemberVisitor tc) throws SemanticException {
+    public Node addMembers(AddMemberVisitor tc) throws SemanticException {
         TypeSystem ts = tc.typeSystem();
         NodeFactory nf = tc.nodeFactory();
-        addGenEnumMembersIfNeeded(ts, nf);
+        addGenEnumMethods(ts, nf);
         return super.addMembers(tc);
     }
     
-    protected void addGenEnumMembersIfNeeded(TypeSystem ts, NodeFactory nf){
+    protected void addGenEnumMethods(TypeSystem ts, NodeFactory nf){
         if (JL5Flags.isEnumModifier(type.flags())){
-            MethodInstance valuesMi = ts.methodInstance(position(), this, Flags.PUBLIC, ts.Void(), "values" 
+            
+            // add values method
+            FlagAnnotations vmFlags = new FlagAnnotations();
+            vmFlags.classicFlags(Flags.PUBLIC.set(Flags.STATIC.set(Flags.FINAL)));
+            JL5MethodDecl valuesMeth = ((JL5NodeFactory)nf).JL5MethodDecl(position(), vmFlags, nf.CanonicalTypeNode(position(), ts.arrayOf(this.type())), "values", Collections.EMPTY_LIST, Collections.EMPTY_LIST,nf.Block(position()));
+            
+            valuesMeth = valuesMeth.setCompilerGenerated(true);
+            
+            JL5MethodInstance mi = (JL5MethodInstance)ts.methodInstance(position(), this.type(), JL5Flags.PUBLIC.set(JL5Flags.STATIC).set(JL5Flags.FINAL), ts.arrayOf(this.type()), "values", Collections.EMPTY_LIST, Collections.EMPTY_LIST);
+            
+            mi = mi.setCompilerGenerated(true);
+            this.type.addMethod(mi);
+            valuesMeth = (JL5MethodDecl)valuesMeth.methodInstance(mi);
+            body(body.addMember(valuesMeth));
+
+            // add valueOf method
+            ArrayList formals = new ArrayList();
+            Formal f1 = nf.Formal(position(), JL5Flags.NONE, nf.CanonicalTypeNode(position(), ts.String()), "arg1");
+            formals.add(f1);
+            
+            FlagAnnotations voFlags = new FlagAnnotations();
+            voFlags.classicFlags(Flags.PUBLIC.set(Flags.STATIC));
+            
+            JL5MethodDecl valueOfMeth = ((JL5NodeFactory)nf).JL5MethodDecl(position(), voFlags, nf.CanonicalTypeNode(position(), this.type()), "valueOf", formals, Collections.EMPTY_LIST,nf.Block(position()));
+            
+            valueOfMeth = valueOfMeth.setCompilerGenerated(true);
+            
+            ArrayList formalTypes = new ArrayList();
+            formalTypes.add(ts.String());
+            
+            JL5MethodInstance mi2 = (JL5MethodInstance)ts.methodInstance(position(), this.type(), JL5Flags.PUBLIC.set(JL5Flags.STATIC), this.type(), "valueOf", formalTypes, Collections.EMPTY_LIST);
+            
+            mi2 = mi2.setCompilerGenerated(true);
+            this.type.addMethod(mi2);
+            valueOfMeth = (JL5MethodDecl)valueOfMeth.methodInstance(mi2);
+            body(body.addMember(valueOfMeth));
+
+            
         }
-    }*/
+    }
     
     protected Node addDefaultConstructor(TypeSystem ts, NodeFactory nf) {
         ConstructorInstance ci = ts.defaultConstructor(position(), this.type);
@@ -69,13 +142,13 @@ public class JL5ClassDecl_c extends ClassDecl_c implements ClassDecl
         
         ConstructorDecl cd;
         if (!JL5Flags.isEnumModifier(type.flags())){
-            cd = nf.ConstructorDecl(position(), Flags.PUBLIC,
+            cd = nf.ConstructorDecl(position(), JL5Flags.PUBLIC,
                                                 name, Collections.EMPTY_LIST,
                                                 Collections.EMPTY_LIST,
                                                 block);
         }
         else {
-            cd = nf.ConstructorDecl(position(), Flags.PRIVATE,
+            cd = nf.ConstructorDecl(position(), JL5Flags.PRIVATE,
                                                 name, Collections.EMPTY_LIST,
                                                 Collections.EMPTY_LIST,
                                                 block);
@@ -84,23 +157,24 @@ public class JL5ClassDecl_c extends ClassDecl_c implements ClassDecl
         return body(body.addMember(cd));
     }
 
-    protected void disambiguateSuperType(AmbiguityRemover ar) throws SemanticException {
-        TypeSystem ts = ar.typeSystem();
-        if (this.superClass == null && JL5Flags.isEnumModifier(this.type().flags())) {
-            this.type.superType(((JL5TypeSystem)ts).Enum());
-        }
-        super.disambiguateSuperType(ar);
-    }
-
 
     public void prettyPrintHeader(CodeWriter w, PrettyPrinter tr) {
         if (flags.isInterface()) {
-            w.write(flags.clearInterface().clearAbstract().translate());
+            if (JL5Flags.isAnnotationModifier(flags)){
+                w.write(JL5Flags.clearAnnotationModifier(flags).clearInterface().clearAbstract().translate());
+                w.write("@");
+            }
+            else{
+                w.write(flags.clearInterface().clearAbstract().translate());
+            }
         }
         else {
             w.write(flags.translate());
         }
 
+        for (Iterator it = annotations.iterator(); it.hasNext(); ){
+            print((AnnotationElem)it.next(), w, tr);
+        }
         if (flags.isInterface()) {
             w.write("interface ");
         }
@@ -112,12 +186,12 @@ public class JL5ClassDecl_c extends ClassDecl_c implements ClassDecl
 
         w.write(name);
 
-        if (superClass() != null) {
+        if (superClass() != null && !JL5Flags.isEnumModifier(type.flags())) {
             w.write(" extends ");
             print(superClass(), w, tr);
         }
 
-        if (! interfaces.isEmpty()) {
+        if (! interfaces.isEmpty() && !JL5Flags.isAnnotationModifier(type.flags())) {
             if (flags.isInterface()) {
                 w.write(" extends ");
             }

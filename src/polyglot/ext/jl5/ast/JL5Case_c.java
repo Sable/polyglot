@@ -9,18 +9,30 @@ import polyglot.ext.jl5.types.*;
 
 public class JL5Case_c extends Case_c implements JL5Case  {
 
+
+    protected Expr target;
+    
     public JL5Case_c(Position pos, Expr expr){
         super(pos, expr);
     }
 
     public NodeVisitor disambiguateEnter(AmbiguityRemover ar) throws SemanticException{
-        System.out.println("disamb enter for jl5 case");
-        System.out.println("expr: "+expr+" is a: "+expr.getClass());
         return ar;
     }
 
     public Node disambiguate(AmbiguityRemover ar) throws SemanticException {
-        System.out.println("disamb for jl5 case: expr: "+expr+" is a: "+expr.getClass());
         return this;
     }
+
+    public Node visitChildren(NodeVisitor v){
+        Expr target = (Expr)visitChild(this.target, v);
+        return super.visitChildren(v);
+    }
+
+    public Case_c reconstruct(Expr expr){
+        return (JL5Case_c)super.reconstruct(expr);
+    }
+    /*public Node typeCheck(TypeChecker tc) throws SemanticException {
+        
+    }*/
 }

@@ -5,6 +5,7 @@ import polyglot.ext.jl5.parse.Lexer_c;
 import polyglot.ext.jl5.parse.Grm;
 import polyglot.ext.jl5.ast.*;
 import polyglot.ext.jl5.types.*;
+import polyglot.ext.jl5.visit.*;
 
 import polyglot.ast.*;
 import polyglot.types.*;
@@ -25,6 +26,8 @@ public class ExtensionInfo extends polyglot.ext.jl.ExtensionInfo {
         Topics t = new Topics();
     }
 
+    public static final polyglot.frontend.Pass.ID ENUM_SWITCH_DISAMBIGUATE = new polyglot.frontend.Pass.ID("enum-switch-disambiguate");
+    
     public String defaultFileExtension() {
         return "java";
     }
@@ -51,6 +54,7 @@ public class ExtensionInfo extends polyglot.ext.jl.ExtensionInfo {
         getOptions().serialize_type_info = false;
         List passes = super.passes(job);
         // TODO: add passes as needed by your compiler
+        //afterPass(passes, Pass.DISAM_ALL, new VisitorPass(ENUM_SWITCH_DISAMBIGUATE, job, new LeftoverAmbiguityRemover(job, ts, nf, LeftoverAmbiguityRemover.SWITCH_CASES)));
         return passes;
     }
 

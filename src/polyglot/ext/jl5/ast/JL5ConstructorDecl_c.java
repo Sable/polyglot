@@ -10,8 +10,8 @@ import polyglot.ext.jl5.types.*;
 
 public class JL5ConstructorDecl_c extends ConstructorDecl_c implements JL5ConstructorDecl{
 
-    public JL5ConstructorDecl_c(Position pos, Flags flags, String name, List formals, List throwTypes, Block body) {
-        super(pos, flags, name, formals, throwTypes, body);
+    public JL5ConstructorDecl_c(Position pos, FlagAnnotations flags, String name, List formals, List throwTypes, Block body) {
+        super(pos, flags.classicFlags(), name, formals, throwTypes, body);
     }
 
     public Node addMembers(AddMemberVisitor tc) throws SemanticException {

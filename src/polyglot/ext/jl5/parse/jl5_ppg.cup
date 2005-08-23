@@ -24,6 +24,12 @@ parser Grm extends polyglot.ext.jl.parse.Grm {:
         nf = (JL5NodeFactory) n;
     }
 
+    public boolean isClassicFlag(Object o){
+        if (o instanceof Flags) return true;
+        return false;
+    }
+        
+
 :}
 scan with {: return nextSymbol(); :};
 terminal Token BOOLEAN;
@@ -105,7 +111,7 @@ non terminal Import import_declaration;
 non terminal Import single_type_import_declaration;
 non terminal Import type_import_on_demand_declaration;
 non terminal ClassDecl type_declaration;
-non terminal Flags modifiers_opt, modifiers, modifier;
+non terminal Flags modifier;
 non terminal ClassDecl class_declaration;
 non terminal TypeNode super, super_opt;
 non terminal List interfaces, interfaces_opt, interface_type_list;
@@ -195,13 +201,29 @@ non terminal Assign.Operator assignment_operator;
 non terminal Expr expression_opt, expression;
 non terminal Expr constant_expression;
 terminal Token ENUM;
+terminal Token AT;
 non terminal ExtendedFor for_each_statement, for_each_statement_no_short_if;
 non terminal ClassBody enum_body;
+non terminal ClassBody annotation_body;
 non terminal List enum_constants_opt;
 non terminal List enum_constants;
 non terminal List arguments_opt;
 non terminal EnumConstantDecl enum_constant;
 non terminal List enum_body_declarations_opt;
+non terminal List annotation_type_element_declarations_opt;
+non terminal List annotation_type_element_declarations;
+non terminal List annotation_type_element_declaration;
+non terminal Expr element_value;
+non terminal Expr default_value_opt;
+non terminal ElementValuePair element_value_pair;
+non terminal List element_value_pairs, element_value_pairs_opt;
+non terminal AnnotationElem annotation;
+non terminal AnnotationElem marker_annotation, single_element_annotation, normal_annotation;
+non terminal Object modifier_or_annotation;
+non terminal FlagAnnotations modifiers_or_annotations;
+non terminal FlagAnnotations modifiers_or_annotations_opt;
+non terminal ArrayInit element_value_array_initializer;
+non terminal List element_values;
 
 
 start with goal;
@@ -402,17 +424,6 @@ type_declaration ::=
  |  interface_declaration:a {:  RESULT = a;  :}
  |  SEMICOLON {:  RESULT = null;  :};
 
-modifiers_opt ::=
-    {:  RESULT = Flags.NONE;  :}
- |  modifiers:a {:  RESULT = a;  :};
-
-modifiers ::=
-    modifier:a {:  RESULT = a;  :}
- |  modifiers:a modifier:b {:
-                           if (a.intersects(b)) parser.die(parser.position());
-               RESULT = a.set(b); 
-                           :};
-
 modifier ::=
     PUBLIC:a {:  RESULT = Flags.PUBLIC;  :}
  |  PROTECTED:a {:  RESULT = Flags.PROTECTED;  :}
@@ -427,13 +438,12 @@ modifier ::=
  |  STRICTFP:a {:  RESULT = Flags.STRICTFP;  :};
 
 class_declaration ::=
-    modifiers_opt:a CLASS:n IDENTIFIER:b super_opt:c interfaces_opt:d class_body:e {:
-                                                                                   RESULT = parser.nf.ClassDecl(parser.pos(n, e),
-                a, b.getIdentifier(), c, d, e); 
-                                                                                   :}
- |  modifiers_opt:a ENUM:n IDENTIFIER:b interfaces_opt:c enum_body:d {:
-                                                                     RESULT = parser.nf.JL5ClassDecl(parser.pos(n, d), a.set(JL5Flags.ENUM), b.getIdentifier(),  c, d); 
-                                                                     :};
+    modifiers_or_annotations_opt:a CLASS:n IDENTIFIER:b super_opt:c interfaces_opt:d class_body:e {:
+                                                                                                  RESULT = parser.nf.JL5ClassDecl(parser.pos(n, e), a, b.getIdentifier(), c, d, e); 
+                                                                                                  :}
+ |  modifiers_or_annotations_opt:a ENUM:n IDENTIFIER:b interfaces_opt:c enum_body:d {:
+                                                                                    RESULT = parser.nf.JL5ClassDecl(parser.pos(n, d), a.classicFlags(a.classicFlags().set(JL5Flags.ENUM)), b.getIdentifier(), parser.nf.CanonicalTypeNode(parser.pos(n, d), parser.ts.Enum()), c, d); 
+                                                                                    :};
 
 super ::=
     EXTENDS class_type:a {:  RESULT = a;  :};
@@ -517,34 +527,34 @@ class_member_declaration ::=
                l.add(a);
                RESULT = l; 
                          :}
- |  modifiers_opt:a CLASS:n IDENTIFIER:b super_opt:c interfaces_opt:d class_body:e {:
-                                                                                   List l = new TypedList(new LinkedList(), ClassMember.class, false);
-               l.add(parser.nf.ClassDecl(parser.pos(n, e),
+ |  modifiers_or_annotations_opt:a CLASS:n IDENTIFIER:b super_opt:c interfaces_opt:d class_body:e {:
+                                                                                                  List l = new TypedList(new LinkedList(), ClassMember.class, false);
+               l.add(parser.nf.JL5ClassDecl(parser.pos(n, e),
                         a, b.getIdentifier(), c, d, e));
                RESULT = l; 
-                                                                                   :}
+                                                                                                  :}
  |  interface_declaration:a {:
                             List l = new TypedList(new LinkedList(), ClassMember.class, false);
                l.add(a);
                RESULT = l; 
                             :}
- |  modifiers_opt:a ENUM:n IDENTIFIER:b interfaces_opt:c enum_body:d {:
-                                                                     List l = new TypedList(new LinkedList(), ClassMember.class, false);
-           l.add(parser.nf.JL5ClassDecl(parser.pos(n, d), a.set(JL5Flags.ENUM), b.getIdentifier(),  c, d));
+ |  modifiers_or_annotations_opt:a ENUM:n IDENTIFIER:b interfaces_opt:c enum_body:d {:
+                                                                                    List l = new TypedList(new LinkedList(), ClassMember.class, false);
+           l.add(parser.nf.JL5ClassDecl(parser.pos(n, d), a.classicFlags(a.classicFlags().set(JL5Flags.ENUM)), b.getIdentifier(),  parser.nf.CanonicalTypeNode(parser.pos(n,d), parser.ts.Enum()), c, d));
            RESULT = l; 
-                                                                     :};
+                                                                                    :};
 
 field_declaration ::=
-    modifiers_opt:a type:b variable_declarators:c SEMICOLON:e {:
-                                                              List l = new TypedList(new LinkedList(), ClassMember.class, false);
+    modifiers_or_annotations_opt:a type:b variable_declarators:c SEMICOLON:e {:
+                                                                             List l = new TypedList(new LinkedList(), ClassMember.class, false);
                for (Iterator i = c.iterator(); i.hasNext(); ) {
                    VarDeclarator d = (VarDeclarator) i.next();
-                   l.add(parser.nf.FieldDecl(parser.pos(b, e),
+                   l.add(parser.nf.JL5FieldDecl(parser.pos(b, e),
                                              a, parser.array(b, d.dims),
                                              d.name, d.init));
                }
                RESULT = l; 
-                                                              :};
+                                                                             :};
 
 variable_declarators ::=
     variable_declarator:a {:
@@ -580,20 +590,20 @@ variable_initializer ::=
 
 method_declaration ::=
     method_header:a method_body:b {:
-                                  RESULT = (MethodDecl) a.body(b); 
+                                  RESULT = (JL5MethodDecl) a.body(b); 
                                   :};
 
 method_header ::=
-    modifiers_opt:a type:b IDENTIFIER:c LPAREN formal_parameter_list_opt:d RPAREN:g dims_opt:e throws_opt:f {:
-                                                                                                            RESULT = parser.nf.MethodDecl(parser.pos(b, g, c), a,
+    modifiers_or_annotations_opt:a type:b IDENTIFIER:c LPAREN formal_parameter_list_opt:d RPAREN:g dims_opt:e throws_opt:f {:
+                                                                                                                           RESULT = parser.nf.JL5MethodDecl(parser.pos(b, g, c), a,
                 parser.array(b, e.intValue()), c.getIdentifier(),
                 d, f, null); 
-                                                                                                            :}
- |  modifiers_opt:a VOID:b IDENTIFIER:c LPAREN formal_parameter_list_opt:d RPAREN:g throws_opt:f {:
-                                                                                                 RESULT = parser.nf.MethodDecl(parser.pos(b, g, c), a,
+                                                                                                                           :}
+ |  modifiers_or_annotations_opt:a VOID:b IDENTIFIER:c LPAREN formal_parameter_list_opt:d RPAREN:g throws_opt:f {:
+                                                                                                                RESULT = parser.nf.JL5MethodDecl(parser.pos(b, g, c), a,
                 parser.nf.CanonicalTypeNode(parser.pos(b),
                 parser.ts.Void()), c.getIdentifier(), d, f, null); 
-                                                                                                 :};
+                                                                                                                :};
 
 formal_parameter_list_opt ::=
     {:
@@ -614,13 +624,13 @@ formal_parameter_list ::=
 
 formal_parameter ::=
     type:a variable_declarator_id:b {:
-                                    RESULT = parser.nf.Formal(parser.pos(a, b, b), Flags.NONE,
-                                         parser.array(a, b.dims), b.name); 
+                                    FlagAnnotations fl = new FlagAnnotations();
+           fl.classicFlags(Flags.NONE);
+           RESULT = parser.nf.JL5Formal(parser.pos(a, b, b), fl, parser.array(a, b.dims), b.name); 
                                     :}
- |  FINAL type:a variable_declarator_id:b {:
-                                          RESULT = parser.nf.Formal(parser.pos(a, b, b), Flags.FINAL,
-                     parser.array(a, b.dims), b.name); 
-                                          :};
+ |  modifiers_or_annotations:a type:b variable_declarator_id:c {:
+                                                               RESULT = parser.nf.JL5Formal(parser.pos(b, c, c), a, parser.array(b, c.dims), c.name); 
+                                                               :};
 
 throws_opt ::=
     {:
@@ -650,9 +660,9 @@ static_initializer ::=
     STATIC block:a {:  RESULT = a;  :};
 
 constructor_declaration ::=
-    modifiers_opt:m simple_name:a LPAREN formal_parameter_list_opt:b RPAREN throws_opt:c constructor_body:d {:
-                                                                                                            RESULT = parser.nf.JL5ConstructorDecl(parser.pos(a, d), m, a.toString(), b, c, d); 
-                                                                                                            :};
+    modifiers_or_annotations_opt:m simple_name:a LPAREN formal_parameter_list_opt:b RPAREN throws_opt:c constructor_body:d {:
+                                                                                                                           RESULT = parser.nf.JL5ConstructorDecl(parser.pos(a, d), m, a.toString(), b, c, d); 
+                                                                                                                           :};
 
 constructor_body ::=
     LBRACE:n explicit_constructor_invocation:a block_statements:b RBRACE:d {:
@@ -686,11 +696,26 @@ explicit_constructor_invocation ::=
                                                                         :};
 
 interface_declaration ::=
-    modifiers_opt:a INTERFACE:n IDENTIFIER:b extends_interfaces_opt:c interface_body:d {:
-                                                                                       RESULT = parser.nf.ClassDecl(
-                    parser.pos(n, d), a.Interface(),
+    modifiers_or_annotations_opt:a INTERFACE:n IDENTIFIER:b extends_interfaces_opt:c interface_body:d {:
+                                                                                                      
+                a.classicFlags(Flags.INTERFACE);
+            RESULT = parser.nf.JL5ClassDecl(
+                    parser.pos(n, d), a,
                         b.getIdentifier(), null, c, d); 
-                                                                                       :};
+                                                                                                      :}
+ |  modifiers_or_annotations:a AT:c INTERFACE:n IDENTIFIER:b annotation_body:d {:
+                                                                               List l = new TypedList(new LinkedList(), TypeNode.class, false);
+       l.add(parser.nf.CanonicalTypeNode(parser.pos(c,d), parser.ts.Annotation()));
+       a.classicFlags(Flags.INTERFACE.set(JL5Flags.ANNOTATION));
+       RESULT = parser.nf.JL5ClassDecl(parser.pos(c,d), a, b.getIdentifier(), null ,l, d); 
+                                                                               :}
+ |  AT:c INTERFACE:n IDENTIFIER:b annotation_body:d {:
+                                                    List l = new TypedList(new LinkedList(), TypeNode.class, false);
+       l.add(parser.nf.CanonicalTypeNode(parser.pos(c,d), parser.ts.Annotation()));
+       FlagAnnotations fl = new FlagAnnotations();
+       fl.classicFlags(Flags.INTERFACE.set(JL5Flags.ANNOTATION));
+       RESULT = parser.nf.JL5ClassDecl(parser.pos(c,d), fl, b.getIdentifier(), null , l, d); 
+                                                    :};
 
 extends_interfaces_opt ::=
     {:
@@ -1458,18 +1483,18 @@ constant_expression ::=
 
 for_each_statement ::=
     FOR:n LPAREN type:b variable_declarators:c COLON expression:d RPAREN statement:e {:
-                                                                                     RESULT = parser.nf.ExtendedFor(parser.pos(n,e), parser.variableDeclarators(b, c, Flags.NONE), d, e); 
+                                                                                     RESULT = parser.nf.ExtendedFor(parser.pos(n,e), parser.variableDeclarators(b, c, JL5Flags.NONE), d, e); 
                                                                                      :}
  |  FOR:n LPAREN FINAL type:b variable_declarators:c COLON expression:d RPAREN statement:e {:
-                                                                                           RESULT = parser.nf.ExtendedFor(parser.pos(n,e), parser.variableDeclarators(b, c, Flags.FINAL), d, e); 
+                                                                                           RESULT = parser.nf.ExtendedFor(parser.pos(n,e), parser.variableDeclarators(b, c, JL5Flags.FINAL), d, e); 
                                                                                            :};
 
 for_each_statement_no_short_if ::=
     FOR:n LPAREN type:b variable_declarators:c COLON expression:d RPAREN statement_no_short_if:e {:
-                                                                                                 RESULT = parser.nf.ExtendedFor(parser.pos(n,e), parser.variableDeclarators(b, c, Flags.NONE), d, e); 
+                                                                                                 RESULT = parser.nf.ExtendedFor(parser.pos(n,e), parser.variableDeclarators(b, c, JL5Flags.NONE), d, e); 
                                                                                                  :}
  |  FOR:n LPAREN FINAL type:b variable_declarators:c COLON expression:d RPAREN statement_no_short_if:e {:
-                                                                                                       RESULT = parser.nf.ExtendedFor(parser.pos(n,e), parser.variableDeclarators(b, c, Flags.FINAL), d, e); 
+                                                                                                       RESULT = parser.nf.ExtendedFor(parser.pos(n,e), parser.variableDeclarators(b, c, JL5Flags.FINAL), d, e); 
                                                                                                        :};
 
 enum_body ::=
@@ -1514,5 +1539,156 @@ enum_body_declarations_opt ::=
     RESULT = new TypedList(new LinkedList(), ClassMember.class, false); 
     :}
  |  SEMICOLON class_body_declarations_opt:a {:  RESULT = a;  :};
+
+annotation_body ::=
+    LBRACE:n annotation_type_element_declarations_opt:a RBRACE:d {:
+                                                                 RESULT = parser.nf.JL5ClassBody(parser.pos(n,d), a); 
+                                                                 :};
+
+annotation_type_element_declarations_opt ::=
+    {:
+    RESULT = new TypedList(new LinkedList(), ClassMember.class, false); 
+    :}
+ |  annotation_type_element_declarations:a {:  RESULT = a;  :};
+
+annotation_type_element_declarations ::=
+    annotation_type_element_declaration:a {:  RESULT = a;  :}
+ |  annotation_type_element_declarations:a annotation_type_element_declaration:b {:
+                                                                                 RESULT = a;
+           a.addAll(b); 
+                                                                                 :};
+
+annotation_type_element_declaration ::=
+    modifiers_or_annotations_opt:a type:b IDENTIFIER:c LPAREN RPAREN default_value_opt:d SEMICOLON {:
+                                                                                                   List l = new TypedList(new LinkedList(), ClassMember.class, false);
+           l.add(parser.nf.AnnotationElemDecl(parser.pos(b,d), a, parser.array(b, (new Integer(0)).intValue()), c.getIdentifier(), d));
+           RESULT = l; 
+                                                                                                   :}
+ |  constant_declaration:a {:  RESULT = a;  :}
+ |  class_declaration:a {:
+                        List l = new TypedList(new LinkedList(), ClassMember.class, false);
+           l.add(a);
+           RESULT = l; 
+                        :}
+ |  interface_declaration:a {:
+                            List l = new TypedList(new LinkedList(), ClassMember.class, false);
+           l.add(a);
+           RESULT = l; 
+                            :}
+ |  SEMICOLON {:  RESULT = Collections.EMPTY_LIST;  :};
+
+default_value_opt ::=
+    {:  RESULT = null;  :}
+ |  DEFAULT element_value:a {:  RESULT = a;  :};
+
+element_value ::=
+    element_value_array_initializer:a {:  RESULT = a;  :}
+ |  conditional_expression:a {:  RESULT = a;  :}
+ |  annotation:a {:  RESULT = a;  :};
+
+element_value_array_initializer ::=
+    LBRACE:n element_values:a COMMA RBRACE:d {:
+                                             RESULT = parser.nf.ArrayInit(parser.pos(n, d), a); 
+                                             :}
+ |  LBRACE:n element_values:a RBRACE:d {:
+                                       RESULT = parser.nf.ArrayInit(parser.pos(n, d), a); 
+                                       :}
+ |  LBRACE:n COMMA RBRACE:d {:
+                            RESULT = parser.nf.ArrayInit(parser.pos(n, d)); 
+                            :}
+ |  LBRACE:n RBRACE:d {:
+                      RESULT = parser.nf.ArrayInit(parser.pos(n, d)); 
+                      :};
+
+element_values ::=
+    element_value:a {:
+                    List l = new TypedList(new LinkedList(), Expr.class, false); 
+           l.add(a);
+           RESULT = l;
+        
+                    :}
+ |  element_values:a COMMA element_value:b {:
+                                           a.add(b);
+           RESULT = a;
+        
+                                           :};
+
+modifiers_or_annotations_opt ::=
+    {:
+    FlagAnnotations fl = new FlagAnnotations();
+           fl.classicFlags(Flags.NONE);
+           RESULT = fl; 
+    :}
+ |  modifiers_or_annotations:a {:  RESULT = a;  :};
+
+modifiers_or_annotations ::=
+    modifier_or_annotation:a {:
+                             FlagAnnotations fl = new FlagAnnotations();
+           if (parser.isClassicFlag(a)){
+               if (fl.classicFlags().intersects((Flags)a)) parser.die(parser.position());
+               RESULT = fl.classicFlags(fl.classicFlags().set((Flags)a));
+           }
+           else {
+               RESULT = fl.addAnnotation(a);
+           }
+        
+                             :}
+ |  modifiers_or_annotations:a modifier_or_annotation:b {:
+                                                        if (parser.isClassicFlag(b)){
+               if (a.classicFlags().intersects((Flags)b)) parser.die(parser.position());
+               RESULT = a.classicFlags(a.classicFlags().set((Flags)b));
+           }
+           else {
+               RESULT = a.addAnnotation(b);
+           }
+        
+                                                        :};
+
+modifier_or_annotation ::=
+    modifier:a {:  RESULT = a;  :}
+ |  annotation:a {:  RESULT = a;  :};
+
+annotation ::=
+    normal_annotation:a {:  RESULT = a;  :}
+ |  marker_annotation:a {:  RESULT = a;  :}
+ |  single_element_annotation:a {:  RESULT = a;  :};
+
+marker_annotation ::=
+    AT:a simple_name:b {:
+                       RESULT = parser.nf.MarkerAnnotationElem(parser.pos(b), b.toType()); 
+                       :};
+
+single_element_annotation ::=
+    AT:a simple_name:b LPAREN element_value:c RPAREN {:
+                                                     RESULT = parser.nf.SingleElementAnnotationElem(parser.pos(b), b.toType(), c); 
+                                                     :};
+
+normal_annotation ::=
+    AT:a simple_name:b LPAREN element_value_pairs_opt:c RPAREN {:
+                                                              RESULT = parser.nf.NormalAnnotationElem(parser.pos(b), b.toType(), c); 
+                                                               :};
+
+element_value_pairs_opt ::=
+    {:
+    RESULT = new TypedList(new LinkedList(), ElementValuePair.class, false); 
+    :}
+ |  element_value_pairs:a {:  RESULT = a;  :};
+
+element_value_pairs ::=
+    element_value_pair:a {:
+                         List l = new TypedList(new LinkedList(), ElementValuePair.class, false); 
+           l.add(a);
+           RESULT = l;
+        
+                         :}
+ |  element_value_pairs:a COMMA element_value_pair:b {:
+                                                     a.add(b);
+           RESULT = a; 
+                                                     :};
+
+element_value_pair ::=
+    IDENTIFIER:a EQ element_value:b {:
+                                    RESULT = parser.nf.ElementValuePair(parser.pos(a,b), a.getIdentifier(), b); 
+                                    :};
 
 

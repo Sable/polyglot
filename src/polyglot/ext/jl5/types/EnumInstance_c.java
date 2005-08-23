@@ -12,7 +12,7 @@ public class EnumInstance_c extends FieldInstance_c implements EnumInstance {
     }*/
 
     public EnumInstance_c(TypeSystem ts, Position pos, ReferenceType container,  Flags f, String name){
-        super(ts, pos, container, f.set(Flags.STATIC), container, name);
+        super(ts, pos, container, f.set(JL5Flags.STATIC), container, name);
     }
     
     /*public ReferenceType container(){

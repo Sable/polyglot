@@ -8,12 +8,13 @@ import polyglot.ext.jl5.types.*;
 
 public class JL5Disamb_c extends Disamb_c implements JL5Disamb {
 
+        
     protected Node disambiguateTypeNodePrefix(TypeNode tn) throws SemanticException {
-    
         Type t = tn.type();
+    
         if (t.isReference() && exprOK()){
             try {
-                FieldInstance fi = ts.findField(t.toReference(), name, c);
+                FieldInstance fi = ((JL5TypeSystem)ts).findFieldOrEnum(t.toReference(), name, c.currentClass());
                 return ((JL5NodeFactory)nf).JL5Field(pos, tn, name).fieldInstance(fi);
             }
             catch(NoMemberException e){
@@ -55,4 +56,18 @@ public class JL5Disamb_c extends Disamb_c implements JL5Disamb {
     }
 
 
+    protected Node disambiguateNoPrefix() throws SemanticException {
+        Node result = super.disambiguateNoPrefix();
+        if (result == null){
+            // make special AmbNoPrefix node and return it (it should 
+            // extend Expr)
+            // later have a pass (after type checking) to deal with these
+            // nodes which may be an enum constant of the type of a 
+            // switch expr (this situation may arise for case labels)
+            // otherwise as far as I know its an error
+                
+            result = ((JL5NodeFactory)nf).JL5AmbExpr(pos, name);
+        }
+        return result;
+    }
 }

@@ -8,4 +8,8 @@ public interface JL5ParsedClassType extends ParsedClassType{
     void addEnumConstant(EnumInstance ei);
     List enumConstants();
     EnumInstance enumConstantNamed(String name);
+    
+    void addAnnotationElem(AnnotationElemInstance ai);
+    List annotationElems();
+    AnnotationElemInstance annotationElemNamed(String name);
 }

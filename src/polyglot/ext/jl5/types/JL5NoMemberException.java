@@ -6,6 +6,7 @@ import polyglot.util.*;
 public class JL5NoMemberException extends NoMemberException {
 
     public static final int ENUM_CONSTANT = 4;
+    public static final int ANNOTATION = 5;
 
     public JL5NoMemberException(int kind, String s){
         super(kind, s);
@@ -19,6 +20,8 @@ public class JL5NoMemberException extends NoMemberException {
         switch(getKind()){
             case ENUM_CONSTANT:
                 return "enum constant";
+            case ANNOTATION:
+                return "annotation";
             default:
                 return super.getKindStr();
         }

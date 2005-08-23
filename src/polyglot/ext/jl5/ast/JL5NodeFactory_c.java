@@ -8,6 +8,7 @@ import polyglot.types.Type;
 import polyglot.types.Qualifier;
 import polyglot.util.*;
 import java.util.*;
+import polyglot.ext.jl5.types.*;
 
 /**
  * NodeFactory for jl5 extension.
@@ -26,15 +27,15 @@ public class JL5NodeFactory_c extends NodeFactory_c implements JL5NodeFactory {
         EnumConstantDecl n = new EnumConstantDecl_c(pos, name, args, null);
         return n;
     }
-    public ClassDecl JL5ClassDecl(Position pos, Flags flags, String name, List interfaces, ClassBody body){
-        ClassDecl n = new JL5ClassDecl_c(pos, flags, name, null, interfaces, body);
+    public ClassDecl JL5ClassDecl(Position pos, FlagAnnotations flags, String name, TypeNode superType,  List interfaces, ClassBody body){
+        ClassDecl n = new JL5ClassDecl_c(pos, flags, name, superType, interfaces, body);
         return n;
     }
     public JL5ClassBody JL5ClassBody(Position pos, List members){
         JL5ClassBody n = new JL5ClassBody_c(pos, members);
         return n;
     }
-    public JL5ConstructorDecl JL5ConstructorDecl(Position pos, Flags flags, String name, List formals, List throwTypes, Block body){
+    public JL5ConstructorDecl JL5ConstructorDecl(Position pos, FlagAnnotations flags, String name, List formals, List throwTypes, Block body){
         JL5ConstructorDecl n = new JL5ConstructorDecl_c(pos, flags, name, formals, throwTypes, body);
         return n;
     }
@@ -67,9 +68,56 @@ public class JL5NodeFactory_c extends NodeFactory_c implements JL5NodeFactory {
         JL5Case n = new JL5Case_c(pos, expr);
         return n;
     }
+
+    public JL5AmbExpr JL5AmbExpr(Position pos, String name){
+        JL5AmbExpr n = new JL5AmbExpr_c(pos, name);
+        return n;
+    }
     
     public Disamb disamb(){
         return new JL5Disamb_c();
+    }
+    
+    public JL5MethodDecl JL5MethodDecl(Position pos, FlagAnnotations flags, TypeNode returnType, String name, List formals, List throwTypes, Block body){
+        JL5MethodDecl n = new JL5MethodDecl_c(pos, flags, returnType, name, formals, throwTypes, body);
+        return n;
+    }
+    
+    public AnnotationElemDecl AnnotationElemDecl(Position pos, FlagAnnotations flags, TypeNode type, String name, Expr def){
+        AnnotationElemDecl n = new AnnotationElemDecl_c(pos, flags, type, name, def);
+        return n;
+    }
+    
+    public NormalAnnotationElem NormalAnnotationElem(Position pos, TypeNode name, List elements){
+        NormalAnnotationElem n = new NormalAnnotationElem_c(pos, name, elements);
+        return n;
+    }
+    
+    public MarkerAnnotationElem MarkerAnnotationElem(Position pos, TypeNode name){
+        MarkerAnnotationElem n = new MarkerAnnotationElem_c(pos, name);
+        return n;
+    }
+    
+    public SingleElementAnnotationElem SingleElementAnnotationElem(Position pos, TypeNode name, Expr value){
+        List l = new TypedList(new LinkedList(), ElementValuePair.class, false);
+        l.add(ElementValuePair(pos, "value", value));
+        SingleElementAnnotationElem n = new SingleElementAnnotationElem_c(pos, name, l);
+        return n;
+    }
+
+   
+    public ElementValuePair ElementValuePair(Position pos, String name, Expr value){
+        ElementValuePair n = new ElementValuePair_c(pos, name, value);
+        return n;
+    }
+    
+    public JL5FieldDecl JL5FieldDecl(Position pos, FlagAnnotations flags, TypeNode type, String name, Expr init){
+        JL5FieldDecl n = new JL5FieldDecl_c(pos, flags, type, name, init);
+        return n;
+    }
+    public JL5Formal JL5Formal(Position pos, FlagAnnotations flags, TypeNode type, String name){
+        JL5Formal n = new JL5Formal_c(pos, flags, type, name);
+        return n;
     }
     // TODO:  Override factory methods for overriden AST nodes.
     // TODO:  Override factory methods for AST nodes with new extension nodes.

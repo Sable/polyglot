@@ -98,7 +98,7 @@ public class EnumConstantDecl_c extends Term_c implements EnumConstantDecl
 
         EnumConstantDecl n = this;
 
-        EnumInstance ei = ts.enumInstance(n.position(), ts.Enum(), Flags.NONE, n.name());
+        EnumInstance ei = ts.enumInstance(n.position(), ts.Enum(), JL5Flags.NONE, n.name());
 
         return n.enumInstance(ei);
     }
@@ -122,7 +122,7 @@ public class EnumConstantDecl_c extends Term_c implements EnumConstantDecl
 
             //Flags f = flags;
             
-            EnumInstance ei = ts.enumInstance(position(), ct, Flags.NONE, name);
+            EnumInstance ei = ts.enumInstance(position(), ct, JL5Flags.NONE, name);
             return enumInstance(ei);
         }
 
