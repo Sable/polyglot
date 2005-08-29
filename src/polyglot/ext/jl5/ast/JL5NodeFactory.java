@@ -16,8 +16,8 @@ import polyglot.ext.jl5.types.*;
 public interface JL5NodeFactory extends NodeFactory {
     // TODO: Declare any factory methods for new AST nodes.
     public ExtendedFor ExtendedFor(Position pos, List varDecls, Expr expr, Stmt stmt);
-    public EnumConstantDecl EnumConstantDecl(Position pos, String name, List args, ClassBody body);
-    public EnumConstantDecl EnumConstantDecl(Position pos, String name, List args);
+    public EnumConstantDecl EnumConstantDecl(Position pos, FlagAnnotations flags, String name, List args, ClassBody body);
+    public EnumConstantDecl EnumConstantDecl(Position pos, FlagAnnotations flags, String name, List args);
     public ClassDecl JL5ClassDecl(Position pos, FlagAnnotations flags, String name, TypeNode superType, List interfaces, ClassBody body);
     public JL5ClassBody JL5ClassBody(Position pos, List members);
     public JL5ConstructorDecl JL5ConstructorDecl(Position pos, FlagAnnotations flags, String name, List formals, List throwTypes, Block body);
@@ -52,5 +52,7 @@ public interface JL5NodeFactory extends NodeFactory {
     public JL5FieldDecl JL5FieldDecl(Position pos, FlagAnnotations flags, TypeNode type, String name, Expr init);
     
     public JL5Formal JL5Formal(Position pos, FlagAnnotations flags, TypeNode type, String name);
+    
+    public JL5LocalDecl JL5LocalDecl(Position pos, FlagAnnotations flags, TypeNode type, String name, Expr init);
 }
 

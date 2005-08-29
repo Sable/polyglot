@@ -4,6 +4,7 @@ import java.lang.reflect.Modifier;
 
 import polyglot.frontend.*;
 import polyglot.ext.jl.types.*;
+import polyglot.ext.jl5.ast.*;
 import polyglot.types.*;
 import polyglot.util.*;
 import java.util.*;
@@ -243,4 +244,19 @@ public class JL5TypeSystem_c extends TypeSystem_c implements JL5TypeSystem {
         }
         return false;
     }
+    
+    public void checkDuplicateAnnotations(List annotations) throws SemanticException {
+        // check no duplicate annotations used
+        ArrayList l = new ArrayList(annotations);
+        for (int i = 0; i < l.size(); i++){
+            AnnotationElem ai = (AnnotationElem)l.get(i);
+            for (int j = i+1; j < l.size(); j++){
+                AnnotationElem aj = (AnnotationElem)l.get(j);
+                if (ai.typeName().type() == aj.typeName().type()){
+                    throw new SemanticException("Duplicate annotation use: "+aj.typeName(), aj.position());
+                }
+            }
+        }
+    }
+        
 }

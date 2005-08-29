@@ -190,6 +190,17 @@ public class AnnotationElemDecl_c extends Term_c implements AnnotationElemDecl {
                 }
             }
         }
+
+        if (flags.contains(Flags.NATIVE) ){
+            throw new SemanticException("Modifier native is not allowed here", position());
+        }
+        if (flags.contains(Flags.PRIVATE) ){
+            throw new SemanticException("Modifier private is not allowed here", position());
+        }
+
+        if (defaultVal != null && !defaultVal.isConstant() || defaultVal instanceof NullLit){
+            throw new SemanticException("Default annotation value must be constant", defaultVal.position());
+        }
         return this;
    }
     

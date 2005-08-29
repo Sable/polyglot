@@ -21,6 +21,9 @@ public class FlagAnnotations {
     }
 
     public FlagAnnotations classicFlags(Flags flags){
+        if (this.classicFlags != null){
+            this.classicFlags = this.classicFlags.set(flags);
+        }
         this.classicFlags = flags;
         return this;
     }

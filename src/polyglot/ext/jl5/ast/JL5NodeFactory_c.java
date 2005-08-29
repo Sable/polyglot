@@ -19,12 +19,12 @@ public class JL5NodeFactory_c extends NodeFactory_c implements JL5NodeFactory {
         ExtendedFor n = new ExtendedFor_c(pos, varDecls, expr, stmt);
         return n;
     }
-    public EnumConstantDecl EnumConstantDecl(Position pos, String name, List args, ClassBody body){
-        EnumConstantDecl n = new EnumConstantDecl_c(pos, name, args, body);
+    public EnumConstantDecl EnumConstantDecl(Position pos, FlagAnnotations flags, String name, List args, ClassBody body){
+        EnumConstantDecl n = new EnumConstantDecl_c(pos, flags, name, args, body);
         return n;
     }
-    public EnumConstantDecl EnumConstantDecl(Position pos, String name, List args){
-        EnumConstantDecl n = new EnumConstantDecl_c(pos, name, args, null);
+    public EnumConstantDecl EnumConstantDecl(Position pos, FlagAnnotations flags, String name, List args){
+        EnumConstantDecl n = new EnumConstantDecl_c(pos, flags, name, args, null);
         return n;
     }
     public ClassDecl JL5ClassDecl(Position pos, FlagAnnotations flags, String name, TypeNode superType,  List interfaces, ClassBody body){
@@ -117,6 +117,10 @@ public class JL5NodeFactory_c extends NodeFactory_c implements JL5NodeFactory {
     }
     public JL5Formal JL5Formal(Position pos, FlagAnnotations flags, TypeNode type, String name){
         JL5Formal n = new JL5Formal_c(pos, flags, type, name);
+        return n;
+    }
+    public JL5LocalDecl JL5LocalDecl(Position pos, FlagAnnotations flags, TypeNode type, String name, Expr init){
+        JL5LocalDecl n = new JL5LocalDecl_c(pos, flags, type, name, init);
         return n;
     }
     // TODO:  Override factory methods for overriden AST nodes.

@@ -71,6 +71,18 @@ public class NormalAnnotationElem_c extends AnnotationElem_c implements NormalAn
                 }
             }
         }
+    
+        // check duplicat mem val pairs
+        ArrayList list = new ArrayList(elements);
+        for (int i = 0; i < list.size(); i++){
+            ElementValuePair ei = (ElementValuePair) list.get(i);
+            for (int j = i+1; j < list.size(); j++){
+                ElementValuePair ej = (ElementValuePair) list.get(j);
+                if (ei.name().equals(ej.name())){
+                    throw new SemanticException("Duplicate annotation member value name in "+this.typeName(), ej.position());
+                }
+            }
+        }            
         
         return super.typeCheck(tc);
     }

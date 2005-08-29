@@ -20,7 +20,16 @@ parser Grm extends polyglot.ext.jl.parse.Grm {:
         if (o instanceof Flags) return true;
         return false;
     }
-        
+
+    public List variableDeclarators(TypeNode a, List b, FlagAnnotations flags) throws Exception {
+        List l = new TypedList(new LinkedList(), LocalDecl.class, false);
+        for (Iterator i = b.iterator(); i.hasNext(); ){
+            VarDeclarator d = (VarDeclarator) i.next();
+            l.add(nf.JL5LocalDecl(pos(d), flags, array(a, d.dims), d.name, d.init));
+        }
+        return l;
+    }
+
 :};
 
 terminal Token ENUM; // enum class declaration
@@ -44,6 +53,7 @@ non terminal AnnotationElem annotation;
 non terminal AnnotationElem marker_annotation, single_element_annotation, normal_annotation;
 non terminal Object modifier_or_annotation;
 non terminal FlagAnnotations modifiers_or_annotations;
+/*non terminal FlagAnnotations annotations;*/
 non terminal FlagAnnotations modifiers_or_annotations_opt;
 non terminal ArrayInit element_value_array_initializer;
 non terminal List element_values;
@@ -139,11 +149,11 @@ enum_constants ::=
 ;
 
 enum_constant ::=
-    IDENTIFIER:a arguments_opt:b class_body:c
-        {: RESULT = parser.nf.EnumConstantDecl(parser.pos(a,a), a.getIdentifier(), b, c); :}
+    modifiers_or_annotations_opt:d IDENTIFIER:a arguments_opt:b class_body:c
+        {: RESULT = parser.nf.EnumConstantDecl(parser.pos(d,a), d, a.getIdentifier(), b, c); :}
     |
-    IDENTIFIER:a arguments_opt:b
-        {: RESULT = parser.nf.EnumConstantDecl(parser.pos(a,a), a.getIdentifier(), b);
+    modifiers_or_annotations_opt:d IDENTIFIER:a arguments_opt:b
+        {: RESULT = parser.nf.EnumConstantDecl(parser.pos(d,a), d, a.getIdentifier(), b);
  :}
 ;
 
@@ -439,7 +449,12 @@ override formal_parameter ::=
         {: RESULT = parser.nf.JL5Formal(parser.pos(b, c, c), a, parser.array(b, c.dims), c.name); :}
 ;        
         
-            
+/*override local_variable_declaration ::=
+    modifiers_or_annotations_opt:a type:b variable_declarators:c
+        {: RESULT = parser.variableDeclarators(b, c, a); :}
+;
+*/
+
 modifiers_or_annotations_opt ::=
     /* empty */
         {: FlagAnnotations fl = new FlagAnnotations();
@@ -481,7 +496,21 @@ modifier_or_annotation ::=
         {: RESULT = a; :}
 ;        
         
-
+/*annotations ::=
+    annotation:a
+        {: FlagAnnotations fl = new FlagAnnotations();
+           fl.classicFlags(Flags.NONE);
+           fl.addAnnotation(a);
+           RESULT = fl; :}
+    |
+    annotations:a annotation:b
+        {: a.addAnnotation(b);
+           RESULT = a;
+        :}
+;
+*/
+   
+           
 annotation ::= 
     normal_annotation:a
         {: RESULT = a; :}

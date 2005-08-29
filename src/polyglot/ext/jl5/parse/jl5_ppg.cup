@@ -28,7 +28,16 @@ parser Grm extends polyglot.ext.jl.parse.Grm {:
         if (o instanceof Flags) return true;
         return false;
     }
-        
+
+    public List variableDeclarators(TypeNode a, List b, FlagAnnotations flags) throws Exception {
+        List l = new TypedList(new LinkedList(), LocalDecl.class, false);
+        for (Iterator i = b.iterator(); i.hasNext(); ){
+            VarDeclarator d = (VarDeclarator) i.next();
+            l.add(nf.JL5LocalDecl(pos(d), flags, array(a, d.dims), d.name, d.init));
+        }
+        return l;
+    }
+
 
 :}
 scan with {: return nextSymbol(); :};
@@ -1522,13 +1531,13 @@ enum_constants ::=
                                            :};
 
 enum_constant ::=
-    IDENTIFIER:a arguments_opt:b class_body:c {:
-                                              RESULT = parser.nf.EnumConstantDecl(parser.pos(a,a), a.getIdentifier(), b, c); 
-                                              :}
- |  IDENTIFIER:a arguments_opt:b {:
-                                 RESULT = parser.nf.EnumConstantDecl(parser.pos(a,a), a.getIdentifier(), b);
+    modifiers_or_annotations_opt:d IDENTIFIER:a arguments_opt:b class_body:c {:
+                                                                             RESULT = parser.nf.EnumConstantDecl(parser.pos(d,a), d, a.getIdentifier(), b, c); 
+                                                                             :}
+ |  modifiers_or_annotations_opt:d IDENTIFIER:a arguments_opt:b {:
+                                                                RESULT = parser.nf.EnumConstantDecl(parser.pos(d,a), d, a.getIdentifier(), b);
  
-                                 :};
+                                                                :};
 
 arguments_opt ::=
     {:  RESULT = new TypedList(new LinkedList(), Expr.class, false);  :}

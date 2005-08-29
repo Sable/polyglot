@@ -16,14 +16,23 @@ public class EnumConstantDecl_c extends Term_c implements EnumConstantDecl
 {   
     protected List args;
     protected String name;
+    protected Flags flags;
+    protected List annotations;
     protected ClassBody body;
     protected EnumInstance ei;
     
-    public EnumConstantDecl_c(Position pos, String name, List args, ClassBody body){
+    public EnumConstantDecl_c(Position pos, FlagAnnotations flags, String name, List args, ClassBody body){
         super(pos);
         this.name = name;
         this.args = args;
         this.body = body;
+        this.flags = flags.classicFlags();
+        if (flags.annotations() != null){
+            this.annotations = flags.annotations();
+        }
+        else {
+            this.annotations = new TypedList(new LinkedList(), AnnotationElem.class, true);
+        }
     }
         
     
@@ -82,11 +91,24 @@ public class EnumConstantDecl_c extends Term_c implements EnumConstantDecl
         }
         return this;
     }
+    
+    protected EnumConstantDecl_c reconstruct(List args, ClassBody body, List annotations){
+        if (!CollectionUtil.equals(args, this.args) || body != this.body ||
+                !CollectionUtil.equals(annotations, this.annotations)) {
+            EnumConstantDecl_c n = (EnumConstantDecl_c) copy();
+            n.args = TypedList.copyAndCheck(args, Expr.class, true);
+            n.body = body;
+            n.annotations = annotations;
+            return n;
+        }
+        return this;
+    }
 
     public Node visitChildren(NodeVisitor v){
         List args = visitList(this.args, v);
         ClassBody body = (ClassBody) visitChild(this.body, v);
-        return reconstruct(args, body);
+        List annotations = visitList(this.annotations, v);
+        return reconstruct(args, body, annotations);
     }
 
     public NodeVisitor buildTypesEnter(TypeBuilder tb) throws SemanticException {
@@ -129,7 +151,7 @@ public class EnumConstantDecl_c extends Term_c implements EnumConstantDecl
         return this;
     }
     public Node typeCheck(TypeChecker tc) throws SemanticException {
-        TypeSystem ts = tc.typeSystem();
+        JL5TypeSystem ts = (JL5TypeSystem)tc.typeSystem();
         Context c = tc.context();
         ClassType ct = c.currentClass();
 
@@ -138,8 +160,13 @@ public class EnumConstantDecl_c extends Term_c implements EnumConstantDecl
             Expr e = (Expr) it.next();
             argTypes.add(e.type());
         }
-
+        
         ConstructorInstance ci = ts.findConstructor(ct, argTypes, c.currentClass());
+        if (flags != Flags.NONE){
+            throw new SemanticException("Cannot have modifier(s): "+flags+" on enum constant declaration", this.position());
+        }
+
+        ts.checkDuplicateAnnotations(annotations);
         return this;
     }
 

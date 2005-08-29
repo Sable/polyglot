@@ -58,6 +58,13 @@ public class ElementValuePair_c extends Expr_c implements ElementValuePair {
         return reconstruct(value);
     }
 
+    public Node typeCheck(TypeChecker tc) throws SemanticException{
+        if (!this.value.isConstant() || value == null || value instanceof NullLit){
+            throw new SemanticException("Annotation attribute value must be constant", value.position());
+        }
+        return this;
+    }
+    
     public void translate(CodeWriter w, Translator tr){
         w.write(name+"=");
         print(value, w, tr);

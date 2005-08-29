@@ -3,6 +3,7 @@ package polyglot.ext.jl5.types;
 import polyglot.types.*;
 import polyglot.frontend.*;
 import polyglot.util.*;
+import java.util.*;
 
 public interface JL5TypeSystem extends TypeSystem {
     // TODO: declare any new methods needed
@@ -31,4 +32,6 @@ public interface JL5TypeSystem extends TypeSystem {
 
     boolean numericConversionBaseValid(Type t, Object value);
     boolean isBaseCastValid(Type from, Type to);
+
+    void checkDuplicateAnnotations(List annotations) throws SemanticException;
 }

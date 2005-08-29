@@ -14,7 +14,12 @@ public class JL5MethodDecl_c extends MethodDecl_c implements JL5MethodDecl {
     
     public JL5MethodDecl_c(Position pos, FlagAnnotations flags, TypeNode returnType, String name, List formals, List throwTypes, Block body){
         super(pos, flags.classicFlags(), returnType, name, formals, throwTypes, body);
-        this.annotations = flags.annotations();
+        if (flags.annotations() != null){
+            this.annotations = flags.annotations();
+        }
+        else {
+            this.annotations = new TypedList(new LinkedList(), AnnotationElem.class, true);
+        }
     }
     
     protected boolean compilerGenerated;
@@ -46,13 +51,19 @@ public class JL5MethodDecl_c extends MethodDecl_c implements JL5MethodDecl {
             n.formals = TypedList.copyAndCheck(formals, Formal.class, true);
             n.throwTypes = TypedList.copyAndCheck(throwTypes, TypeNode.class, true);
             n.body = body;
-            if (annotations != null){
-                n.annotations = TypedList.copyAndCheck(annotations, AnnotationElem.class, true);
-            }
+            n.annotations = TypedList.copyAndCheck(annotations, AnnotationElem.class, true);
             return n;
         }
         return this;
                                                             
+    }
+   
+    public Node typeCheck(TypeChecker tc) throws SemanticException {
+        // check no duplicate annotations used
+        JL5TypeSystem ts = (JL5TypeSystem)tc.typeSystem();
+        ts.checkDuplicateAnnotations(annotations);
+        
+        return super.typeCheck(tc);
     }
     
     public Node visitChildren(NodeVisitor v){
@@ -66,13 +77,9 @@ public class JL5MethodDecl_c extends MethodDecl_c implements JL5MethodDecl {
     
     public void translate(CodeWriter w, Translator tr){
         if (isCompilerGenerated()) return;
-            
-
-        if (annotations != null){
-            
-            for (Iterator it = annotations.iterator(); it.hasNext(); ){
-                print((AnnotationElem)it.next(), w, tr);
-            }
+        
+        for (Iterator it = annotations.iterator(); it.hasNext(); ){
+            print((AnnotationElem)it.next(), w, tr);
         }
 
         super.translate(w, tr);

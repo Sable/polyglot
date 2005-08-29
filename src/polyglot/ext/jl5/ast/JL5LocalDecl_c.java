@@ -8,12 +8,12 @@ import polyglot.util.*;
 import polyglot.visit.*;
 import polyglot.types.*;
 
-public class JL5Formal_c extends Formal_c implements JL5Formal {
+public class JL5LocalDecl_c extends LocalDecl_c implements JL5LocalDecl{
 
     protected List annotations;
     
-    public JL5Formal_c(Position pos, FlagAnnotations flags, TypeNode type, String name){
-        super(pos, flags.classicFlags(), type, name);
+    public JL5LocalDecl_c(Position pos, FlagAnnotations flags, TypeNode type, String name, Expr init){
+        super(pos, flags.classicFlags(), type, name, init);
         if (flags.annotations() != null){
             this.annotations = flags.annotations();
         }
@@ -26,16 +26,17 @@ public class JL5Formal_c extends Formal_c implements JL5Formal {
         return annotations;
     }
     
-    public JL5Formal annotations(List annotations){
-        JL5Formal_c n = (JL5Formal_c) copy();
+    public JL5LocalDecl annotations(List annotations){
+        JL5LocalDecl_c n = (JL5LocalDecl_c) copy();
         n.annotations = annotations;
         return n;
     }
 
-    protected Formal reconstruct(TypeNode type, List annotations){
-        if (this.type() != type || !CollectionUtil.equals(annotations, this.annotations)){
-            JL5Formal_c n = (JL5Formal_c)copy();
+    protected LocalDecl reconstruct(TypeNode type, Expr init, List annotations){
+        if (this.type() != type || this.init() != init ||  !CollectionUtil.equals(annotations, this.annotations)){
+            JL5LocalDecl_c n = (JL5LocalDecl_c)copy();
             n.type(type);
+            n.init(init);
             n.annotations = annotations;
             return n;
         }
@@ -44,8 +45,9 @@ public class JL5Formal_c extends Formal_c implements JL5Formal {
 
     public Node visitChildren(NodeVisitor v){
         TypeNode type = (TypeNode)visitChild(this.type(), v);
+        Expr init = (Expr)visitChild(this.init(), v);
         List annots = visitList(this.annotations, v);
-        return reconstruct(type, annots);
+        return reconstruct(type, init, annots);
     }
 
     public Node typeCheck(TypeChecker tc) throws SemanticException {

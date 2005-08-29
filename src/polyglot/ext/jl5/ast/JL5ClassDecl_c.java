@@ -71,6 +71,11 @@ public class JL5ClassDecl_c extends ClassDecl_c implements ClassDecl
         if (JL5Flags.isEnumModifier(flags()) && flags().isPrivate()){
             throw new SemanticException("Enum types cannot have explicit final modifier", this.position());
         }
+        if (JL5Flags.isAnnotationModifier(flags()) && flags().isPrivate()){
+            throw new SemanticException("Annotation types cannot have explicit private modifier", this.position());
+        }
+        JL5TypeSystem ts = (JL5TypeSystem)tc.typeSystem();
+        ts.checkDuplicateAnnotations(annotations);
         return super.typeCheck(tc);    
     }
    

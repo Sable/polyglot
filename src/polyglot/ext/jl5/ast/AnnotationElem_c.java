@@ -36,7 +36,8 @@ public class AnnotationElem_c extends Expr_c implements AnnotationElem {
     }
 
     public Node typeCheck(TypeChecker tc) throws SemanticException {
-        if (!typeName.type().isClass() || !JL5Flags.isAnnotationModifier(((JL5ParsedClassType)typeName.type()).flags())){
+        JL5TypeSystem ts = (JL5TypeSystem)tc.typeSystem();
+        if (!typeName.type().isClass() || !JL5Flags.isAnnotationModifier(((JL5ParsedClassType)typeName.type()).flags()) || !((ClassType)typeName.type()).superType().equals(ts.Annotation())){
             throw new SemanticException("Annotation: "+typeName+" must be an annotation type, ", position());
                     
         }
@@ -54,6 +55,10 @@ public class AnnotationElem_c extends Expr_c implements AnnotationElem {
     
     public List acceptCFG(CFGBuilder v, List succs) {
         return succs;
+    }
+
+    public boolean isConstant(){
+        return true;
     }
         
 }

@@ -27,4 +27,8 @@ public class EnumConstant_c extends Field_c implements EnumConstant{
     String name();
 
     EnumConstant name(String name);*/
+
+    public boolean isConstant(){
+        return true;
+    }
 }
