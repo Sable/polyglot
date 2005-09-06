@@ -11,6 +11,7 @@ import polyglot.*;
 import polyglot.ast.Assert;
 import polyglot.ext.jl5.types.*;
 import polyglot.ext.jl5.ast.*;
+import polyglot.ext.jl.ast.*;
 import polyglot.ext.jl.parse.Name;
 
 parser Grm extends polyglot.ext.jl.parse.Grm {:
@@ -29,6 +30,17 @@ parser Grm extends polyglot.ext.jl.parse.Grm {:
         return false;
     }
 
+    public ClassDecl handleClassDecl(FlagAnnotations fl, ClassDecl c){
+        return ((JL5ClassDecl)((JL5ClassDecl)c).flags(fl.classicFlags())).annotations(fl.annotations());
+    }
+    
+    public List handleLocalDecl(FlagAnnotations fl, List list){
+        List l = new TypedList(new LinkedList(), LocalDecl.class, false);
+        JL5LocalDecl dc = (JL5LocalDecl)list.get(0);
+        l.add(nf.JL5LocalDecl(dc.position(), fl, dc.type(), dc.name(), dc.init()));
+        return l;
+    }
+    
     public List variableDeclarators(TypeNode a, List b, FlagAnnotations flags) throws Exception {
         List l = new TypedList(new LinkedList(), LocalDecl.class, false);
         for (Iterator i = b.iterator(); i.hasNext(); ){
@@ -431,7 +443,10 @@ type_import_on_demand_declaration ::=
 type_declaration ::=
     class_declaration:a {:  RESULT = a;  :}
  |  interface_declaration:a {:  RESULT = a;  :}
- |  SEMICOLON {:  RESULT = null;  :};
+ |  SEMICOLON {:  RESULT = null;  :}
+ |  modifiers_or_annotations:a class_declaration:b {:
+                                                   RESULT = parser.handleClassDecl(a, b); 
+                                                   :};
 
 modifier ::=
     PUBLIC:a {:  RESULT = Flags.PUBLIC;  :}
@@ -447,12 +462,18 @@ modifier ::=
  |  STRICTFP:a {:  RESULT = Flags.STRICTFP;  :};
 
 class_declaration ::=
-    modifiers_or_annotations_opt:a CLASS:n IDENTIFIER:b super_opt:c interfaces_opt:d class_body:e {:
-                                                                                                  RESULT = parser.nf.JL5ClassDecl(parser.pos(n, e), a, b.getIdentifier(), c, d, e); 
-                                                                                                  :}
- |  modifiers_or_annotations_opt:a ENUM:n IDENTIFIER:b interfaces_opt:c enum_body:d {:
-                                                                                    RESULT = parser.nf.JL5ClassDecl(parser.pos(n, d), a.classicFlags(a.classicFlags().set(JL5Flags.ENUM)), b.getIdentifier(), parser.nf.CanonicalTypeNode(parser.pos(n, d), parser.ts.Enum()), c, d); 
-                                                                                    :};
+    CLASS:n IDENTIFIER:b super_opt:c interfaces_opt:d class_body:e {:
+                                                                   FlagAnnotations fl = new FlagAnnotations();
+           fl.classicFlags(Flags.NONE);
+           fl.annotations(new TypedList(new LinkedList(), AnnotationElem.class, false));
+           RESULT = parser.nf.JL5ClassDecl(parser.pos(n, e), fl, b.getIdentifier(), c, d, e); 
+                                                                   :}
+ |  ENUM:n IDENTIFIER:b interfaces_opt:c enum_body:d {:
+                                                     FlagAnnotations fl = new FlagAnnotations();
+           fl.classicFlags(JL5Flags.ENUM);
+           fl.annotations(new TypedList(new LinkedList(), AnnotationElem.class, false));
+           RESULT = parser.nf.JL5ClassDecl(parser.pos(n, d), fl, b.getIdentifier(), parser.nf.CanonicalTypeNode(parser.pos(n, d), parser.ts.Enum()), c, d); 
+                                                     :};
 
 super ::=
     EXTENDS class_type:a {:  RESULT = a;  :};
@@ -716,14 +737,15 @@ interface_declaration ::=
                                                                                List l = new TypedList(new LinkedList(), TypeNode.class, false);
        l.add(parser.nf.CanonicalTypeNode(parser.pos(c,d), parser.ts.Annotation()));
        a.classicFlags(Flags.INTERFACE.set(JL5Flags.ANNOTATION));
-       RESULT = parser.nf.JL5ClassDecl(parser.pos(c,d), a, b.getIdentifier(), null ,l, d); 
+       RESULT = parser.nf.JL5ClassDecl(parser.pos(c,d), a, b.getIdentifier() ,null, l, d); 
                                                                                :}
  |  AT:c INTERFACE:n IDENTIFIER:b annotation_body:d {:
                                                     List l = new TypedList(new LinkedList(), TypeNode.class, false);
        l.add(parser.nf.CanonicalTypeNode(parser.pos(c,d), parser.ts.Annotation()));
        FlagAnnotations fl = new FlagAnnotations();
        fl.classicFlags(Flags.INTERFACE.set(JL5Flags.ANNOTATION));
-       RESULT = parser.nf.JL5ClassDecl(parser.pos(c,d), fl, b.getIdentifier(), null , l, d); 
+       fl.annotations(new TypedList(new LinkedList(), AnnotationElem.class, false));
+       RESULT = parser.nf.JL5ClassDecl(parser.pos(c,d), fl, b.getIdentifier(), null, l, d); 
                                                     :};
 
 extends_interfaces_opt ::=
@@ -778,7 +800,12 @@ interface_member_declaration ::=
                l.add(a);
                RESULT = l; 
                             :}
- |  SEMICOLON {:  RESULT = Collections.EMPTY_LIST;  :};
+ |  SEMICOLON {:  RESULT = Collections.EMPTY_LIST;  :}
+ |  modifiers_or_annotations:a class_declaration:b {:
+                                                   List l = new TypedList(new LinkedList(), ClassMember.class, false);
+           l.add(parser.handleClassDecl(a, b)); 
+           RESULT = l; 
+                                                   :};
 
 constant_declaration ::=
     field_declaration:a {:  RESULT = a;  :};
@@ -835,16 +862,24 @@ block_statements ::=
                                          :};
 
 block_statement ::=
-    local_variable_declaration_statement:a {:  RESULT = a;  :}
- |  statement:a {:
+    statement:a {:
                 List l = new TypedList(new LinkedList(), Stmt.class, false);
-               l.add(a);
-               RESULT = l; 
+       l.add(a);
+       RESULT = l; 
                 :}
- |  class_declaration:a {:
+ |  modifiers_or_annotations:a local_variable_declaration_statement:b {:
+                                                                      RESULT = parser.handleLocalDecl(a, b); 
+                                                                      :}
+ |  local_variable_declaration_statement:b {:  RESULT = b;  :}
+ |  modifiers_or_annotations:a class_declaration:b {:
+                                                   List l = new TypedList(new LinkedList(), Stmt.class, false);
+       l.add(b);
+       RESULT = l; 
+                                                   :}
+ |  class_declaration:b {:
                         List l = new TypedList(new LinkedList(), Stmt.class, false);
-               l.add(parser.nf.LocalClassDecl(parser.pos(a), a));
-               RESULT = l; 
+       l.add(b);
+       RESULT = l; 
                         :};
 
 local_variable_declaration_statement ::=
@@ -852,11 +887,10 @@ local_variable_declaration_statement ::=
 
 local_variable_declaration ::=
     type:a variable_declarators:b {:
-                                  RESULT = parser.variableDeclarators(a, b, Flags.NONE); 
-                                  :}
- |  FINAL type:a variable_declarators:b {:
-                                        RESULT = parser.variableDeclarators(a, b, Flags.FINAL); 
-                                        :};
+                                  FlagAnnotations fl = new FlagAnnotations();
+       fl.classicFlags(Flags.NONE);
+        RESULT = parser.variableDeclarators(a, b, fl); 
+                                  :};
 
 statement ::=
     statement_without_trailing_substatement:a {:  RESULT = a;  :}
@@ -1579,6 +1613,11 @@ annotation_type_element_declaration ::=
            l.add(a);
            RESULT = l; 
                         :}
+ |  modifiers_or_annotations:a class_declaration:b {:
+                                                   List l = new TypedList(new LinkedList(), ClassMember.class, false);
+           l.add(parser.handleClassDecl(a, b));
+           RESULT = l; 
+                                                   :}
  |  interface_declaration:a {:
                             List l = new TypedList(new LinkedList(), ClassMember.class, false);
            l.add(a);
@@ -1626,6 +1665,7 @@ modifiers_or_annotations_opt ::=
     {:
     FlagAnnotations fl = new FlagAnnotations();
            fl.classicFlags(Flags.NONE);
+           fl.annotations(new TypedList(new LinkedList(), AnnotationElem.class, false));
            RESULT = fl; 
     :}
  |  modifiers_or_annotations:a {:  RESULT = a;  :};
@@ -1635,9 +1675,11 @@ modifiers_or_annotations ::=
                              FlagAnnotations fl = new FlagAnnotations();
            if (parser.isClassicFlag(a)){
                if (fl.classicFlags().intersects((Flags)a)) parser.die(parser.position());
+               fl.annotations(new TypedList(new LinkedList(), AnnotationElem.class, false));
                RESULT = fl.classicFlags(fl.classicFlags().set((Flags)a));
            }
            else {
+               fl.classicFlags(Flags.NONE);
                RESULT = fl.addAnnotation(a);
            }
         

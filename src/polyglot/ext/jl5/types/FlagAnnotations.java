@@ -28,6 +28,11 @@ public class FlagAnnotations {
         return this;
     }
 
+    public FlagAnnotations annotations(List annotations){
+        this.annotations = annotations;
+        return this;
+    }
+    
     public List annotations(){
         return annotations;
     }

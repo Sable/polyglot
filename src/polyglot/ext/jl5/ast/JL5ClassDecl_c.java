@@ -18,7 +18,7 @@ import polyglot.ext.jl.ast.*;
  * or interface. It may be a public or other top-level class, or an inner
  * named class, or an anonymous class.
  */
-public class JL5ClassDecl_c extends ClassDecl_c implements ClassDecl
+public class JL5ClassDecl_c extends ClassDecl_c implements JL5ClassDecl
 {
     protected List annotations;
 
@@ -38,10 +38,13 @@ public class JL5ClassDecl_c extends ClassDecl_c implements ClassDecl
         return this.annotations;
     }
     
-    public ClassDecl annotations(List annotations){
-        JL5ClassDecl_c n = (JL5ClassDecl_c) copy();
-        n.annotations = annotations;
-        return n;
+    public JL5ClassDecl annotations(List annotations){
+        if (annotations != null){
+            JL5ClassDecl_c n = (JL5ClassDecl_c) copy();
+            n.annotations = annotations;
+            return n;
+        }
+        return this;
     }
     
     protected ClassDecl reconstruct(TypeNode superClass, List interfaces, ClassBody body, List annotations){
@@ -63,7 +66,17 @@ public class JL5ClassDecl_c extends ClassDecl_c implements ClassDecl
         List annots = visitList(this.annotations, v); 
         return reconstruct(superClass, interfaces, body, annots);
     }
-    
+   
+    protected void disambiguateSuperType(AmbiguityRemover ar) throws SemanticException {
+        JL5TypeSystem ts = (JL5TypeSystem)ar.typeSystem();
+        if (JL5Flags.isAnnotationModifier(flags())){
+            this.type.superType(ts.Annotation());
+        }
+        else {
+            super.disambiguateSuperType(ar);
+        }
+    }
+       
     public Node typeCheck(TypeChecker tc) throws SemanticException {
         if (JL5Flags.isEnumModifier(flags()) && flags().isAbstract()){
             throw new SemanticException("Enum types cannot have abstract modifier", this.position());
