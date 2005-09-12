@@ -128,7 +128,7 @@ public class Disamb_c implements Disamb
 
         // First try local variables and fields.
         VarInstance vi = c.findVariableSilent(name);
-        
+       
         if (vi != null && exprOK()) {
             Node n = disambiguateVarInstance(vi);
             if (n != null) return n;

@@ -4,11 +4,12 @@ import polyglot.ast.*;
 import java.util.*;
 import polyglot.ext.jl.ast.*;
 import polyglot.ext.jl5.types.*;
+import polyglot.ext.jl5.visit.*;
 import polyglot.util.*;
 import polyglot.visit.*;
 import polyglot.types.*;
 
-public class JL5Formal_c extends Formal_c implements JL5Formal {
+public class JL5Formal_c extends Formal_c implements JL5Formal, ApplicationCheck {
 
     protected List annotations;
     
@@ -16,6 +17,7 @@ public class JL5Formal_c extends Formal_c implements JL5Formal {
         super(pos, flags.classicFlags(), type, name);
         if (flags.annotations() != null){
             this.annotations = flags.annotations();
+        
         }
         else {
             this.annotations = new TypedList(new LinkedList(), AnnotationElem.class, true);
@@ -56,7 +58,16 @@ public class JL5Formal_c extends Formal_c implements JL5Formal {
         ts.checkDuplicateAnnotations(annotations);
         return super.typeCheck(tc);
     }
-    
+
+    public Node applicationCheck(ApplicationChecker appCheck) throws SemanticException {
+        JL5TypeSystem ts = (JL5TypeSystem)appCheck.typeSystem();
+        for( Iterator it = annotations.iterator(); it.hasNext(); ){
+            AnnotationElem next = (AnnotationElem)it.next();
+            ts.checkAnnotationApplicability(next, this);
+        }
+        return this;
+    }
+
     public void prettyPrint(CodeWriter w, PrettyPrinter tr){
         if (annotations != null){
             for (Iterator it = annotations.iterator(); it.hasNext(); ){

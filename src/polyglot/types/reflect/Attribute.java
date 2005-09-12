@@ -15,7 +15,7 @@ import java.io.*;
  * @author Nate Nystrom
  *         (<a href="mailto:nystrom@cs.purdue.edu">nystrom@cs.purdue.edu</a>)
  */
-abstract class Attribute {
+public abstract class Attribute {
   protected int nameIndex;
   protected int length;
 
@@ -27,7 +27,7 @@ abstract class Attribute {
    * @param length
    *        The length of the attribute, excluding the header.
    */
-  Attribute(int nameIndex, int length) {
+  public Attribute(int nameIndex, int length) {
     this.nameIndex = nameIndex;
     this.length = length;
   }

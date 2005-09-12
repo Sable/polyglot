@@ -2,6 +2,7 @@ package polyglot.ext.jl5.ast;
 
 import polyglot.ast.*;
 import polyglot.ext.jl.ast.*;
+import polyglot.ext.jl5.types.*;
 import polyglot.types.*;
 import polyglot.util.*;
 import polyglot.visit.*;
@@ -59,9 +60,9 @@ public class ElementValuePair_c extends Expr_c implements ElementValuePair {
     }
 
     public Node typeCheck(TypeChecker tc) throws SemanticException{
-        if (!this.value.isConstant() || value == null || value instanceof NullLit){
-            throw new SemanticException("Annotation attribute value must be constant", value.position());
-        }
+        JL5TypeSystem ts = (JL5TypeSystem)tc.typeSystem();
+        ts.checkValueConstant(value);
+
         return this;
     }
     

@@ -4,11 +4,12 @@ import polyglot.ast.*;
 import polyglot.ext.jl.ast.*;
 import polyglot.util.*;
 import polyglot.ext.jl5.types.*;
+import polyglot.ext.jl5.visit.*;
 import polyglot.types.*;
 import java.util.*;
 import polyglot.visit.*;
 
-public class JL5FieldDecl_c extends FieldDecl_c implements JL5FieldDecl {
+public class JL5FieldDecl_c extends FieldDecl_c implements JL5FieldDecl, ApplicationCheck {
 
     protected List annotations;
     
@@ -55,6 +56,16 @@ public class JL5FieldDecl_c extends FieldDecl_c implements JL5FieldDecl {
         ts.checkDuplicateAnnotations(annotations);
         return super.typeCheck(tc);
     }
+
+    public Node applicationCheck(ApplicationChecker appCheck) throws SemanticException {
+        JL5TypeSystem ts = (JL5TypeSystem)appCheck.typeSystem();
+        for( Iterator it = annotations.iterator(); it.hasNext(); ){
+            AnnotationElem next = (AnnotationElem)it.next();
+            ts.checkAnnotationApplicability(next, this);
+        }
+        return this;
+   }
+    
 
     public void prettyPrint(CodeWriter w, PrettyPrinter tr){
         for (Iterator it = annotations.iterator(); it.hasNext(); ){

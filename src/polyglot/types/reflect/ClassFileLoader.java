@@ -2,6 +2,7 @@ package polyglot.types.reflect;
 
 import polyglot.main.Report;
 import polyglot.util.InternalCompilerError;
+import polyglot.frontend.ExtensionInfo;
 
 import java.io.*;
 import java.util.*;
@@ -14,6 +15,10 @@ import java.util.jar.*;
  */
 public class ClassFileLoader
 {
+
+    /** The extension info */
+    private ExtensionInfo extensionInfo;
+
     /**
      * Keep a cache of the zips and jars so we don't have to keep
      * opening them from the file system.
@@ -33,10 +38,11 @@ public class ClassFileLoader
 
     final static Object not_found = new Object();
 
-    public ClassFileLoader() {
+    public ClassFileLoader(ExtensionInfo ext) {
         this.zipCache = new HashMap();
         this.dirContentsCache = new HashMap();
 	this.packageCache = new HashSet();
+        this.extensionInfo = ext;
     }
 
     /**
@@ -245,7 +251,7 @@ public class ClassFileLoader
         try {
             if (Report.should_report(verbose, 3))
 		Report.report(3, "defining class " + name);
-            return new ClassFile(source, bytecode);
+            return extensionInfo.createClassFile(source, bytecode);
         }
         catch (ClassFormatError e) {
             throw new IOException(e.getMessage());

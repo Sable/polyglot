@@ -38,6 +38,11 @@ public class JL5Field_c extends Field_c implements JL5Field {
         
     }
 
+    public boolean isConstant(){
+        if (JL5Flags.isEnumModifier(flags())) return true;
+        if (fieldInstance() instanceof EnumInstance) return true;
+        return super.isConstant();
+    }
     public void checkConsistency(Context c){
         super.checkConsistency(c);
     }

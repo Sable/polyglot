@@ -18,15 +18,17 @@ import java.io.*;
  * @author Nate Nystrom
  *         (<a href="mailto:nystrom@cs.purdue.edu">nystrom@cs.purdue.edu</a>)
  */
-class Method
+public class Method
 {
-  ClassFile clazz; 
-  int modifiers;
-  int name;
-  int type;
-  Attribute[] attrs;
-  Exceptions exceptions;
-  boolean synthetic;
+  protected ClassFile clazz; 
+  protected DataInputStream in;
+  
+  protected int modifiers;
+  protected int name;
+  protected int type;
+  protected Attribute[] attrs;
+  protected Exceptions exceptions;
+  protected boolean synthetic;
 
   /**
    * Constructor.  Read a method from a class file.
@@ -38,10 +40,13 @@ class Method
    * @exception IOException
    *        If an error occurs while reading.
    */
-  Method(DataInputStream in, ClassFile clazz) throws IOException
+  public Method(DataInputStream in, ClassFile clazz) 
   {
     this.clazz = clazz;
+    this.in = in;
+  }
 
+  public void initialize() throws IOException {
     modifiers = in.readUnsignedShort();
 
     name = in.readUnsignedShort();
@@ -84,7 +89,7 @@ class Method
     return (String) clazz.constants[this.name].value();
   }
 
-  MethodInstance methodInstance(TypeSystem ts, ClassType ct) {
+  public MethodInstance methodInstance(TypeSystem ts, ClassType ct) {
     String name = (String) clazz.constants[this.name].value();
     String type = (String) clazz.constants[this.type].value();
 

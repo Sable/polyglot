@@ -2,6 +2,7 @@ package polyglot.frontend;
 
 import polyglot.ast.*;
 import polyglot.types.*;
+import polyglot.types.reflect.*;
 import polyglot.util.*;
 import java.io.*;
 import java.util.*;
@@ -144,4 +145,10 @@ public interface ExtensionInfo {
 
     /** Remove a pass.  The removed pass cannot be a barrier. */
     void removePass(List passes, Pass.ID oldPass);
+
+    /** Create class file */ 
+    ClassFile createClassFile(File classFileSource, byte[] code);
+    
+    /** Create method */ 
+    Method createMethod(DataInputStream in, ClassFile classFile) throws IOException;
 }

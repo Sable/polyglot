@@ -11,4 +11,6 @@ public class JL5LazyClassInitializer_c extends LazyClassInitializer_c implements
     
     public void initEnumConstants(JL5ParsedClassType ct){
     }
+    public void initAnnotations(JL5ParsedClassType ct){
+    }
 }

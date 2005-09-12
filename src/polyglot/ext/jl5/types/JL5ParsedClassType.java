@@ -12,4 +12,7 @@ public interface JL5ParsedClassType extends ParsedClassType{
     void addAnnotationElem(AnnotationElemInstance ai);
     List annotationElems();
     AnnotationElemInstance annotationElemNamed(String name);
+
+    void annotations(List annotations);
+    List annotations();
 }

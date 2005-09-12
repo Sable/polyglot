@@ -5,6 +5,7 @@ import polyglot.types.*;
 import polyglot.util.*;
 import java.io.*;
 import java.util.*;
+import polyglot.frontend.*;
 
 /**
  * ClassFile basically represents a Java classfile as it is found on 
@@ -26,12 +27,13 @@ public class ClassFile implements LazyClassInitializer {
     int thisClass;              
     int superClass;             
     int[] interfaces;           
-    Field[] fields;
-    Method[] methods;
+    protected Field[] fields;
+    protected Method[] methods;
     Attribute[] attrs;
     InnerClasses innerClasses;
     File classFileSource;
-
+    private ExtensionInfo extensionInfo;
+    
     static Collection verbose = ClassFileLoader.verbose;
   
     /**
@@ -40,8 +42,9 @@ public class ClassFile implements LazyClassInitializer {
      * @param code
      *        A byte array containing the class data
      */
-    public ClassFile(File classFileSource, byte[] code) {
+    public ClassFile(File classFileSource, byte[] code, ExtensionInfo ext) {
         this.classFileSource = classFileSource;
+        this.extensionInfo = ext;
 
         try {
             ByteArrayInputStream bin = new ByteArrayInputStream(code);
@@ -55,6 +58,10 @@ public class ClassFile implements LazyClassInitializer {
         }
     }
 
+    public Constant[] constants(){
+        return constants;
+    }
+   
     public boolean fromClassFile() { 
       return true;
     }
@@ -139,6 +146,8 @@ public class ClassFile implements LazyClassInitializer {
      */
     void read(DataInputStream in) throws IOException {
         // Read in file contents from stream
+        //Throwable t = new Throwable();
+        //t.printStackTrace();
         readHeader(in);
         readConstantPool(in);
         readAccessFlags(in);
@@ -404,6 +413,8 @@ public class ClassFile implements LazyClassInitializer {
 
         // Create the ClassType.
         ParsedClassType ct = ts.createClassType(this);
+                
+        
 
         ct.flags(ts.flagsForBits(modifiers));
         ct.position(position());
@@ -731,7 +742,7 @@ public class ClassFile implements LazyClassInitializer {
     methods = new Method[numMethods];
     
     for (int i = 0; i < numMethods; i++) {
-      methods[i] = new Method(in, this);
+      methods[i] = extensionInfo.createMethod(in, this);
     }
   }
   

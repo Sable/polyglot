@@ -4,6 +4,8 @@ import polyglot.types.*;
 import polyglot.frontend.*;
 import polyglot.util.*;
 import java.util.*;
+import polyglot.ast.*;
+import polyglot.ext.jl5.ast.*;
 
 public interface JL5TypeSystem extends TypeSystem {
     // TODO: declare any new methods needed
@@ -34,4 +36,10 @@ public interface JL5TypeSystem extends TypeSystem {
     boolean isBaseCastValid(Type from, Type to);
 
     void checkDuplicateAnnotations(List annotations) throws SemanticException;
+    void checkValueConstant(Expr value) throws SemanticException;
+
+    Flags flagsForBits(int bits);
+    
+    public void checkAnnotationApplicability(AnnotationElem annotation, Node n) throws SemanticException;
+    
 }

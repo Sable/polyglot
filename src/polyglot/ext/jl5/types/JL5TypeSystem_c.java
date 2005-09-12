@@ -5,6 +5,7 @@ import java.lang.reflect.Modifier;
 import polyglot.frontend.*;
 import polyglot.ext.jl.types.*;
 import polyglot.ext.jl5.ast.*;
+import polyglot.ast.*;
 import polyglot.types.*;
 import polyglot.util.*;
 import java.util.*;
@@ -72,6 +73,13 @@ public class JL5TypeSystem_c extends TypeSystem_c implements JL5TypeSystem {
 	checkAccessFlags(f);
     }
 
+    public LazyClassInitializer defaultClassInitializer(){
+        if (defaultClassInit == null){
+            defaultClassInit = new JL5LazyClassInitializer_c(this);
+        }
+        return defaultClassInit;
+    }
+    
     public ParsedClassType createClassType(LazyClassInitializer init, Source fromSource){
         return new JL5ParsedClassType_c(this, init, fromSource);
     }
@@ -258,5 +266,125 @@ public class JL5TypeSystem_c extends TypeSystem_c implements JL5TypeSystem {
             }
         }
     }
+
+    public void checkValueConstant(Expr value) throws SemanticException {
+        if (value instanceof ArrayInit) {
+            // check elements
+            for (Iterator it = ((ArrayInit)value).elements().iterator(); it.hasNext(); ){
+                Expr next = (Expr)it.next();
+                if ((!next.isConstant() || next == null || next instanceof NullLit) && !(next instanceof ClassLit)){
+                    throw new SemanticException("Annotation attribute value must be constant", value.position());
+                }
+            }
+        }
+        else if ((!value.isConstant() || value == null || value instanceof NullLit) && !(value instanceof ClassLit)){
+            // for purposes of annotation elems class lits are constants
+            throw new SemanticException("Annotation attribute value must be constant", value.position());
+        }
+    }
+
+    public Flags flagsForBits(int bits){
+        Flags f = super.flagsForBits(bits);
+        if ((bits & JL5Flags.ANNOTATION_MOD) != 0) f = JL5Flags.setAnnotationModifier(f);
+        if ((bits & JL5Flags.ENUM_MOD) != 0) {
+            f = JL5Flags.setEnumModifier(f);
+        }
+        return f;
+    }
+
+    public void checkAnnotationApplicability(AnnotationElem annotation, Node n) throws SemanticException {
+        List applAnnots = ((JL5ParsedClassType)annotation.typeName().type()).annotations();
+        // if there are no annotations applied to this annotation type then 
+        // there is no need to check the target type of the annotation
+        if (applAnnots != null) {
         
+        for (Iterator it = applAnnots.iterator(); it.hasNext(); ){
+            AnnotationElem next = (AnnotationElem)it.next();
+            if (((ClassType)next.typeName().type()).fullName().equals("java.lang.annotation.Target")) {
+                if (next instanceof NormalAnnotationElem){
+                    for (Iterator elems = ((NormalAnnotationElem)next).elements().iterator(); elems.hasNext(); ){
+                        ElementValuePair elemVal = (ElementValuePair)elems.next();
+                        if (elemVal.value() instanceof JL5Field){
+                            String check = ((JL5Field)elemVal.value()).name();
+                            appCheckValue(check, n);
+                        }
+                        else if (elemVal.value() instanceof ArrayInit){
+                            ArrayInit val = (ArrayInit)elemVal.value();
+                            if (val.elements().isEmpty()){
+                                // automatically throw exception
+                                // this annot cannot be applied anywhere
+                                throw new SemanticException("Annotation type not applicable to this kind of declaration", n.position());
+                            }
+                            else {
+                                for (Iterator vals = val.elements().iterator(); vals.hasNext(); ){
+                                    Object nextVal = vals.next();
+                                    if (nextVal instanceof JL5Field){
+                                        String valCheck = ((JL5Field)nextVal).name();
+                                        appCheckValue(valCheck, n);
+                                    }
+                                    
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        }
+        if (((ClassType)annotation.typeName().type()).fullName().equals("java.lang.Override")) {
+            appCheckOverride(n);
+        }
+    }
+
+    private void appCheckValue(String val, Node n) throws SemanticException {
+        if (val.equals("ANNOTATION_TYPE")){
+            if (!(n instanceof ClassDecl) || !JL5Flags.isAnnotationModifier(((ClassDecl)n).flags())){
+                throw new SemanticException("Annotation type not applicable to this kind of declaration", n.position());
+            }
+        }
+        else if (val.equals("CONSTRUCTOR")){
+            if (!(n instanceof ConstructorDecl)) {
+                throw new SemanticException("Annotation type not applicable to this kind of declaration", n.position());
+            }
+        }
+        else if (val.equals("FIELD")){
+            if (!(n instanceof FieldDecl)) {
+                throw new SemanticException("Annotation type not applicable to this kind of declaration", n.position());
+            }
+        }
+        else if (val.equals("LOCAL_VARIABLE")){
+            if (!(n instanceof LocalDecl)) {
+                throw new SemanticException("Annotation type not applicable to this kind of declaration", n.position());
+            }
+        }
+        else if (val.equals("METHOD")){
+            if (!(n instanceof MethodDecl)) {
+                throw new SemanticException("Annotation type not applicable to this kind of declaration", n.position());
+            }
+        }
+        else if (val.equals("PACKAGE")){
+        }
+        else if (val.equals("PARAMETER")){
+            if (!(n instanceof Formal)) {
+                throw new SemanticException("Annotation type not applicable to this kind of declaration", n.position());
+            }
+        }
+        else if (val.equals("TYPE")){
+            if (!(n instanceof ClassDecl)){
+                throw new SemanticException("Annotation type not applicable to this kind of declaration", n.position());
+            }
+        }
+    }
+
+    private void appCheckOverride(Node n) throws SemanticException{
+        MethodDecl md = (MethodDecl)n; // the other check should 
+                                       // prevent anything else
+        JL5ParsedClassType mdClass = (JL5ParsedClassType)md.methodInstance().container();
+        try {
+            MethodInstance mi = findMethod((ReferenceType)mdClass.superType(), md.name(), md.methodInstance().formalTypes(), (ClassType)mdClass.superType());
+        }
+        catch (NoMemberException e){
+            throw new SemanticException("method does not override a method from its superclass", md.position());
+        }
+    }
 }

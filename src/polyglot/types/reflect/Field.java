@@ -16,7 +16,7 @@ import java.io.*;
  * @author Nate Nystrom
  *         (<a href="mailto:nystrom@cs.purdue.edu">nystrom@cs.purdue.edu</a>)
  */
-class Field {
+public class Field {
     ClassFile clazz; 
     int modifiers;
     int name;
@@ -36,7 +36,11 @@ class Field {
           && t.toClass().fullName().equals("java.lang.String");
     }
 
-    FieldInstance fieldInstance(TypeSystem ts, ClassType ct) {
+    public int modifiers(){
+        return modifiers;
+    }
+    
+    public FieldInstance fieldInstance(TypeSystem ts, ClassType ct) {
       String name = (String) clazz.constants[this.name].value();
       String type = (String) clazz.constants[this.type].value();
 

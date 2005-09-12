@@ -198,11 +198,10 @@ public class AnnotationElemDecl_c extends Term_c implements AnnotationElemDecl {
             throw new SemanticException("Modifier private is not allowed here", position());
         }
 
-        if (defaultVal != null && !defaultVal.isConstant() || defaultVal instanceof NullLit){
-            throw new SemanticException("Default annotation value must be constant", defaultVal.position());
-        }
+        if (defaultVal != null) ts.checkValueConstant(defaultVal);
         return this;
-   }
+    }
+    
     
     public List acceptCFG(CFGBuilder v, List succs){
         if (defaultVal != null) {

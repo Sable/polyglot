@@ -13,7 +13,7 @@ import java.io.*;
  * @author Nate Nystrom
  *         (<a href="mailto:nystrom@cs.purdue.edu">nystrom@cs.purdue.edu</a>)
  */
-class Exceptions extends Attribute {
+public class Exceptions extends Attribute {
   int[] exceptions;
   ClassFile clazz;
 
@@ -27,7 +27,7 @@ class Exceptions extends Attribute {
    *        A non-<code>null</code> array of indices into the constant
    *        pool for the types of the exceptions
    */
-  Exceptions(ClassFile clazz, int nameIndex, int[] exceptions) {
+  public Exceptions(ClassFile clazz, int nameIndex, int[] exceptions) {
     super(nameIndex, (2 * exceptions.length) + 2);
     this.clazz = clazz;
     this.exceptions = exceptions;
@@ -45,7 +45,7 @@ class Exceptions extends Attribute {
    * @exception IOException
    *        If an error occurs while reading.
    */
-  Exceptions(ClassFile clazz, DataInputStream in,
+  public Exceptions(ClassFile clazz, DataInputStream in,
 		    int nameIndex, int length) throws IOException
   {
     super(nameIndex, length);

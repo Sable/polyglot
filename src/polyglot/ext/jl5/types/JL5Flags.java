@@ -11,7 +11,10 @@ public class JL5Flags extends Flags {
     static int next_bit = 0;
     static final String [] flag_names = new String[64];
     long bits;*/
-   
+
+    public static final int ANNOTATION_MOD = 8192;
+    public static final int ENUM_MOD = 16384;
+
     public static final Flags ENUM = createFlag("enum", null);
     public static final Flags ANNOTATION = createFlag("annotation", null);
     /*public static final Flags NONE         = new JL5Flags(0);

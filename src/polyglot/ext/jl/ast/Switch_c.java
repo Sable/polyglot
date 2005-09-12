@@ -72,6 +72,27 @@ public class Switch_c extends Stmt_c implements Switch
 	return reconstruct(expr, elements);
     }
 
+    /*public NodeVisitor disambiguateEnter(AmbiguityRemover ar) throws SemanticException {
+        System.out.println("in switch disamb enter");
+        System.out.println("expr: "+expr+" is a: "+expr.getClass()+" type: "+expr.type());
+        return ar;
+        
+    }
+
+    public Node disambiguate(AmbiguityRemover ar) throws SemanticException {
+        System.out.println("expr: "+expr+" is a: "+expr.getClass()+" type: "+expr.type());
+        if (expr instanceof Local){
+            System.out.println(((Local)expr).localInstance().type());
+        }
+        
+        return this;
+    }*/
+   
+    /*public NodeVisitor typeCheckEnter(TypeChecker tc) throws SemanticException {
+        System.out.println("type check enter in switch");
+        return tc;
+    }*/
+    
     /** Type check the statement. */
     public Node typeCheck(TypeChecker tc) throws SemanticException {
         TypeSystem ts = tc.typeSystem();

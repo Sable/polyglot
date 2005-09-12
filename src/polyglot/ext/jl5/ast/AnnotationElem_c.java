@@ -30,20 +30,29 @@ public class AnnotationElem_c extends Expr_c implements AnnotationElem {
         return this;
     }
 
+    protected AnnotationElem_c reconstruct(TypeNode typeName){
+        if (!typeName.equals(this.typeName)){
+            AnnotationElem_c n = (AnnotationElem_c) copy();
+            n.typeName = typeName;
+            return n;
+        }
+        return this;
+    }
+    
     public Node visitChildren(NodeVisitor v){
         TypeNode tn = (TypeNode)visitChild(this.typeName, v);
-        return typeName(tn);
+        return reconstruct(tn);
     }
 
     public Node typeCheck(TypeChecker tc) throws SemanticException {
         JL5TypeSystem ts = (JL5TypeSystem)tc.typeSystem();
-        if (!typeName.type().isClass() || !JL5Flags.isAnnotationModifier(((JL5ParsedClassType)typeName.type()).flags()) || !((ClassType)typeName.type()).superType().equals(ts.Annotation())){
+        if (!typeName.type().isClass() || !JL5Flags.isAnnotationModifier(((JL5ParsedClassType)typeName.type()).flags())){
             throw new SemanticException("Annotation: "+typeName+" must be an annotation type, ", position());
                     
         }
         return type(typeName.type());
     }
-    
+   
     public void translate(CodeWriter w, Translator tr){
         w.write("@");
         print(typeName, w, tr);
@@ -59,6 +68,10 @@ public class AnnotationElem_c extends Expr_c implements AnnotationElem {
 
     public boolean isConstant(){
         return true;
+    }
+
+    public String toString(){
+        return "Annotation Type: "+typeName();
     }
         
 }

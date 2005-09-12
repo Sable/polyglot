@@ -11,6 +11,7 @@ import polyglot.util.Position;
 import polyglot.util.TypedList;
 import polyglot.visit.*;
 import polyglot.ext.jl5.types.*;
+import polyglot.ext.jl5.visit.*;
 import polyglot.ext.jl.ast.*;
 
 /**
@@ -18,7 +19,7 @@ import polyglot.ext.jl.ast.*;
  * or interface. It may be a public or other top-level class, or an inner
  * named class, or an anonymous class.
  */
-public class JL5ClassDecl_c extends ClassDecl_c implements JL5ClassDecl
+public class JL5ClassDecl_c extends ClassDecl_c implements JL5ClassDecl, ApplicationCheck
 {
     protected List annotations;
 
@@ -46,14 +47,15 @@ public class JL5ClassDecl_c extends ClassDecl_c implements JL5ClassDecl
         }
         return this;
     }
+
     
     protected ClassDecl reconstruct(TypeNode superClass, List interfaces, ClassBody body, List annotations){
         if (superClass != this.superClass || !CollectionUtil.equals(interfaces, this.interfaces) || body != this.body || !CollectionUtil.equals(annotations, this.annotations)){
             JL5ClassDecl_c n = (JL5ClassDecl_c) copy();
             n.superClass = superClass;
-            n.interfaces = TypedList.copyAndCheck(interfaces, TypeNode.class, true);
+            n.interfaces = TypedList.copyAndCheck(interfaces, TypeNode.class, false);
             n.body = body;
-            n.annotations = TypedList.copyAndCheck(annotations, AnnotationElem.class, true);
+            n.annotations = TypedList.copyAndCheck(annotations, AnnotationElem.class, false);
             return n;
         }
         return this;
@@ -65,6 +67,13 @@ public class JL5ClassDecl_c extends ClassDecl_c implements JL5ClassDecl
         ClassBody body = (ClassBody) visitChild(this.body, v);
         List annots = visitList(this.annotations, v); 
         return reconstruct(superClass, interfaces, body, annots);
+    }
+
+    public NodeVisitor buildTypesEnter(TypeBuilder tb) throws SemanticException {
+        tb = (TypeBuilder)super.buildTypesEnter(tb);
+        //JL5ParsedClassType ct = (JL5ParsedClassType)tb.currentClass();
+        //ct.annotations(this.annotations);
+        return tb;
     }
    
     protected void disambiguateSuperType(AmbiguityRemover ar) throws SemanticException {
@@ -89,9 +98,44 @@ public class JL5ClassDecl_c extends ClassDecl_c implements JL5ClassDecl
         }
         JL5TypeSystem ts = (JL5TypeSystem)tc.typeSystem();
         ts.checkDuplicateAnnotations(annotations);
+        
+        
+        // set up ct with annots
+        JL5ParsedClassType ct = (JL5ParsedClassType)type();
+        ct.annotations(this.annotations);
+
+        
         return super.typeCheck(tc);    
     }
-   
+  
+    public Node applicationCheck(ApplicationChecker appCheck) throws SemanticException {
+        
+        // check proper used of predefined annotations
+        JL5TypeSystem ts = (JL5TypeSystem)appCheck.typeSystem();
+        for( Iterator it = annotations.iterator(); it.hasNext(); ){
+            AnnotationElem next = (AnnotationElem)it.next();
+            ts.checkAnnotationApplicability(next, this);
+        }
+
+        // check annotation circularity
+        if (JL5Flags.isAnnotationModifier(flags())){
+            JL5ParsedClassType ct = (JL5ParsedClassType)type();
+            for (Iterator it = ct.annotationElems().iterator(); it.hasNext(); ){
+                AnnotationElemInstance ai = (AnnotationElemInstance)it.next();
+                if (ai.type() instanceof ClassType && ((ClassType)((ClassType)ai.type()).superType()).fullName().equals("java.lang.annotation.Annotation")){
+                    JL5ParsedClassType other = (JL5ParsedClassType)ai.type();
+                    for (Iterator otherIt = other.annotationElems().iterator(); otherIt.hasNext(); ){
+                        AnnotationElemInstance aj = (AnnotationElemInstance)otherIt.next();
+                        if (aj.type().equals(ct)) {
+                            throw new SemanticException("cyclic annotation element type", aj.position());
+                        }
+                    }
+                }
+            }
+        }
+        return this;    
+    }
+    
     public Node addMembers(AddMemberVisitor tc) throws SemanticException {
         TypeSystem ts = tc.typeSystem();
         NodeFactory nf = tc.nodeFactory();
@@ -177,6 +221,9 @@ public class JL5ClassDecl_c extends ClassDecl_c implements JL5ClassDecl
 
 
     public void prettyPrintHeader(CodeWriter w, PrettyPrinter tr) {
+        for (Iterator it = annotations.iterator(); it.hasNext(); ){
+            print((AnnotationElem)it.next(), w, tr);
+        }
         if (flags.isInterface()) {
             if (JL5Flags.isAnnotationModifier(flags)){
                 w.write(JL5Flags.clearAnnotationModifier(flags).clearInterface().clearAbstract().translate());
@@ -190,9 +237,6 @@ public class JL5ClassDecl_c extends ClassDecl_c implements JL5ClassDecl
             w.write(flags.translate());
         }
 
-        for (Iterator it = annotations.iterator(); it.hasNext(); ){
-            print((AnnotationElem)it.next(), w, tr);
-        }
         if (flags.isInterface()) {
             w.write("interface ");
         }

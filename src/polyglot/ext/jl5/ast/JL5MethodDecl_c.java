@@ -7,8 +7,9 @@ import java.util.*;
 import polyglot.types.*;
 import polyglot.visit.*;
 import polyglot.ext.jl5.types.*;
+import polyglot.ext.jl5.visit.*;
 
-public class JL5MethodDecl_c extends MethodDecl_c implements JL5MethodDecl {
+public class JL5MethodDecl_c extends MethodDecl_c implements JL5MethodDecl, ApplicationCheck {
 
     protected List annotations;
     
@@ -64,6 +65,15 @@ public class JL5MethodDecl_c extends MethodDecl_c implements JL5MethodDecl {
         ts.checkDuplicateAnnotations(annotations);
         
         return super.typeCheck(tc);
+    }
+
+    public Node applicationCheck(ApplicationChecker appCheck) throws SemanticException {
+        JL5TypeSystem ts = (JL5TypeSystem)appCheck.typeSystem();
+        for( Iterator it = annotations.iterator(); it.hasNext(); ){
+            AnnotationElem next = (AnnotationElem)it.next();
+            ts.checkAnnotationApplicability(next, this);
+        }
+        return this;         
     }
     
     public Node visitChildren(NodeVisitor v){

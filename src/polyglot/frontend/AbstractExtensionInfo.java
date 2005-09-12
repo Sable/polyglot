@@ -2,6 +2,7 @@ package polyglot.frontend;
 
 import polyglot.ast.*;
 import polyglot.types.*;
+import polyglot.types.reflect.*;
 import polyglot.util.*;
 import polyglot.visit.*;
 import polyglot.main.Options;
@@ -823,5 +824,15 @@ public abstract class AbstractExtensionInfo implements ExtensionInfo {
 
     public String toString() {
         return getClass().getName() + " worklist=" + worklist;
+    }
+
+    public ClassFile createClassFile(File classFileSource, byte[] code){
+        return new ClassFile(classFileSource, code, this);
+    }
+
+    public Method createMethod(DataInputStream in, ClassFile classFile) throws IOException{
+        Method m = new Method(in, classFile);
+        m.initialize();
+        return m;
     }
 }

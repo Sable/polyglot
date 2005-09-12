@@ -10,11 +10,24 @@ import polyglot.ext.jl.types.*;
 public class JL5ParsedClassType_c extends ParsedClassType_c implements JL5ParsedClassType{
     
     protected List enumConstants;
+    // these are annotation elements in the annotation type
     protected List annotationElems;
-   
+  
+    // these are annotations that have been declared on (applied to) the type
+    protected List annotations;
+    
     public JL5ParsedClassType_c( TypeSystem ts, LazyClassInitializer init, Source fromSource){
         super(ts, init, fromSource);
     }
+    
+    public void annotations(List annotations){
+        this.annotations = annotations;
+    }
+
+    public List annotations(){
+        return annotations;
+    }
+        
     
     public void addEnumConstant(EnumInstance ei){
         enumConstants().add(ei);
@@ -27,7 +40,7 @@ public class JL5ParsedClassType_c extends ParsedClassType_c implements JL5Parsed
     public List enumConstants(){
         if (enumConstants == null){
             enumConstants = new TypedList(new LinkedList(), EnumInstance.class, false);
-            //init.initEnumConstantDecls(this);
+            ((JL5LazyClassInitializer)init).initEnumConstants(this);
             freeInit();
         }
         return enumConstants;
@@ -36,13 +49,14 @@ public class JL5ParsedClassType_c extends ParsedClassType_c implements JL5Parsed
     public List annotationElems(){
         if (annotationElems == null){
             annotationElems = new TypedList(new LinkedList(), AnnotationElemInstance.class, false);
+            ((JL5LazyClassInitializer)init).initAnnotations(this);
             freeInit();
         }
         return annotationElems;
     }
 
     protected boolean initialized(){
-        return super.initialized() && this.enumConstants != null;
+        return super.initialized() && this.enumConstants != null && this.annotationElems != null;
     }
     
     public EnumInstance enumConstantNamed(String name){
@@ -63,6 +77,14 @@ public class JL5ParsedClassType_c extends ParsedClassType_c implements JL5Parsed
             }
         }
         return null;
+    }
+
+    public void addMethod(MethodInstance mi){
+        if (JL5Flags.isAnnotationModifier(flags())){
+            //addAnnotationElem(ts.annotationElemInstance(mi.position(), this, mi.flags(), mi.type(), mi,name(), 
+                        
+        }
+        super.addMethod(mi);
     }
 }
 
