@@ -37,7 +37,7 @@ public class JL5Formal_c extends Formal_c implements JL5Formal, ApplicationCheck
     protected Formal reconstruct(TypeNode type, List annotations){
         if (this.type() != type || !CollectionUtil.equals(annotations, this.annotations)){
             JL5Formal_c n = (JL5Formal_c)copy();
-            n.type(type);
+            n.type = type;
             n.annotations = annotations;
             return n;
         }

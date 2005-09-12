@@ -23,6 +23,7 @@ parser Grm extends polyglot.ext.jl.parse.Grm {:
     }
 
     public ClassDecl handleClassDecl(FlagAnnotations fl, ClassDecl c){
+        fl.classicFlags(c.flags());
         return ((JL5ClassDecl)((JL5ClassDecl)c).flags(fl.classicFlags())).annotations(fl.annotations());
     }
     
@@ -214,7 +215,7 @@ override class_member_declaration ::=
     |
     modifiers_or_annotations_opt:a ENUM:n IDENTIFIER:b interfaces_opt:c enum_body:d
         {: List l = new TypedList(new LinkedList(), ClassMember.class, false);
-           l.add(parser.nf.JL5ClassDecl(parser.pos(n, d), a.classicFlags(a.classicFlags().set(JL5Flags.ENUM)), b.getIdentifier(),  parser.nf.CanonicalTypeNode(parser.pos(n,d), parser.ts.Enum()), c, d));
+           l.add(parser.nf.JL5ClassDecl(parser.pos(n, d), a.classicFlags(JL5Flags.ENUM), b.getIdentifier(),  parser.nf.CanonicalTypeNode(parser.pos(n,d), parser.ts.Enum()), c, d));
            RESULT = l; :}
 ;    
    

@@ -15,7 +15,7 @@ public class Formal_c extends Term_c implements Formal
 {
     LocalInstance li;
     Flags flags;
-    TypeNode type;
+    protected TypeNode type;
     String name;
     boolean reachable;
 

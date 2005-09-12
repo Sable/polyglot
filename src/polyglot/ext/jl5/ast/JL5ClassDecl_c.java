@@ -190,6 +190,7 @@ public class JL5ClassDecl_c extends ClassDecl_c implements JL5ClassDecl, Applica
         ConstructorInstance ci = ts.defaultConstructor(position(), this.type);
         this.type.addConstructor(ci);
         Block block = null;
+        System.out.println("flags: "+flags());
         if (this.type.superType() instanceof ClassType && !JL5Flags.isEnumModifier(type.flags())) {
             ConstructorInstance sci = ts.defaultConstructor(position(),
                                                 (ClassType) this.type.superType());
