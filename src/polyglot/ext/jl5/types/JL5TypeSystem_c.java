@@ -73,6 +73,24 @@ public class JL5TypeSystem_c extends TypeSystem_c implements JL5TypeSystem {
 	checkAccessFlags(f);
     }
 
+    public ConstructorInstance defaultConstructor(Position pos, ClassType container){
+        assert_(container);
+
+        Flags access = Flags.NONE;
+        if (container.flags().isPrivate() || JL5Flags.isEnumModifier(container.flags())){
+            access = access.Private();
+        }
+        if (container.flags().isProtected()){
+            access = access.Protected();
+        }
+        if (container.flags().isPublic() && !JL5Flags.isEnumModifier(container.flags())){
+            access = access.Public();
+        }
+        return constructorInstance(pos, container, access, Collections.EMPTY_LIST, Collections.EMPTY_LIST);
+        
+
+    }
+    
     public LazyClassInitializer defaultClassInitializer(){
         if (defaultClassInit == null){
             defaultClassInit = new JL5LazyClassInitializer_c(this);
@@ -85,11 +103,11 @@ public class JL5TypeSystem_c extends TypeSystem_c implements JL5TypeSystem {
     }
 
     public void checkClassConformance(ClassType ct) throws SemanticException {
-    
+   
         if (JL5Flags.isEnumModifier(ct.flags())){
             // check enums elsewhere - have to do something special with
             // abstract methods and anon enum element bodies
-            return;
+            //return;
         }
         super.checkClassConformance(ct); 
     }

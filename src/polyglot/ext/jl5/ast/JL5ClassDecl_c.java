@@ -91,11 +91,19 @@ public class JL5ClassDecl_c extends ClassDecl_c implements JL5ClassDecl, Applica
             throw new SemanticException("Enum types cannot have abstract modifier", this.position());
         }
         if (JL5Flags.isEnumModifier(flags()) && flags().isPrivate()){
+            throw new SemanticException("Enum types cannot have explicit private modifier", this.position());
+        }
+        if (JL5Flags.isEnumModifier(flags()) && flags().isFinal()){
             throw new SemanticException("Enum types cannot have explicit final modifier", this.position());
         }
         if (JL5Flags.isAnnotationModifier(flags()) && flags().isPrivate()){
             throw new SemanticException("Annotation types cannot have explicit private modifier", this.position());
         }
+
+        if (JL5Flags.isEnumModifier(type().superType().toClass().flags())){
+            throw new SemanticException("Cannot extend enum type", position());
+        }
+
         JL5TypeSystem ts = (JL5TypeSystem)tc.typeSystem();
         ts.checkDuplicateAnnotations(annotations);
         
@@ -104,6 +112,14 @@ public class JL5ClassDecl_c extends ClassDecl_c implements JL5ClassDecl, Applica
         JL5ParsedClassType ct = (JL5ParsedClassType)type();
         ct.annotations(this.annotations);
 
+        if (JL5Flags.isEnumModifier(flags())){
+            for(Iterator it = type().constructors().iterator(); it.hasNext(); ){
+                ConstructorInstance ci = (ConstructorInstance)it.next();
+                if (!ci.flags().clear(Flags.PRIVATE).equals(Flags.NONE)){
+                    throw new SemanticException("Modifier "+ci.flags().clear(Flags.PRIVATE)+" not allowed here", ci.position());
+                }
+            }
+        }
         
         return super.typeCheck(tc);    
     }
@@ -190,8 +206,7 @@ public class JL5ClassDecl_c extends ClassDecl_c implements JL5ClassDecl, Applica
         ConstructorInstance ci = ts.defaultConstructor(position(), this.type);
         this.type.addConstructor(ci);
         Block block = null;
-        System.out.println("flags: "+flags());
-        if (this.type.superType() instanceof ClassType && !JL5Flags.isEnumModifier(type.flags())) {
+        if (this.type.superType() instanceof ClassType && !JL5Flags.isEnumModifier(flags())) {
             ConstructorInstance sci = ts.defaultConstructor(position(),
                                                 (ClassType) this.type.superType());
             ConstructorCall cc = nf.SuperCall(position(), 
@@ -204,7 +219,7 @@ public class JL5ClassDecl_c extends ClassDecl_c implements JL5ClassDecl, Applica
         }
         
         ConstructorDecl cd;
-        if (!JL5Flags.isEnumModifier(type.flags())){
+        if (!JL5Flags.isEnumModifier(flags())){
             cd = nf.ConstructorDecl(position(), JL5Flags.PUBLIC,
                                                 name, Collections.EMPTY_LIST,
                                                 Collections.EMPTY_LIST,
