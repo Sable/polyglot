@@ -18,20 +18,21 @@ import polyglot.util.SubtypeSet;
 public class ExceptionChecker extends ErrorHandlingVisitor
 {
     protected ExceptionChecker outer;
-    protected SubtypeSet scope;
+    /**
+     * Lazily instantiate the SubtypeSet in the getter method
+     */
+    private SubtypeSet scope = null;
     protected Map exceptionPositions;
 
     public ExceptionChecker(Job job, TypeSystem ts, NodeFactory nf) {
 	super(job, ts, nf);
 	this.outer = null;
-        this.scope = new SubtypeSet(ts.Throwable());
         this.exceptionPositions = new HashMap();
     }
 
     public ExceptionChecker push() {
         ExceptionChecker ec = (ExceptionChecker) this.visitChildren();
         ec.outer = this;
-        ec.scope = new SubtypeSet(ts.Throwable());
         ec.exceptionPositions = new HashMap();
         return ec;
     }
@@ -107,7 +108,10 @@ public class ExceptionChecker extends ErrorHandlingVisitor
      * modify the throwsSet.
      */
     public SubtypeSet throwsSet() {
-        return (SubtypeSet) scope;
+        if (scope == null) {
+            this.scope = new SubtypeSet(ts.Throwable());            
+        }
+        return scope;
     }
     
     /**

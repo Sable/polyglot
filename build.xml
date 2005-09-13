@@ -732,7 +732,8 @@ ext=""
     <copy file="build.xml" todir="${dist}"/>
     <copy file="README" todir="${dist}"/>
     <copy file="CHANGES" todir="${dist}"/>
-    <copy file="LICENSE" todir="${dist}"/>
+    <copy file="LICENSE.LGPL" todir="${dist}"/>
+    <copy file="LICENSE.Eclipse" todir="${dist}"/>
   </target>
 
   <target name="dist-javadoc" depends="jl-dist">
@@ -837,6 +838,7 @@ ext=""
     <copy file="${basedir}/configure-jmatch.xml" tofile="${dist}/configure-jmatch.xml"/>
 
     <!-- readme, licences, &c. -->
+    <copy file="${bin}/jm.in" todir="${dist}/bin"/>
     <move file="${dist}/README" tofile="${dist}/README-POLYGLOT"/>
     <copy file="${src}/polyglot/ext/jmatch/doc/README" tofile="${dist}/README"/>
     <delete file="${dist}/CHANGES"/>

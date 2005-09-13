@@ -911,6 +911,21 @@ public class TypeSystem_c implements TypeSystem
 					      ClassType currClass)
 	throws SemanticException {
 
+        Collection maximal = findMostSpecificProcedures(acceptable, container,
+                                                        argTypes, currClass);
+
+        if (maximal.size() == 1) {
+            return (ProcedureInstance) maximal.iterator().next();
+        }
+
+        return null;
+    }
+        
+    protected Collection findMostSpecificProcedures(List acceptable,
+                                                    ReferenceType container,                                                    List argTypes,
+                                                    ClassType currClass)
+        throws SemanticException {
+
         assert_(container);
         assert_(argTypes);
 
@@ -919,18 +934,51 @@ public class TypeSystem_c implements TypeSystem
 	MostSpecificComparator msc = new MostSpecificComparator();
 	Collections.sort(acceptable, msc);
 
+        List maximal = new ArrayList(acceptable.size());
+
 	Iterator i = acceptable.iterator();
 
-	ProcedureInstance maximal = (ProcedureInstance) i.next();
+	ProcedureInstance first = (ProcedureInstance) i.next();
+        maximal.add(first);
 
 	// Now check to make sure that we have a maximal most-specific method.
 	while (i.hasNext()) {
 	    ProcedureInstance p = (ProcedureInstance) i.next();
 
-	    if (msc.compare(maximal, p) > 0) {
-	        return null;
+	    if (msc.compare(first, p) >= 0) {
+                maximal.add(p);
 	    }
 	}
+
+        if (maximal.size() > 1) {
+            // If exactly one method is not abstract, it is the most specific.
+            List notAbstract = new ArrayList(maximal.size());
+            for (Iterator j = maximal.iterator(); j.hasNext(); ) {
+                ProcedureInstance p = (ProcedureInstance) j.next();
+                if (! p.flags().isAbstract()) {
+                    notAbstract.add(p);
+                }
+            }
+
+            if (notAbstract.size() == 1) {
+                maximal = notAbstract;
+            }
+            else if (notAbstract.size() == 0) {
+                // all are abstract; if all signatures match, any will do.
+                Iterator j = maximal.iterator();
+                first = (ProcedureInstance) j.next();
+                while (j.hasNext()) {
+                    ProcedureInstance p = (ProcedureInstance) j.next();
+                    if (! first.hasFormals(p.formalTypes())) {
+                        // not all signatures match; must be ambiguous
+                        return maximal;
+                    }
+                }
+
+                // all signatures match, just take the first
+                maximal = Collections.singletonList(first);
+            }
+        }
 
         return maximal;
     }
@@ -945,15 +993,7 @@ public class TypeSystem_c implements TypeSystem
 
 	    if (moreSpecific(p1, p2)) return -1;
 	    if (moreSpecific(p2, p1)) return 1;
-
-	    // otherwise equally maximally specific
-
-	    // JLS2 15.12.2.2 "two or more maximally specific methods"
-	    // if both abstract or not abstract, equally applicable
-	    // otherwise the non-abstract is more applicable
-	    if (p1.flags().isAbstract() == p2.flags().isAbstract()) return 0;
-	    if (p1.flags().isAbstract()) return 1;
-	    return -1;
+            return 0;
 	}
     }
 
@@ -962,7 +1002,7 @@ public class TypeSystem_c implements TypeSystem
      * Applicable and Accessible as defined by JLS 15.11.2.1
      */
     protected List findAcceptableMethods(ReferenceType container, String name,
-                                     List argTypes, ClassType currClass)
+                                         List argTypes, ClassType currClass)
 	throws SemanticException {
 
         assert_(container);
