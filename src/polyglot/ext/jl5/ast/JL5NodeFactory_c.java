@@ -27,8 +27,14 @@ public class JL5NodeFactory_c extends NodeFactory_c implements JL5NodeFactory {
         EnumConstantDecl n = new EnumConstantDecl_c(pos, flags, name, args, null);
         return n;
     }
-    public ClassDecl JL5ClassDecl(Position pos, FlagAnnotations flags, String name, TypeNode superType,  List interfaces, ClassBody body){
-        ClassDecl n = new JL5ClassDecl_c(pos, flags, name, superType, interfaces, body);
+    public ClassDecl JL5ClassDecl(Position pos, FlagAnnotations flags, String name, TypeNode superType,  List interfaces, ClassBody body, List paramTypes ){
+        ClassDecl n;
+        if (paramTypes == null){
+            n = new JL5ClassDecl_c(pos, flags, name, superType, interfaces, body);
+        }
+        else {
+            n = new JL5GenericClassDecl_c(pos, flags, name, superType, interfaces, body, paramTypes);
+        }
         return n;
     }
     public JL5ClassBody JL5ClassBody(Position pos, List members){
@@ -123,6 +129,22 @@ public class JL5NodeFactory_c extends NodeFactory_c implements JL5NodeFactory {
         JL5LocalDecl n = new JL5LocalDecl_c(pos, flags, type, name, init);
         return n;
     }
+    public JL5PackageNode JL5PackageNode(Position pos, FlagAnnotations fl, Package package_){
+        JL5PackageNode n = new JL5PackageNode_c(pos, fl, package_);
+        return n;
+    }
+
+    public ParamTypeNode ParamTypeNode(Position pos, BoundedTypeNode.Kind kind, List bounds, String id){
+        ParamTypeNode n = new ParamTypeNode_c(pos, kind, bounds, id);
+        return n;
+    }
+    
+    public BoundedTypeNode BoundedTypeNode(Position pos, BoundedTypeNode.Kind kind, List bounds){
+        BoundedTypeNode n = new BoundedTypeNode_c(pos, kind, bounds);
+        return n;
+    }
+    
+    
     // TODO:  Override factory methods for overriden AST nodes.
     // TODO:  Override factory methods for AST nodes with new extension nodes.
 }

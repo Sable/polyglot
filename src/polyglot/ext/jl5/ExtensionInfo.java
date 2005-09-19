@@ -59,6 +59,9 @@ public class ExtensionInfo extends polyglot.ext.jl.ExtensionInfo {
         List passes = super.passes(job);
         // TODO: add passes as needed by your compiler
         //afterPass(passes, Pass.DISAM_ALL, new VisitorPass(ENUM_SWITCH_DISAMBIGUATE, job, new LeftoverAmbiguityRemover(job, ts, nf, LeftoverAmbiguityRemover.SWITCH_CASES)));
+        
+        replacePass(passes, Pass.BUILD_TYPES, new VisitorPass(Pass.BUILD_TYPES, job, new JL5TypeBuilder(job, ts, nf)));
+        
         afterPass(passes, Pass.TYPE_CHECK, new BarrierPass(TYPE_CHECK_ALL, job));
         beforePass(passes, Pass.REACH_CHECK, new VisitorPass(APPLICATION_CHECK, job, new ApplicationChecker(job, ts, nf)));
 

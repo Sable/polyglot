@@ -43,6 +43,41 @@ parser Grm extends polyglot.ext.jl.parse.Grm {:
         return l;
     }
 
+    public BoundedTypeNode toSuperType(TypeNode a) {
+        List l = new TypedList(new LinkedList(), TypeNode.class, false);
+        l.add(a);
+        BoundedTypeNode tn = nf.BoundedTypeNode(a.position(), BoundedTypeNode.LOWER, l);
+        return tn;
+    }
+    
+    public BoundedTypeNode toExtendsType(TypeNode a) {
+        List l = new TypedList(new LinkedList(), TypeNode.class, false);
+        l.add(a);
+        BoundedTypeNode tn = nf.BoundedTypeNode(a.position(), BoundedTypeNode.UPPER, l);
+        return tn;
+    }
+    
+    public BoundedTypeNode toBoundedType(Position pos) {
+        List l = new TypedList(new LinkedList(), TypeNode.class, false);
+        BoundedTypeNode tn = nf.BoundedTypeNode(pos, BoundedTypeNode.UPPER, l);
+        return tn;
+    }
+    
+    public BoundedTypeNode toExtendsType(TypeNode a, List bounds) {
+        bounds.add(0, a);
+        BoundedTypeNode tn = nf.BoundedTypeNode(a.position(), BoundedTypeNode.UPPER, bounds);
+        return tn;
+    }
+
+    public ParamTypeNode toParamType(Position pos, String id, BoundedTypeNode bounds){
+        List boundsList = null;
+        if (bounds != null){
+            boundsList = bounds.boundsList();
+        }
+        ParamTypeNode tn = nf.ParamTypeNode(pos, BoundedTypeNode.UPPER, boundsList, id);
+        return tn;
+    }
+    
 :};
 
 terminal Token ENUM; // enum class declaration
@@ -69,6 +104,19 @@ non terminal FlagAnnotations modifiers_or_annotations;
 non terminal FlagAnnotations modifiers_or_annotations_opt;
 non terminal ArrayInit element_value_array_initializer;
 non terminal List element_values;
+non terminal ParamTypeNode type_variable;
+non terminal BoundedTypeNode type_bound_opt;
+non terminal BoundedTypeNode type_bound;
+non terminal List additional_bound_list_opt;
+non terminal List additional_bound_list;
+non terminal TypeNode additional_bound;
+non terminal List type_parameter_list_opt;
+non terminal List type_parameter_list;
+non terminal List type_argument_list_opt;
+non terminal List type_argument_list;
+non terminal TypeNode type_argument;
+non terminal TypeNode wildcard;
+non terminal BoundedTypeNode bound;
 
 start with goal;
 
@@ -123,17 +171,17 @@ static_import_on_demand_declaration ::=
 */
 
 override class_declaration ::=
-    CLASS:n IDENTIFIER:b super_opt:c interfaces_opt:d class_body:e
+    CLASS:n IDENTIFIER:b type_parameter_list_opt:f super_opt:c interfaces_opt:d class_body:e
         {: FlagAnnotations fl = new FlagAnnotations();
            fl.classicFlags(Flags.NONE);
            fl.annotations(new TypedList(new LinkedList(), AnnotationElem.class, false));
-           RESULT = parser.nf.JL5ClassDecl(parser.pos(n, e), fl, b.getIdentifier(), c, d, e); :}
+           RESULT = parser.nf.JL5ClassDecl(parser.pos(n, e), fl, b.getIdentifier(), c, d, e, f); :}
     |                                               
     ENUM:n IDENTIFIER:b interfaces_opt:c enum_body:d
         {: FlagAnnotations fl = new FlagAnnotations();
            fl.classicFlags(JL5Flags.ENUM);
            fl.annotations(new TypedList(new LinkedList(), AnnotationElem.class, false));
-           RESULT = parser.nf.JL5ClassDecl(parser.pos(n, d), fl, b.getIdentifier(), parser.nf.CanonicalTypeNode(parser.pos(n, d), parser.ts.Enum()), c, d); :}
+           RESULT = parser.nf.JL5ClassDecl(parser.pos(n, d), fl, b.getIdentifier(), parser.nf.CanonicalTypeNode(parser.pos(n, d), parser.ts.Enum()), c, d, null); :}
 ;
 
 extend type_declaration ::=
@@ -202,11 +250,11 @@ override class_member_declaration ::=
                l.add(a);
                RESULT = l; :}
         /* repeat the prod for 'class_declaration' here: */
-    |   modifiers_or_annotations_opt:a CLASS:n IDENTIFIER:b
+    |   modifiers_or_annotations_opt:a CLASS:n IDENTIFIER:b type_parameter_list_opt:f
                     super_opt:c interfaces_opt:d class_body:e
             {: List l = new TypedList(new LinkedList(), ClassMember.class, false);
                l.add(parser.nf.JL5ClassDecl(parser.pos(n, e),
-                        a, b.getIdentifier(), c, d, e));
+                        a, b.getIdentifier(), c, d, e, f));
                RESULT = l; :}
     |   interface_declaration:a
             {: List l = new TypedList(new LinkedList(), ClassMember.class, false);
@@ -215,7 +263,7 @@ override class_member_declaration ::=
     |
     modifiers_or_annotations_opt:a ENUM:n IDENTIFIER:b interfaces_opt:c enum_body:d
         {: List l = new TypedList(new LinkedList(), ClassMember.class, false);
-           l.add(parser.nf.JL5ClassDecl(parser.pos(n, d), a.classicFlags(JL5Flags.ENUM), b.getIdentifier(),  parser.nf.CanonicalTypeNode(parser.pos(n,d), parser.ts.Enum()), c, d));
+           l.add(parser.nf.JL5ClassDecl(parser.pos(n, d), a.classicFlags(JL5Flags.ENUM), b.getIdentifier(),  parser.nf.CanonicalTypeNode(parser.pos(n,d), parser.ts.Enum()), c, d, null));
            RESULT = l; :}
 ;    
    
@@ -246,19 +294,19 @@ override class_body ::=
 ;
 
 override interface_declaration ::=
-    modifiers_or_annotations_opt:a INTERFACE:n IDENTIFIER:b
+    modifiers_or_annotations_opt:a INTERFACE:n IDENTIFIER:b type_parameter_list_opt:f
                 extends_interfaces_opt:c interface_body:d
             {: 
                 a.classicFlags(Flags.INTERFACE);
             RESULT = parser.nf.JL5ClassDecl(
                     parser.pos(n, d), a,
-                        b.getIdentifier(), null, c, d); :}
+                        b.getIdentifier(), null, c, d, f); :}
     |
     modifiers_or_annotations:a AT:c INTERFACE:n IDENTIFIER:b annotation_body:d
     {: List l = new TypedList(new LinkedList(), TypeNode.class, false);
        l.add(parser.nf.CanonicalTypeNode(parser.pos(c,d), parser.ts.Annotation()));
        a.classicFlags(Flags.INTERFACE.set(JL5Flags.ANNOTATION));
-       RESULT = parser.nf.JL5ClassDecl(parser.pos(c,d), a, b.getIdentifier() ,null, l, d); :}
+       RESULT = parser.nf.JL5ClassDecl(parser.pos(c,d), a, b.getIdentifier() ,null, l, d, null); :}
     |
     AT:c INTERFACE:n IDENTIFIER:b annotation_body:d
     {: List l = new TypedList(new LinkedList(), TypeNode.class, false);
@@ -266,7 +314,7 @@ override interface_declaration ::=
        FlagAnnotations fl = new FlagAnnotations();
        fl.classicFlags(Flags.INTERFACE.set(JL5Flags.ANNOTATION));
        fl.annotations(new TypedList(new LinkedList(), AnnotationElem.class, false));
-       RESULT = parser.nf.JL5ClassDecl(parser.pos(c,d), fl, b.getIdentifier(), null, l, d); :}
+       RESULT = parser.nf.JL5ClassDecl(parser.pos(c,d), fl, b.getIdentifier(), null, l, d, null); :}
 ;
 
 override interface_body ::=
@@ -609,24 +657,134 @@ element_value_pair ::=
     {: RESULT = parser.nf.ElementValuePair(parser.pos(a,b), a.getIdentifier(), b); :}
 ;      
 
-/*type_parameter_list_opt ::=
-    {: RESULT = new TypedList(new LinkedList(), Node.class, true); :}
+/*override package_declaration ::=
+    modifiers_or_annotations:a PACKAGE name:b SEMICOLON
+        {: RESULT = b.toPackage(a); :}
+    |
+    PACKAGE name:b SEMICOLON
+        {: FlagAnnotations fl = new FlagAnnotations();
+           fl.classicFlags(Flags.NONE);
+           RESULT = b.toPackage(fl); :}
+;*/
+
+type_variable ::=
+        // ParamTypeNode with id and list of BoundedTypeNodes
+    IDENTIFIER:a type_bound_opt:b
+    {: RESULT = parser.toParamType(parser.pos(a, b), a.getIdentifier(), b); :}
+;
+
+type_bound_opt ::=
+    {: RESULT = null; :}
+    |
+        // BoundedTypeNode
+    type_bound:a
+    {: RESULT = a; :}
+;
+
+type_bound ::=
+        // BoundedTypeNode
+    EXTENDS class_or_interface_type:a additional_bound_list_opt:b
+    {: RESULT = parser.toExtendsType(a, b); :}
+;
+
+additional_bound_list_opt ::=
+    {: RESULT = new TypedList(new LinkedList(), TypeNode.class, false); :}
+    |
+    additional_bound_list:a
+    {: RESULT = a; :}
+;
+
+additional_bound_list ::=
+    additional_bound:a
+    {: List l = new TypedList(new LinkedList(), TypeNode.class, false); 
+       l.add(a);
+       RESULT = l; :}
+    |
+    additional_bound_list:a additional_bound:b
+    {:  a.add(b);
+       RESULT = a; :}
+;
+
+additional_bound ::=
+        // AmbTypeNode
+    AND interface_type:a
+    {: RESULT = a; :}
+;    
+
+type_parameter_list_opt ::=
+    {: RESULT = null; :}
     |
     LT type_parameter_list:a GT
     {: RESULT = a; :}
 ;
 
 type_parameter_list ::=
-    type_parameter:a
-    {: List l = new TypedList(new LinkedList(); Node.class, false); :}
+    type_variable:a
+    {: List l = new TypedList(new LinkedList(), TypeNode.class, false); 
        l.add(a);
        RESULT = l; :}
     |
-    type_parameter_list:a COMMA type_parameter:b
+    type_parameter_list:a COMMA type_variable:b
     {: a.add(b);
        RESULT = a; :}
 ;
 
-type_parameter ::=
-    IDENTIFIER:a bounds_opt:b
-    {: RESULT =*/ 
+type_argument_list_opt ::=
+    {: RESULT = new TypedList(new LinkedList(), TypeNode.class, true); :}
+    |
+    LT type_argument_list:a GT
+    {: RESULT = a; :}
+;
+
+type_argument_list ::=
+    type_argument:a
+    {: List l = new TypedList(new LinkedList(), TypeNode.class, false); 
+       l.add(a);
+       RESULT = l; :}
+    |
+    type_argument_list:a COMMA type_argument:b
+    {: a.add(b);
+       RESULT = a; :}
+;
+    
+
+type_argument ::=
+        // gives AmbTypeNode 
+    reference_type:a
+    {: RESULT = a; :}
+    |
+        // give BoundedTypeNode subtype of TypeNode
+    wildcard:a
+    {: RESULT = a; :}
+;
+
+wildcard ::=
+        // make a into BoundedTypeNode with or without  bound - TypeNodes 
+    QUESTION bound:a
+    {: RESULT = a; :}
+    |
+    QUESTION
+    {: RESULT = parser.toBoundedType(null); :}
+;
+
+/*bounds_opt ::=
+    {: RESULT = null; :}
+    |
+        // gives BoundedTypeNode
+    bound:a 
+    {: RESULT = a; :}
+;*/
+ 
+bound ::=
+        // gives BoundedTypeNode
+    EXTENDS reference_type:a
+    {: RESULT = parser.toExtendsType(a); :}
+    |
+        // gives BoundedTypeNode
+    SUPER reference_type:a
+    {: RESULT = parser.toSuperType(a); :}
+;
+
+/*extend class_or_interface_type ::=
+    name:a LT type_argument_list:b GT
+    {: RESULT = */

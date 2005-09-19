@@ -102,6 +102,14 @@ public class JL5TypeSystem_c extends TypeSystem_c implements JL5TypeSystem {
         return new JL5ParsedClassType_c(this, init, fromSource);
     }
 
+    public GenericParsedClassType createGenericClassType(Source fromSource){
+        return createGenericClassType(defaultClassInitializer(), fromSource);
+    }
+
+    public GenericParsedClassType createGenericClassType(LazyClassInitializer init, Source fromSource){
+        return new GenericParsedClassType_c(this, init, fromSource);
+    }
+
     public void checkClassConformance(ClassType ct) throws SemanticException {
    
         if (JL5Flags.isEnumModifier(ct.flags())){

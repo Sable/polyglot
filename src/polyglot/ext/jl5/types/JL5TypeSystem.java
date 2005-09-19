@@ -11,6 +11,8 @@ public interface JL5TypeSystem extends TypeSystem {
     // TODO: declare any new methods needed
     //polyglot.ext.jl5.types.LazyClassInitializer defaultClassInitializer();
     ParsedClassType createClassType(LazyClassInitializer init, Source fromSource);
+    GenericParsedClassType createGenericClassType(Source fromSource);
+
     ClassType Enum();
     
     ClassType Annotation();

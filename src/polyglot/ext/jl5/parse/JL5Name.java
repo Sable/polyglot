@@ -30,4 +30,14 @@ public class JL5Name extends Name {
         }
         return nf.JL5Field(pos, prefix.toReceiver(), name);
     }
+
+    public PackageNode toPackage(FlagAnnotations fl) {
+        if (prefix == null) {
+            return nf.JL5PackageNode(pos, fl, ts.createPackage(null, name));
+        }
+        else {
+            return nf.JL5PackageNode(pos, fl, ts.createPackage(((JL5Name)prefix).toPackage(fl).package_(), name));
+        }
+    }
+   
 }

@@ -69,13 +69,6 @@ public class JL5ClassDecl_c extends ClassDecl_c implements JL5ClassDecl, Applica
         return reconstruct(superClass, interfaces, body, annots);
     }
 
-    public NodeVisitor buildTypesEnter(TypeBuilder tb) throws SemanticException {
-        tb = (TypeBuilder)super.buildTypesEnter(tb);
-        //JL5ParsedClassType ct = (JL5ParsedClassType)tb.currentClass();
-        //ct.annotations(this.annotations);
-        return tb;
-    }
-   
     protected void disambiguateSuperType(AmbiguityRemover ar) throws SemanticException {
         JL5TypeSystem ts = (JL5TypeSystem)ar.typeSystem();
         if (JL5Flags.isAnnotationModifier(flags())){
@@ -236,8 +229,72 @@ public class JL5ClassDecl_c extends ClassDecl_c implements JL5ClassDecl, Applica
     }
 
 
-    public void prettyPrintHeader(CodeWriter w, PrettyPrinter tr) {
+    public void prettyPrintModifiers(CodeWriter w, PrettyPrinter tr){
         for (Iterator it = annotations.iterator(); it.hasNext(); ){
+            print((AnnotationElem)it.next(), w, tr);
+        }
+        if (flags.isInterface()) {
+            if (JL5Flags.isAnnotationModifier(flags)){
+                w.write(JL5Flags.clearAnnotationModifier(flags).clearInterface().clearAbstract().translate());
+                w.write("@");
+            }
+            else{
+                w.write(flags.clearInterface().clearAbstract().translate());
+            }
+        }
+        else {
+            w.write(flags.translate());
+        }
+
+        if (flags.isInterface()) {
+            w.write("interface ");
+        }
+        else if (JL5Flags.isEnumModifier(flags)){
+        }
+        else {
+            w.write("class ");
+        }
+    }
+    
+    
+    public void prettyPrintName(CodeWriter w, PrettyPrinter tr) {
+        w.write(name);
+    }
+    
+    public void prettyPrintHeaderRest(CodeWriter w, PrettyPrinter tr) {
+        if (superClass() != null && !JL5Flags.isEnumModifier(type.flags())) {
+            w.write(" extends ");
+            print(superClass(), w, tr);
+        }
+
+        if (! interfaces.isEmpty() && !JL5Flags.isAnnotationModifier(type.flags())) {
+            if (flags.isInterface()) {
+                w.write(" extends ");
+            }
+            else {
+                w.write(" implements ");
+            }
+
+            for (Iterator i = interfaces().iterator(); i.hasNext(); ) {
+                TypeNode tn = (TypeNode) i.next();
+                print(tn, w, tr);
+
+                if (i.hasNext()) {
+                    w.write (", ");
+                }
+            }
+        }
+
+        w.write(" {");
+    }
+        
+    public void prettyPrintHeader(CodeWriter w, PrettyPrinter tr) {
+        prettyPrintModifiers(w, tr);
+        prettyPrintName(w, tr);
+        prettyPrintHeaderRest(w, tr);
+
+    }
+    /*    for (Iterator it = annotations.iterator(); it.hasNext(); ){
             print((AnnotationElem)it.next(), w, tr);
         }
         if (flags.isInterface()) {
@@ -288,7 +345,7 @@ public class JL5ClassDecl_c extends ClassDecl_c implements JL5ClassDecl, Applica
         }
 
         w.write(" {");
-    }
+    }*/
 
 
 }
