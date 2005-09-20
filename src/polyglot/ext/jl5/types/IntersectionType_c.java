@@ -2,6 +2,7 @@ package polyglot.ext.jl5.types;
 
 import polyglot.ext.jl.types.*;
 import polyglot.types.*;
+import polyglot.visit.*;
 import polyglot.ast.*;
 import java.util.*;
 import polyglot.util.*;
@@ -105,5 +106,9 @@ public class IntersectionType_c extends ClassType_c implements IntersectionType 
 
     public boolean inStaticContext(){
         return false; // not sure
+    }
+
+    public String translate(Resolver c){
+        return name;
     }
 }

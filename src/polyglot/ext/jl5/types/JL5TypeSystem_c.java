@@ -413,4 +413,12 @@ public class JL5TypeSystem_c extends TypeSystem_c implements JL5TypeSystem {
             throw new SemanticException("method does not override a method from its superclass", md.position());
         }
     }
+    
+    public MethodInstance genericMethodInstance(Position pos, ReferenceType container, Flags flags, Type returnType, String name, List formals, List throwTypes, List typeVars){
+        return new GenericMethodInstance_c(this, pos, container, flags, returnType, name, formals, throwTypes, typeVars);
+    }
+    
+    public ConstructorInstance genericConstructorInstance(Position pos, ClassType container, Flags flags, List formals, List throwTypes, List typeVars){
+        return new GenericConstructorInstance_c(this, pos, container, flags, formals, throwTypes, typeVars);
+    }
 }

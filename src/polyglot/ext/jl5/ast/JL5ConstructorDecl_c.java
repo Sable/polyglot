@@ -88,5 +88,13 @@ public class JL5ConstructorDecl_c extends ConstructorDecl_c implements JL5Constr
         }
         return this;
     }
+
+    public void prettyPrint(CodeWriter w, PrettyPrinter tr){
     
+        for (Iterator it = annotations.iterator(); it.hasNext(); ){
+            print((AnnotationElem)it.next(), w, tr);
+        }
+        
+        super.prettyPrint(w, tr);
+    }
 }

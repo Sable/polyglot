@@ -1,16 +1,20 @@
 package polyglot.ext.jl5.types;
 
 import java.util.*;
-import polyglot.types.*;
-import polyglot.frontend.*;
-import polyglot.util.*;
 
-public class GenericParsedClassType_c extends JL5ParsedClassType_c implements GenericParsedClassType {
+import polyglot.ast.*;
+import polyglot.main.Report;
+import polyglot.types.*;
+import polyglot.util.*;
+import polyglot.visit.*;
+
+public class GenericMethodInstance_c extends JL5MethodInstance_c implements GenericMethodInstance {
 
     protected List typeVariables;
    
-    public GenericParsedClassType_c(TypeSystem ts, LazyClassInitializer init, Source fromSource){
-        super(ts, init, fromSource);
+    public GenericMethodInstance_c(TypeSystem ts, Position pos, ReferenceType container, Flags flags, Type returnType, String name, List formals, List excTypes, List typeVariables){
+        super(ts, pos, container, flags, returnType, name, formals, excTypes);
+        this.typeVariables = typeVariables;
     }
     
     public List typeVariables(){
@@ -39,4 +43,5 @@ public class GenericParsedClassType_c extends JL5ParsedClassType_c implements Ge
         }
         return null;
     }
+
 }

@@ -57,8 +57,73 @@ public class JL5Disamb_c extends Disamb_c implements JL5Disamb {
 
 
     protected Node disambiguateNoPrefix() throws SemanticException {
-        Node result = super.disambiguateNoPrefix();
-        if (result == null){
+        
+        // First try local variables and fields
+        VarInstance vi = c.findVariableSilent(name);
+        
+        if (vi != null && exprOK()){
+            Node n = disambiguateVarInstance(vi);
+            if (n != null) return n;
+        }
+
+        // no variable found. try
+        // might be a generic type parameter
+        ClassType ct = c.currentClass();
+        if (ct instanceof GenericParsedClassType){
+            GenericParsedClassType gt = (GenericParsedClassType)ct;
+            if (gt.hasTypeVariable(name)){
+                IntersectionType it =  gt.getTypeVariable(name);
+                return nf.CanonicalTypeNode(pos, it);
+            }
+        }
+
+        // may be a generic type param for method or constr
+        // header 
+        if (c.inCode()){
+            CodeInstance ci = c.currentCode();
+            System.out.println("current code: "+ci);
+            if (ci instanceof GenericMethodInstance){
+                if (((GenericMethodInstance)ci).hasTypeVariable(name)){
+                    return nf.CanonicalTypeNode(pos, ((GenericMethodInstance)ci).getTypeVariable(name));
+                }
+            }
+            else if (ci instanceof GenericConstructorInstance){
+                if (((GenericConstructorInstance)ci).hasTypeVariable(name)){
+                    return nf.CanonicalTypeNode(pos, ((GenericConstructorInstance)ci).getTypeVariable(name));
+                }
+            }
+        }
+        
+        if (typeOK()) {
+            try {
+                Named n = c.find(name);
+                if (n instanceof Type) {
+                    Type type = (Type) n;
+                    return nf.CanonicalTypeNode(pos, type);
+                }
+            } catch (NoClassException e) {
+                if (!name.equals(e.getClassName())) {
+                    // hmm, something else must have gone wrong
+                    // rethrow the exception
+                    throw e;
+                }
+
+                // couldn't find a type named name. 
+                // It must be a package--ignore the exception.
+            }
+        }
+
+
+        // Must be a package then...
+        if (packageOK()) {
+            return nf.PackageNode(pos, ts.packageForName(name));
+        }
+
+        //return null;
+ 
+        
+        Node result = null;
+        //if (result == null){
             // make special AmbNoPrefix node and return it (it should 
             // extend Expr)
             // later have a pass (after type checking) to deal with these
@@ -67,7 +132,7 @@ public class JL5Disamb_c extends Disamb_c implements JL5Disamb {
             // otherwise as far as I know its an error
                 
             result = ((JL5NodeFactory)nf).JL5AmbExpr(pos, name);
-        }
+        //}
         return result;
     }
 }

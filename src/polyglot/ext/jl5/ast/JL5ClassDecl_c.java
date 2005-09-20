@@ -158,7 +158,7 @@ public class JL5ClassDecl_c extends ClassDecl_c implements JL5ClassDecl, Applica
             // add values method
             FlagAnnotations vmFlags = new FlagAnnotations();
             vmFlags.classicFlags(Flags.PUBLIC.set(Flags.STATIC.set(Flags.FINAL)));
-            JL5MethodDecl valuesMeth = ((JL5NodeFactory)nf).JL5MethodDecl(position(), vmFlags, nf.CanonicalTypeNode(position(), ts.arrayOf(this.type())), "values", Collections.EMPTY_LIST, Collections.EMPTY_LIST,nf.Block(position()));
+            JL5MethodDecl valuesMeth = ((JL5NodeFactory)nf).JL5MethodDecl(position(), vmFlags, nf.CanonicalTypeNode(position(), ts.arrayOf(this.type())), "values", Collections.EMPTY_LIST, Collections.EMPTY_LIST,nf.Block(position()), null);
             
             valuesMeth = valuesMeth.setCompilerGenerated(true);
             
@@ -177,7 +177,7 @@ public class JL5ClassDecl_c extends ClassDecl_c implements JL5ClassDecl, Applica
             FlagAnnotations voFlags = new FlagAnnotations();
             voFlags.classicFlags(Flags.PUBLIC.set(Flags.STATIC));
             
-            JL5MethodDecl valueOfMeth = ((JL5NodeFactory)nf).JL5MethodDecl(position(), voFlags, nf.CanonicalTypeNode(position(), this.type()), "valueOf", formals, Collections.EMPTY_LIST,nf.Block(position()));
+            JL5MethodDecl valueOfMeth = ((JL5NodeFactory)nf).JL5MethodDecl(position(), voFlags, nf.CanonicalTypeNode(position(), this.type()), "valueOf", formals, Collections.EMPTY_LIST,nf.Block(position()), null);
             
             valueOfMeth = valueOfMeth.setCompilerGenerated(true);
             

@@ -41,8 +41,14 @@ public class JL5NodeFactory_c extends NodeFactory_c implements JL5NodeFactory {
         JL5ClassBody n = new JL5ClassBody_c(pos, members);
         return n;
     }
-    public JL5ConstructorDecl JL5ConstructorDecl(Position pos, FlagAnnotations flags, String name, List formals, List throwTypes, Block body){
-        JL5ConstructorDecl n = new JL5ConstructorDecl_c(pos, flags, name, formals, throwTypes, body);
+    public JL5ConstructorDecl JL5ConstructorDecl(Position pos, FlagAnnotations flags, String name, List formals, List throwTypes, Block body, List typeParams){
+        JL5ConstructorDecl n;
+        if (typeParams == null){
+            n = new JL5ConstructorDecl_c(pos, flags, name, formals, throwTypes, body);
+        }
+        else {
+            n = new JL5GenericConstructorDecl_c(pos, flags, name, formals, throwTypes, body, typeParams);
+        }
         return n;
     }
     public JL5Block JL5Block(Position pos, List statements){
@@ -84,8 +90,14 @@ public class JL5NodeFactory_c extends NodeFactory_c implements JL5NodeFactory {
         return new JL5Disamb_c();
     }
     
-    public JL5MethodDecl JL5MethodDecl(Position pos, FlagAnnotations flags, TypeNode returnType, String name, List formals, List throwTypes, Block body){
-        JL5MethodDecl n = new JL5MethodDecl_c(pos, flags, returnType, name, formals, throwTypes, body);
+    public JL5MethodDecl JL5MethodDecl(Position pos, FlagAnnotations flags, TypeNode returnType, String name, List formals, List throwTypes, Block body, List typeParams){
+        JL5MethodDecl n;
+        if (typeParams == null){
+            n = new JL5MethodDecl_c(pos, flags, returnType, name, formals, throwTypes, body);
+        }
+        else {
+            n = new JL5GenericMethodDecl_c(pos, flags, returnType, name, formals, throwTypes, body, typeParams);
+        }
         return n;
     }
     

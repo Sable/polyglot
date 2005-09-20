@@ -43,5 +43,8 @@ public interface JL5TypeSystem extends TypeSystem {
     Flags flagsForBits(int bits);
     
     public void checkAnnotationApplicability(AnnotationElem annotation, Node n) throws SemanticException;
+   
+    public MethodInstance genericMethodInstance(Position pos, ReferenceType container, Flags flags, Type returnType, String name, List formals, List throwTypes, List typeVars);
     
+    public ConstructorInstance genericConstructorInstance(Position pos, ClassType container, Flags flags, List formals, List throwTypes, List typeVars);
 }

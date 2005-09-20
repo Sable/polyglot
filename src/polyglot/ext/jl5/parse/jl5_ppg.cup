@@ -676,13 +676,23 @@ method_header ::=
     modifiers_or_annotations_opt:a type:b IDENTIFIER:c LPAREN formal_parameter_list_opt:d RPAREN:g dims_opt:e throws_opt:f {:
                                                                                                                            RESULT = parser.nf.JL5MethodDecl(parser.pos(b, g, c), a,
                 parser.array(b, e.intValue()), c.getIdentifier(),
-                d, f, null); 
+                d, f, null, null); 
                                                                                                                            :}
  |  modifiers_or_annotations_opt:a VOID:b IDENTIFIER:c LPAREN formal_parameter_list_opt:d RPAREN:g throws_opt:f {:
                                                                                                                 RESULT = parser.nf.JL5MethodDecl(parser.pos(b, g, c), a,
                 parser.nf.CanonicalTypeNode(parser.pos(b),
-                parser.ts.Void()), c.getIdentifier(), d, f, null); 
-                                                                                                                :};
+                parser.ts.Void()), c.getIdentifier(), d, f, null, null); 
+                                                                                                                :}
+ |  modifiers_or_annotations_opt:a LT type_parameter_list:h GT type:b IDENTIFIER:c LPAREN formal_parameter_list_opt:d RPAREN:g dims_opt:e throws_opt:f {:
+                                                                                                                                                       RESULT = parser.nf.JL5MethodDecl(parser.pos(b, g, c), a,
+                parser.array(b, e.intValue()), c.getIdentifier(),
+                d, f, null, h); 
+                                                                                                                                                       :}
+ |  modifiers_or_annotations_opt:a LT type_parameter_list:h GT VOID:b IDENTIFIER:c LPAREN formal_parameter_list_opt:d RPAREN:g throws_opt:f {:
+                                                                                                                                            RESULT = parser.nf.JL5MethodDecl(parser.pos(b, g, c), a,
+                parser.nf.CanonicalTypeNode(parser.pos(b),
+                parser.ts.Void()), c.getIdentifier(), d, f, null, h); 
+                                                                                                                                            :};
 
 formal_parameter_list_opt ::=
     {:
@@ -740,8 +750,11 @@ static_initializer ::=
 
 constructor_declaration ::=
     modifiers_or_annotations_opt:m simple_name:a LPAREN formal_parameter_list_opt:b RPAREN throws_opt:c constructor_body:d {:
-                                                                                                                           RESULT = parser.nf.JL5ConstructorDecl(parser.pos(a, d), m, a.toString(), b, c, d); 
-                                                                                                                           :};
+                                                                                                                           RESULT = parser.nf.JL5ConstructorDecl(parser.pos(a, d), m, a.toString(), b, c, d, null); 
+                                                                                                                           :}
+ |  modifiers_or_annotations_opt:m LT type_parameter_list:e GT simple_name:a LPAREN formal_parameter_list_opt:b RPAREN throws_opt:c constructor_body:d {:
+                                                                                                                                                       RESULT = parser.nf.JL5ConstructorDecl(parser.pos(a, d), m, a.toString(), b, c, d, e); 
+                                                                                                                                                       :};
 
 constructor_body ::=
     LBRACE:n explicit_constructor_invocation:a block_statements:b RBRACE:d {:

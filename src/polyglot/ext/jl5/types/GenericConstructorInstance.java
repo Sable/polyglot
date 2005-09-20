@@ -1,8 +1,9 @@
 package polyglot.ext.jl5.types;
 
+import polyglot.types.*;
 import java.util.*;
 
-public interface GenericParsedClassType extends JL5ParsedClassType {
+public interface GenericConstructorInstance extends ConstructorInstance{
 
     List typeVariables();
     void addTypeVariable(IntersectionType type);

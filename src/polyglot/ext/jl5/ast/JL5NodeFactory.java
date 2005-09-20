@@ -20,7 +20,7 @@ public interface JL5NodeFactory extends NodeFactory {
     public EnumConstantDecl EnumConstantDecl(Position pos, FlagAnnotations flags, String name, List args);
     public ClassDecl JL5ClassDecl(Position pos, FlagAnnotations flags, String name, TypeNode superType, List interfaces, ClassBody body, List paramTypes);
     public JL5ClassBody JL5ClassBody(Position pos, List members);
-    public JL5ConstructorDecl JL5ConstructorDecl(Position pos, FlagAnnotations flags, String name, List formals, List throwTypes, Block body);
+    public JL5ConstructorDecl JL5ConstructorDecl(Position pos, FlagAnnotations flags, String name, List formals, List throwTypes, Block body, List typeParams);
     public JL5Block JL5Block(Position pos, List statements);
     public JL5New JL5New(Position pos, Expr qualifier, TypeNode tn, List arguments, ClassBody body);
     public JL5New JL5New(Position pos, TypeNode tn, List arguments);
@@ -38,7 +38,7 @@ public interface JL5NodeFactory extends NodeFactory {
      */
     public JL5AmbExpr JL5AmbExpr(Position pos, String name);
     
-    public JL5MethodDecl JL5MethodDecl(Position pos, FlagAnnotations flags, TypeNode returnType, String name, List formals, List throwTypes, Block body);
+    public JL5MethodDecl JL5MethodDecl(Position pos, FlagAnnotations flags, TypeNode returnType, String name, List formals, List throwTypes, Block body, List typeParams);
 
 
     public AnnotationElemDecl AnnotationElemDecl(Position pos, FlagAnnotations flags, TypeNode type, String name, Expr def);
