@@ -344,6 +344,7 @@ OctalEscape = \\ [0-7]
     ">>="  { return op(sym.RSHIFTEQ);   }
     ">>>=" { return op(sym.URSHIFTEQ);  }
     "@"    { return op(sym.AT);         }
+    "..."    { return op(sym.ELLIPSIS);         }
 
     /* 3.10.1 Integer Literals */
     {OctalNumeral} [lL]          { Token t = long_lit(chop(), 8);
