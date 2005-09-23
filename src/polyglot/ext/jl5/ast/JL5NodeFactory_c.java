@@ -156,6 +156,49 @@ public class JL5NodeFactory_c extends NodeFactory_c implements JL5NodeFactory {
         return n;
     }
     
+    public AmbGenericQualifierNode AmbGenericQualifierNode(Position pos, QualifierNode qual, String name, List args){
+        AmbGenericQualifierNode n = new AmbGenericQualifierNode_c(pos, qual, name, args);
+        return n;
+    }
+    
+    public AmbGenericTypeNode AmbGenericTypeNode(Position pos, QualifierNode qual, String name, List args){
+        AmbGenericTypeNode n = new AmbGenericTypeNode_c(pos, qual, name, args);
+        return n;
+    }
+    
+    public GenericConstructorCall GenericThisCall(Position pos, List args, List typeArgs){
+        return GenericThisCall(pos, null, args, typeArgs);
+    }
+
+    public GenericConstructorCall GenericThisCall(Position pos, Expr outer, List args, List typeArgs){
+        GenericConstructorCall n = new GenericConstructorCall_c(pos, ConstructorCall.THIS, outer, args, typeArgs);
+        return n;
+    }
+
+    public GenericConstructorCall GenericSuperCall(Position pos, List args, List typeArgs){
+        return GenericSuperCall(pos, null, args, typeArgs);
+    }
+
+    public GenericConstructorCall GenericSuperCall(Position pos, Expr outer, List args, List typeArgs){
+        GenericConstructorCall n = new GenericConstructorCall_c(pos, ConstructorCall.SUPER, outer, args, typeArgs);
+        return n;
+    }
+
+    public GenericCall GenericCall(Position pos, Receiver target, String name, List args, List typeArgs){
+        GenericCall n = new GenericCall_c(pos, target, name, args, typeArgs);
+        return n;
+    }
+
+    public GenericNew GenericNew(Position pos, Expr qualifier, TypeNode tn, List arguments, ClassBody body, List typeArgs){
+        GenericNew n = new GenericNew_c(pos, qualifier, tn, arguments, body, typeArgs);
+        return n;
+    }
+    
+    public GenericNew GenericNew(Position pos, TypeNode tn, List arguments, ClassBody body, List typeArgs){
+        GenericNew n = new GenericNew_c(pos, null, tn, arguments, body, typeArgs);
+        return n;
+    }
+
     
     // TODO:  Override factory methods for overriden AST nodes.
     // TODO:  Override factory methods for AST nodes with new extension nodes.

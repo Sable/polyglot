@@ -60,6 +60,25 @@ public interface JL5NodeFactory extends NodeFactory {
     public ParamTypeNode ParamTypeNode(Position pos, BoundedTypeNode.Kind kind, List bounds, String id);
     
     public BoundedTypeNode BoundedTypeNode(Position pos, BoundedTypeNode.Kind kind, List bounds);
+
+    public AmbGenericQualifierNode AmbGenericQualifierNode(Position pos, QualifierNode qual, String name, List args);
     
+    public AmbGenericTypeNode AmbGenericTypeNode(Position pos, QualifierNode qual, String name, List args);
+
+    public GenericConstructorCall GenericThisCall(Position pos, List args, List typeArgs);
+
+    public GenericConstructorCall GenericThisCall(Position pos, Expr outer, List args, List typeArgs);
+
+    public GenericConstructorCall GenericSuperCall(Position pos, List args, List typeArgs);
+
+    public GenericConstructorCall GenericSuperCall(Position pos, Expr outer, List args, List typeArgs);
+
+    public GenericCall GenericCall(Position pos, Receiver target, String name, List args, List typeArgs);
+
+    public GenericNew GenericNew(Position pos, Expr qualifier, TypeNode tn, List arguments, ClassBody body, List typeArgs);
+    
+    public GenericNew GenericNew(Position pos, TypeNode tn, List arguments, ClassBody body, List typeArgs);
+
+
 }
 

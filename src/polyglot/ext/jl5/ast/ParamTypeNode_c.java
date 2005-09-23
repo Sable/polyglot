@@ -3,6 +3,7 @@ package polyglot.ext.jl5.ast;
 import polyglot.util.*;
 import java.util.*;
 import polyglot.visit.*;
+import polyglot.ast.*;
 
 public class ParamTypeNode_c extends BoundedTypeNode_c implements ParamTypeNode {
     protected String id;
@@ -24,6 +25,7 @@ public class ParamTypeNode_c extends BoundedTypeNode_c implements ParamTypeNode 
 
     public void prettyPrint(CodeWriter w, PrettyPrinter tr){
         w.write(id);
+        //print(id, w, tr);
         if (boundsList() != null && !boundsList().isEmpty()){
             w.write(" extends ");
             prettyPrintBoundsList(w, tr);
