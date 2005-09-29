@@ -111,4 +111,8 @@ public class IntersectionType_c extends ClassType_c implements IntersectionType 
     public String translate(Resolver c){
         return name;
     }
+
+    public String toString(){
+        return name+":"+bounds;
+    }
 }

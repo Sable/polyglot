@@ -81,7 +81,6 @@ public class JL5Disamb_c extends Disamb_c implements JL5Disamb {
         // header 
         if (c.inCode()){
             CodeInstance ci = c.currentCode();
-            System.out.println("current code: "+ci);
             if (ci instanceof GenericMethodInstance){
                 if (((GenericMethodInstance)ci).hasTypeVariable(name)){
                     return nf.CanonicalTypeNode(pos, ((GenericMethodInstance)ci).getTypeVariable(name));

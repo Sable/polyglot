@@ -34,8 +34,90 @@ public class JL5TypeSystem_c extends TypeSystem_c implements JL5TypeSystem {
             return ANNOTATION_ = load("java.lang.annotation.Annotation");
         }
     }
+  
+    protected ClassType INTEGER_WRAPPER;
+    protected ClassType BYTE_WRAPPER;
+    protected ClassType SHORT_WRAPPER;
+    protected ClassType CHARACTER_WRAPPER;
+    protected ClassType BOOLEAN_WRAPPER;
+    protected ClassType LONG_WRAPPER;
+    protected ClassType DOUBLE_WRAPPER;
+    protected ClassType FLOAT_WRAPPER;
+
+    public ClassType IntegerWrapper(){
+        if (INTEGER_WRAPPER != null){
+            return INTEGER_WRAPPER;
+        }   
+        else {
+            return INTEGER_WRAPPER = load("java.lang.Integer");
+        }
+    }
+    
+    public ClassType ByteWrapper(){
+        if (BYTE_WRAPPER != null){
+            return BYTE_WRAPPER;
+        }   
+        else {
+            return BYTE_WRAPPER = load("java.lang.Byte");
+        }
+    }
+    
+    public ClassType ShortWrapper(){
+        if (SHORT_WRAPPER != null){
+            return SHORT_WRAPPER;
+        }   
+        else {
+            return SHORT_WRAPPER = load("java.lang.Short");
+        }
+    }
     
 
+    public ClassType BooleanWrapper(){
+        if (BOOLEAN_WRAPPER != null){
+            return BOOLEAN_WRAPPER;
+        }   
+        else {
+            return BOOLEAN_WRAPPER = load("java.lang.Boolean");
+        }
+    }
+    
+    public ClassType CharacterWrapper(){
+        if (CHARACTER_WRAPPER != null){
+            return CHARACTER_WRAPPER;
+        }   
+        else {
+            return CHARACTER_WRAPPER = load("java.lang.Character");
+        }
+    }
+    
+    public ClassType LongWrapper(){
+        if (LONG_WRAPPER != null){
+            return LONG_WRAPPER;
+        }   
+        else {
+            return LONG_WRAPPER = load("java.lang.Long");
+        }
+    }
+    
+    public ClassType DoubleWrapper(){
+        if (DOUBLE_WRAPPER != null){
+            return DOUBLE_WRAPPER;
+        }   
+        else {
+            return DOUBLE_WRAPPER = load("java.lang.Double");
+        }
+    }
+    
+    public ClassType FloatWrapper(){
+        if (FLOAT_WRAPPER != null){
+            return FLOAT_WRAPPER;
+        }   
+        else {
+            return FLOAT_WRAPPER = load("java.lang.Float");
+        }
+    }
+    
+    
     protected final Flags TOP_LEVEL_CLASS_FLAGS = JL5Flags.setAnnotationModifier(JL5Flags.setEnumModifier(super.TOP_LEVEL_CLASS_FLAGS));
 
     protected final Flags MEMBER_CLASS_FLAGS = JL5Flags.setAnnotationModifier(JL5Flags.setEnumModifier(super.MEMBER_CLASS_FLAGS));
@@ -110,6 +192,10 @@ public class JL5TypeSystem_c extends TypeSystem_c implements JL5TypeSystem {
         return new GenericParsedClassType_c(this, init, fromSource);
     }
 
+    protected PrimitiveType createPrimitive(PrimitiveType.Kind kind){
+        return new JL5PrimitiveType_c(this, kind);
+    }
+    
     public void checkClassConformance(ClassType ct) throws SemanticException {
    
         if (JL5Flags.isEnumModifier(ct.flags())){

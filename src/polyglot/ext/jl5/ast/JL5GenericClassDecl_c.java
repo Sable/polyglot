@@ -11,7 +11,7 @@ import polyglot.ext.jl5.visit.*;
 import polyglot.visit.*;
 import polyglot.types.*;
 
-public class JL5GenericClassDecl_c extends JL5ClassDecl_c implements JL5GenericClassDecl {
+public class JL5GenericClassDecl_c extends JL5ClassDecl_c implements JL5GenericClassDecl, GenericTypeHandle{
 
     protected List paramTypes;
     
@@ -83,7 +83,14 @@ public class JL5GenericClassDecl_c extends JL5ClassDecl_c implements JL5GenericC
             ParamTypeNode n = (ParamTypeNode)it.next();
             IntersectionType iType = new IntersectionType_c(tb.typeSystem());
             iType.name(n.id());
-            iType.bounds(n.boundsList());
+            
+            ArrayList typeList = new ArrayList();
+            if (n.boundsList() != null){
+                for (int i = 0; i < n.boundsList().size(); i++){//Iterator typesIt = n.boundsList().iterator(); typesIt.hasNext(); ){
+                    typeList.add(tb.typeSystem().unknownType(position()));
+                }
+            }
+            iType.bounds(typeList);
             type.addTypeVariable(iType);
         }
         if (type != null){
@@ -91,7 +98,30 @@ public class JL5GenericClassDecl_c extends JL5ClassDecl_c implements JL5GenericC
         }
         return this;
     }
- 
+
+    public Node handleGenericType(GenericTypeHandler ac) throws SemanticException {
+        GenericParsedClassType genType = (GenericParsedClassType)type();
+        // for each param type - create intersection type and 
+        // add to type
+        for (Iterator it = paramTypes.iterator(); it.hasNext(); ){
+            ParamTypeNode n = (ParamTypeNode)it.next();
+            if (genType.hasTypeVariable(n.id())){
+                IntersectionType iType = genType.getTypeVariable(n.id());
+                ArrayList typeList = new ArrayList();
+                if (n.boundsList() != null){
+                    for (Iterator typesIt = n.boundsList().iterator(); typesIt.hasNext(); ){
+                        typeList.add(((TypeNode)typesIt.next()).type());
+                    }
+                }
+                iType.bounds(typeList);
+            }
+        }
+        if (genType != null){
+            return type(genType).flags(genType.flags());
+        }
+        return this;
+    }
+    
     public void prettyPrintHeader(CodeWriter w, PrettyPrinter tr) {
         prettyPrintModifiers(w, tr);
         prettyPrintName(w, tr);

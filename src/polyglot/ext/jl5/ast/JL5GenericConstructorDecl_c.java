@@ -76,7 +76,34 @@ public class JL5GenericConstructorDecl_c extends JL5ConstructorDecl_c implements
 
         return constructorInstance(ci);
     }
-    
+   
+    protected ConstructorInstance makeConstructorInstance(ClassType ct, TypeSystem ts) throws SemanticException {
+
+        List argTypes = new LinkedList();
+        List excTypes = new LinkedList();
+
+        for (Iterator i = formals.iterator(); i.hasNext(); ) {
+            Formal f = (Formal) i.next();
+            argTypes.add(f.declType());
+        }
+
+        for (Iterator i = throwTypes().iterator(); i.hasNext(); ) {
+            TypeNode tn = (TypeNode) i.next();
+            excTypes.add(tn.type());
+        }
+        
+        List typeVars = new ArrayList(paramTypes.size());
+        for (Iterator it = paramTypes.iterator(); it.hasNext(); ){
+            ParamTypeNode n = (ParamTypeNode)it.next();
+            IntersectionType iType = new IntersectionType_c(ts);
+            iType.name(n.id());
+            iType.bounds(n.boundsList());
+            typeVars.add(iType);
+        }
+
+        return ((JL5TypeSystem)ts).genericConstructorInstance(position(), ct, flags, argTypes, excTypes, typeVars);
+    }
+                            
     public void prettyPrintHeader(CodeWriter w, PrettyPrinter tr) {
         w.begin(0);
         w.write(flags().translate());

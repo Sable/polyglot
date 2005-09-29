@@ -17,6 +17,15 @@ public interface JL5TypeSystem extends TypeSystem {
     
     ClassType Annotation();
 
+    ClassType IntegerWrapper();
+    ClassType ByteWrapper();
+    ClassType ShortWrapper();
+    ClassType BooleanWrapper();
+    ClassType CharacterWrapper();
+    ClassType LongWrapper();
+    ClassType DoubleWrapper();
+    ClassType FloatWrapper();
+
     EnumInstance enumInstance(Position pos, ClassType ct, Flags f,  String name);
     AnnotationElemInstance annotationElemInstance(Position pos, ClassType ct, Flags f, Type type,  String name, boolean hasDefault);
 

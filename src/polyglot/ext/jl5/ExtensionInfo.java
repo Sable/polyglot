@@ -31,6 +31,8 @@ public class ExtensionInfo extends polyglot.ext.jl.ExtensionInfo {
     public static final polyglot.frontend.Pass.ID ENUM_SWITCH_DISAMBIGUATE = new polyglot.frontend.Pass.ID("enum-switch-disambiguate");
     public static final polyglot.frontend.Pass.ID TYPE_CHECK_ALL = new polyglot.frontend.Pass.ID("type-check-all");
     public static final polyglot.frontend.Pass.ID APPLICATION_CHECK = new polyglot.frontend.Pass.ID("application-check");
+    public static final polyglot.frontend.Pass.ID GENERIC_TYPE_HANDLER = new polyglot.frontend.Pass.ID("generic-type-handler");
+    public static final polyglot.frontend.Pass.ID GENERIC_TYPE_ALL = new polyglot.frontend.Pass.ID("generic-type-all");
     
     public String defaultFileExtension() {
         return "java";
@@ -62,6 +64,9 @@ public class ExtensionInfo extends polyglot.ext.jl.ExtensionInfo {
         
         replacePass(passes, Pass.BUILD_TYPES, new VisitorPass(Pass.BUILD_TYPES, job, new JL5TypeBuilder(job, ts, nf)));
         
+        beforePass(passes, Pass.CLEAN_SIGS, new VisitorPass(GENERIC_TYPE_HANDLER, job, new JL5AmbiguityRemover(job, ts, nf, JL5AmbiguityRemover.TYPE_VARS)));
+        
+        //afterPass(passes, GENERIC_TYPE_HANDLER, new BarrierPass(GENERIC_TYPE_ALL, job));
         afterPass(passes, Pass.TYPE_CHECK, new BarrierPass(TYPE_CHECK_ALL, job));
         beforePass(passes, Pass.REACH_CHECK, new VisitorPass(APPLICATION_CHECK, job, new ApplicationChecker(job, ts, nf)));
 

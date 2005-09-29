@@ -6,9 +6,10 @@ import polyglot.util.*;
 import polyglot.types.*;
 import polyglot.ast.*;
 import polyglot.ext.jl5.types.*;
+import polyglot.ext.jl5.visit.*;
 import polyglot.visit.*;
 
-public class JL5GenericMethodDecl_c extends JL5MethodDecl_c implements JL5GenericMethodDecl {
+public class JL5GenericMethodDecl_c extends JL5MethodDecl_c implements JL5GenericMethodDecl{//, GenericTypeHandle {
 
     protected List paramTypes;
     
@@ -70,13 +71,93 @@ public class JL5GenericMethodDecl_c extends JL5MethodDecl_c implements JL5Generi
             ParamTypeNode n = (ParamTypeNode)it.next();
             IntersectionType iType = new IntersectionType_c(tb.typeSystem());
             iType.name(n.id());
-            iType.bounds(n.boundsList());
+            ArrayList typeList = new ArrayList();
+            if (n.boundsList() != null){
+                for (int i = 0; i < n.boundsList().size(); i++){//Iterator typesIt = n.boundsList().iterator(); typesIt.hasNext(); ){
+                    typeList.add(tb.typeSystem().unknownType(position()));
+                }
+            }
+            iType.bounds(typeList);
             typeVars.add(iType);
         }
 
         MethodInstance mi = ts.genericMethodInstance(position(), ts.Object(), Flags.NONE, ts.unknownType(position()), name, l, m, typeVars);
 
         return methodInstance(mi);
+    }
+    
+    public NodeVisitor disambiguateEnter(AmbiguityRemover ar) throws SemanticException {
+        if (ar.kind() == JL5AmbiguityRemover.TYPE_VARS) {
+            return ar.bypass(formals).bypass(returnType).bypass(throwTypes).bypass(body);
+        }
+        else {
+            return super.disambiguateEnter(ar);
+        }
+    }
+    public Node disambiguate(AmbiguityRemover ar) throws SemanticException {
+        if (ar.kind() == JL5AmbiguityRemover.TYPE_VARS){
+            GenericMethodInstance gmi = (GenericMethodInstance)methodInstance();
+            // for each param type - create intersection type and 
+            // add to type
+            for (Iterator it = paramTypes.iterator(); it.hasNext(); ){
+                ParamTypeNode n = (ParamTypeNode)it.next();
+                if (gmi.hasTypeVariable(n.id())){
+                    IntersectionType iType = gmi.getTypeVariable(n.id());
+                    ArrayList typeList = new ArrayList();
+                    if (n.boundsList() != null){
+                        for (Iterator typesIt = n.boundsList().iterator(); typesIt.hasNext(); ){
+                            typeList.add(((TypeNode)typesIt.next()).type());
+                        }
+                    }
+                    iType.bounds(typeList);
+                }
+            }
+            return this.methodInstance(gmi);
+        }
+        else {
+            return super.disambiguate(ar);
+        }
+    }
+    
+   
+    protected MethodInstance makeMethodInstance(ClassType ct, TypeSystem ts) throws SemanticException {
+        List argTypes = new LinkedList();
+        List excTypes = new LinkedList();
+
+        for (Iterator i = formals.iterator(); i.hasNext(); ) {
+            Formal f = (Formal) i.next();
+            argTypes.add(f.declType());
+        }
+
+        for (Iterator i = throwTypes().iterator(); i.hasNext(); ) {
+            TypeNode tn = (TypeNode) i.next();
+            excTypes.add(tn.type());
+        }
+
+        Flags flags = this.flags;
+
+        if (ct.flags().isInterface()) {
+            flags = flags.Public().Abstract();
+        }
+       
+        List typeVars = new ArrayList(paramTypes.size());
+        for (Iterator it = paramTypes.iterator(); it.hasNext(); ){
+            ParamTypeNode n = (ParamTypeNode)it.next();
+            IntersectionType iType = new IntersectionType_c(ts);
+            iType.name(n.id());
+            
+            ArrayList typeList = new ArrayList();
+            if (n.boundsList() != null){
+                for (Iterator typesIt = n.boundsList().iterator(); typesIt.hasNext(); ){
+                    typeList.add(((TypeNode)typesIt.next()).type());
+                }
+            }
+            iType.bounds(typeList);
+            //iType.bounds(n.boundsList());
+            typeVars.add(iType);
+        }
+
+        return ((JL5TypeSystem)ts).genericMethodInstance(position(), ct, flags, returnType.type(), name, argTypes, excTypes, typeVars);
     }
     
     public void prettyPrintHeader(Flags flags, CodeWriter w, PrettyPrinter tr) {

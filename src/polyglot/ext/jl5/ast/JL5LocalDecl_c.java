@@ -36,8 +36,8 @@ public class JL5LocalDecl_c extends LocalDecl_c implements JL5LocalDecl, Applica
     protected LocalDecl reconstruct(TypeNode type, Expr init, List annotations){
         if (this.type() != type || this.init() != init ||  !CollectionUtil.equals(annotations, this.annotations)){
             JL5LocalDecl_c n = (JL5LocalDecl_c)copy();
-            n.type(type);
-            n.init(init);
+            n.type = type;
+            n.init = init;
             n.annotations = annotations;
             return n;
         }
