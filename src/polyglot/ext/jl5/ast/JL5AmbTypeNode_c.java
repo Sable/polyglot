@@ -5,11 +5,11 @@ import polyglot.ext.jl.ast.*;
 import polyglot.util.*;
 import java.util.*;
 
-public class AmbGenericTypeNode_c extends AmbTypeNode_c implements AmbGenericTypeNode {
+public class JL5AmbTypeNode_c extends AmbTypeNode_c implements JL5AmbTypeNode {
 
     protected List typeArguments;
 
-    public AmbGenericTypeNode_c(Position pos, QualifierNode qual, String name, List typeArguments) {
+    public JL5AmbTypeNode_c(Position pos, QualifierNode qual, String name, List typeArguments) {
         super(pos, qual, name);
         this.typeArguments = typeArguments;
     }
@@ -18,8 +18,8 @@ public class AmbGenericTypeNode_c extends AmbTypeNode_c implements AmbGenericTyp
         return typeArguments;
     }
     
-    public AmbGenericTypeNode typeArguments(List args){
-        AmbGenericTypeNode_c n = (AmbGenericTypeNode_c) copy();
+    public JL5AmbTypeNode typeArguments(List args){
+        JL5AmbTypeNode_c n = (JL5AmbTypeNode_c) copy();
         n.typeArguments = args;
         return n;
     }

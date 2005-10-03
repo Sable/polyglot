@@ -5,11 +5,11 @@ import polyglot.ext.jl.ast.*;
 import java.util.*;
 import polyglot.util.*;
 
-public class GenericConstructorCall_c extends ConstructorCall_c implements GenericConstructorCall {
+public class JL5ConstructorCall_c extends ConstructorCall_c implements JL5ConstructorCall {
 
     protected List typeArguments;
 
-    public GenericConstructorCall_c(Position pos, Kind kind, Expr qualifier, List arguments, List typeArguments){
+    public JL5ConstructorCall_c(Position pos, Kind kind, Expr qualifier, List arguments, List typeArguments){
         super(pos, kind, qualifier, arguments);
         this.typeArguments = typeArguments;
     }
@@ -18,8 +18,8 @@ public class GenericConstructorCall_c extends ConstructorCall_c implements Gener
         return typeArguments;
     }
     
-    public GenericConstructorCall typeArguments(List args){
-        GenericConstructorCall_c n = (GenericConstructorCall_c) copy();
+    public JL5ConstructorCall typeArguments(List args){
+        JL5ConstructorCall_c n = (JL5ConstructorCall_c) copy();
         n.typeArguments = args;
         return n;
     }

@@ -3,9 +3,8 @@ package polyglot.ext.jl5.ast;
 import polyglot.ast.*;
 import java.util.*;
 
-public interface GenericNew extends JL5New {
+public interface JL5Call extends Call {
 
     List typeArguments();
-    GenericNew typeArguments(List args);
-    
+    JL5Call typeArguments(List args);
 }

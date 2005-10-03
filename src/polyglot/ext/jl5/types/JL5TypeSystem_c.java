@@ -184,14 +184,6 @@ public class JL5TypeSystem_c extends TypeSystem_c implements JL5TypeSystem {
         return new JL5ParsedClassType_c(this, init, fromSource);
     }
 
-    public GenericParsedClassType createGenericClassType(Source fromSource){
-        return createGenericClassType(defaultClassInitializer(), fromSource);
-    }
-
-    public GenericParsedClassType createGenericClassType(LazyClassInitializer init, Source fromSource){
-        return new GenericParsedClassType_c(this, init, fromSource);
-    }
-
     protected PrimitiveType createPrimitive(PrimitiveType.Kind kind){
         return new JL5PrimitiveType_c(this, kind);
     }
@@ -500,11 +492,11 @@ public class JL5TypeSystem_c extends TypeSystem_c implements JL5TypeSystem {
         }
     }
     
-    public MethodInstance genericMethodInstance(Position pos, ReferenceType container, Flags flags, Type returnType, String name, List formals, List throwTypes, List typeVars){
-        return new GenericMethodInstance_c(this, pos, container, flags, returnType, name, formals, throwTypes, typeVars);
+    public MethodInstance methodInstance(Position pos, ReferenceType container, Flags flags, Type returnType, String name, List formals, List throwTypes, List typeVars){
+        return new JL5MethodInstance_c(this, pos, container, flags, returnType, name, formals, throwTypes, typeVars);
     }
     
-    public ConstructorInstance genericConstructorInstance(Position pos, ClassType container, Flags flags, List formals, List throwTypes, List typeVars){
-        return new GenericConstructorInstance_c(this, pos, container, flags, formals, throwTypes, typeVars);
+    public ConstructorInstance constructorInstance(Position pos, ClassType container, Flags flags, List formals, List throwTypes, List typeVars){
+        return new JL5ConstructorInstance_c(this, pos, container, flags, formals, throwTypes, typeVars);
     }
 }

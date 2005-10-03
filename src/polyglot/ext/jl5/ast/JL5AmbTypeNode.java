@@ -3,8 +3,8 @@ package polyglot.ext.jl5.ast;
 import polyglot.ast.*;
 import java.util.*;
 
-public interface GenericCall extends Call {
+public interface JL5AmbTypeNode extends AmbTypeNode {
 
     List typeArguments();
-    GenericCall typeArguments(List args);
+    JL5AmbTypeNode typeArguments(List args);
 }

@@ -16,7 +16,8 @@ public class JL5ParsedClassType_c extends ParsedClassType_c implements JL5Parsed
   
     // these are annotations that have been declared on (applied to) the type
     protected List annotations;
-    
+    protected List typeVariables;
+
     public JL5ParsedClassType_c( TypeSystem ts, LazyClassInitializer init, Source fromSource){
         super(ts, init, fromSource);
     }
@@ -131,6 +132,38 @@ public class JL5ParsedClassType_c extends ParsedClassType_c implements JL5Parsed
             if (!typeSystem().isSubtype(this, (Type)next)) return false;
         }
         return true;
+    }
+
+     public List typeVariables(){
+        return typeVariables;
+    }
+    
+    public void addTypeVariable(IntersectionType type){
+        if (typeVariables == null){
+            typeVariables = new TypedList(new LinkedList(), IntersectionType.class, false);
+        }
+        typeVariables.add(type);
+    }
+
+    public boolean hasTypeVariable(String name){
+        for (Iterator it = typeVariables.iterator(); it.hasNext(); ){
+            IntersectionType iType = (IntersectionType)it.next();
+            if (iType.name().equals(name)) return true;
+        }
+        return false;
+    }
+
+    public IntersectionType getTypeVariable(String name){
+        for (Iterator it = typeVariables.iterator(); it.hasNext(); ){
+            IntersectionType iType = (IntersectionType)it.next();
+            if (iType.name().equals(name)) return iType;
+        }
+        return null;
+    }
+
+    public boolean isGeneric(){
+        if ((typeVariables != null) && !typeVariables.isEmpty()) return true;
+        return false;
     }
 }
 

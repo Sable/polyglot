@@ -22,9 +22,9 @@ import polyglot.ext.jl.ast.*;
 public class JL5ClassDecl_c extends ClassDecl_c implements JL5ClassDecl, ApplicationCheck
 {
     protected List annotations;
+    protected List paramTypes;
 
-    public JL5ClassDecl_c(Position pos, FlagAnnotations flags, String name,
-                       TypeNode superClass, List interfaces, ClassBody body) {
+    public JL5ClassDecl_c(Position pos, FlagAnnotations flags, String name, TypeNode superClass, List interfaces, ClassBody body) {
 	    super(pos, flags.classicFlags(), name, superClass, interfaces, body);
         if (flags.annotations() != null){
             this.annotations = TypedList.copyAndCheck(flags.annotations(), AnnotationElem.class, false);
@@ -33,6 +33,18 @@ public class JL5ClassDecl_c extends ClassDecl_c implements JL5ClassDecl, Applica
             this.annotations = new TypedList(new LinkedList(), AnnotationElem.class, false);
         }
         
+    }
+
+    public JL5ClassDecl_c(Position pos, FlagAnnotations fl, String name, TypeNode superType, List interfaces, ClassBody body, List paramTypes){
+
+        super(pos, fl.classicFlags(), name, superType, interfaces, body);
+        if (fl.annotations() != null){
+            this.annotations = TypedList.copyAndCheck(fl.annotations(), AnnotationElem.class, false);
+        }
+        else {
+            this.annotations = new TypedList(new LinkedList(), AnnotationElem.class, false);
+        }
+        this.paramTypes = paramTypes;
     }
 
     public List annotations(){
@@ -47,15 +59,25 @@ public class JL5ClassDecl_c extends ClassDecl_c implements JL5ClassDecl, Applica
         }
         return this;
     }
-
     
-    protected ClassDecl reconstruct(TypeNode superClass, List interfaces, ClassBody body, List annotations){
-        if (superClass != this.superClass || !CollectionUtil.equals(interfaces, this.interfaces) || body != this.body || !CollectionUtil.equals(annotations, this.annotations)){
+    public List paramTypes(){
+        return this.paramTypes;
+    }
+    
+    public JL5ClassDecl paramTypes(List types){
+        JL5ClassDecl_c n = (JL5ClassDecl_c) copy();
+        n.paramTypes = types;
+        return n;
+    }
+    
+    protected ClassDecl reconstruct(TypeNode superClass, List interfaces, ClassBody body, List annotations, List paramTypes){
+        if (superClass != this.superClass || !CollectionUtil.equals(interfaces, this.interfaces) || body != this.body || !CollectionUtil.equals(annotations, this.annotations) || !CollectionUtil.equals(paramTypes, this.paramTypes)){
             JL5ClassDecl_c n = (JL5ClassDecl_c) copy();
             n.superClass = superClass;
             n.interfaces = TypedList.copyAndCheck(interfaces, TypeNode.class, false);
             n.body = body;
             n.annotations = TypedList.copyAndCheck(annotations, AnnotationElem.class, false);
+            n.paramTypes = paramTypes;
             return n;
         }
         return this;
@@ -66,8 +88,37 @@ public class JL5ClassDecl_c extends ClassDecl_c implements JL5ClassDecl, Applica
         List interfaces = visitList(this.interfaces, v);
         ClassBody body = (ClassBody) visitChild(this.body, v);
         List annots = visitList(this.annotations, v); 
-        return reconstruct(superClass, interfaces, body, annots);
+        List paramTypes = visitList(this.paramTypes, v);
+        return reconstruct(superClass, interfaces, body, annots, paramTypes);
     }
+
+      public Node buildTypes(TypeBuilder tb) throws SemanticException {
+        JL5ParsedClassType type = (JL5ParsedClassType)tb.currentClass();
+        if (!type.isGeneric()){
+            return super.buildTypes(tb);
+        }
+        // for each param type - create intersection type and 
+        // add to type
+        for (Iterator it = paramTypes.iterator(); it.hasNext(); ){
+            ParamTypeNode n = (ParamTypeNode)it.next();
+            IntersectionType iType = new IntersectionType_c(tb.typeSystem());
+            iType.name(n.id());
+            
+            ArrayList typeList = new ArrayList();
+            if (n.bounds() != null){
+                for (int i = 0; i < n.bounds().size(); i++){//Iterator typesIt = n.boundsList().iterator(); typesIt.hasNext(); ){
+                    typeList.add(tb.typeSystem().unknownType(position()));
+                }
+            }
+            iType.bounds(typeList);
+            type.addTypeVariable(iType);
+        }
+        if (type != null){
+            return type(type).flags(type.flags());
+        }
+        return this;
+    }
+
 
     protected void disambiguateSuperType(AmbiguityRemover ar) throws SemanticException {
         JL5TypeSystem ts = (JL5TypeSystem)ar.typeSystem();
@@ -78,7 +129,45 @@ public class JL5ClassDecl_c extends ClassDecl_c implements JL5ClassDecl, Applica
             super.disambiguateSuperType(ar);
         }
     }
-       
+
+    public NodeVisitor disambiguateEnter(AmbiguityRemover ar) throws SemanticException {
+        if (ar.kind() == JL5AmbiguityRemover.TYPE_VARS) {
+            return ar.bypass(superClass).bypass(interfaces).bypass(body);
+        }
+        else {
+            return super.disambiguateEnter(ar);
+        }
+    }       
+
+    public Node disambiguate(AmbiguityRemover ar) throws SemanticException {
+        if (ar.kind() == JL5AmbiguityRemover.TYPE_VARS) {
+            JL5ParsedClassType genType = (JL5ParsedClassType)type();
+            // for each param type - create intersection type and 
+            // add to type
+            for (Iterator it = paramTypes.iterator(); it.hasNext(); ){
+                ParamTypeNode n = (ParamTypeNode)it.next();
+                if (genType.hasTypeVariable(n.id())){
+                    IntersectionType iType = genType.getTypeVariable(n.id());
+                    ArrayList typeList = new ArrayList();
+                    if (n.bounds() != null){
+                        for (Iterator typesIt = n.bounds().iterator(); typesIt.hasNext(); ){
+                            typeList.add(((TypeNode)typesIt.next()).type());
+                        }
+                    }
+                    iType.bounds(typeList);
+                }
+            }
+            if (genType != null){
+                return type(genType).flags(genType.flags());
+            }
+            return this;
+     
+        }
+        else {
+            return super.disambiguate(ar);
+        }
+    }
+    
     public Node typeCheck(TypeChecker tc) throws SemanticException {
         if (JL5Flags.isEnumModifier(flags()) && flags().isAbstract()){
             throw new SemanticException("Enum types cannot have abstract modifier", this.position());
@@ -291,6 +380,16 @@ public class JL5ClassDecl_c extends ClassDecl_c implements JL5ClassDecl, Applica
     public void prettyPrintHeader(CodeWriter w, PrettyPrinter tr) {
         prettyPrintModifiers(w, tr);
         prettyPrintName(w, tr);
+        w.write("<");
+        for (Iterator it = paramTypes.iterator(); it.hasNext(); ){
+            ParamTypeNode next = (ParamTypeNode)it.next();
+            print(next, w, tr);
+            if (it.hasNext()){
+                w.write(", ");
+            }
+        }
+        w.write("> ");
+
         prettyPrintHeaderRest(w, tr);
 
     }

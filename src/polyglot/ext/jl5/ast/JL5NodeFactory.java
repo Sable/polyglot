@@ -57,27 +57,27 @@ public interface JL5NodeFactory extends NodeFactory {
     
     public JL5PackageNode JL5PackageNode(Position pos, FlagAnnotations flags, Package package_);
 
-    public ParamTypeNode ParamTypeNode(Position pos, BoundedTypeNode.Kind kind, List bounds, String id);
+    public ParamTypeNode ParamTypeNode(Position pos, List bounds, String id);
     
     public BoundedTypeNode BoundedTypeNode(Position pos, BoundedTypeNode.Kind kind, List bounds);
 
-    public AmbGenericQualifierNode AmbGenericQualifierNode(Position pos, QualifierNode qual, String name, List args);
+    public AmbQualifierNode JL5AmbQualifierNode(Position pos, QualifierNode qual, String name, List args);
     
-    public AmbGenericTypeNode AmbGenericTypeNode(Position pos, QualifierNode qual, String name, List args);
+    public AmbTypeNode JL5AmbTypeNode(Position pos, QualifierNode qual, String name, List args);
 
-    public GenericConstructorCall GenericThisCall(Position pos, List args, List typeArgs);
+    public ConstructorCall JL5ThisCall(Position pos, List args, List typeArgs);
 
-    public GenericConstructorCall GenericThisCall(Position pos, Expr outer, List args, List typeArgs);
+    public ConstructorCall JL5ThisCall(Position pos, Expr outer, List args, List typeArgs);
 
-    public GenericConstructorCall GenericSuperCall(Position pos, List args, List typeArgs);
+    public ConstructorCall JL5SuperCall(Position pos, List args, List typeArgs);
 
-    public GenericConstructorCall GenericSuperCall(Position pos, Expr outer, List args, List typeArgs);
+    public ConstructorCall JL5SuperCall(Position pos, Expr outer, List args, List typeArgs);
 
-    public GenericCall GenericCall(Position pos, Receiver target, String name, List args, List typeArgs);
+    public Call JL5Call(Position pos, Receiver target, String name, List args, List typeArgs);
 
-    public GenericNew GenericNew(Position pos, Expr qualifier, TypeNode tn, List arguments, ClassBody body, List typeArgs);
+    public New JL5New(Position pos, Expr qualifier, TypeNode tn, List arguments, ClassBody body, List typeArgs);
     
-    public GenericNew GenericNew(Position pos, TypeNode tn, List arguments, ClassBody body, List typeArgs);
+    public New JL5New(Position pos, TypeNode tn, List arguments, ClassBody body, List typeArgs);
 
 
 }

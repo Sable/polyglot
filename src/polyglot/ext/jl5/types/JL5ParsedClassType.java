@@ -15,4 +15,12 @@ public interface JL5ParsedClassType extends ParsedClassType{
 
     void annotations(List annotations);
     List annotations();
+
+    List typeVariables();
+    void addTypeVariable(IntersectionType type);
+
+    boolean hasTypeVariable(String name);
+    IntersectionType getTypeVariable(String name);
+
+    boolean isGeneric();
 }

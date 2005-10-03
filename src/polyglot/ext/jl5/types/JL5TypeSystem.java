@@ -11,7 +11,7 @@ public interface JL5TypeSystem extends TypeSystem {
     // TODO: declare any new methods needed
     //polyglot.ext.jl5.types.LazyClassInitializer defaultClassInitializer();
     ParsedClassType createClassType(LazyClassInitializer init, Source fromSource);
-    GenericParsedClassType createGenericClassType(Source fromSource);
+    ParsedClassType createClassType(Source fromSource);
 
     ClassType Enum();
     
@@ -53,7 +53,7 @@ public interface JL5TypeSystem extends TypeSystem {
     
     public void checkAnnotationApplicability(AnnotationElem annotation, Node n) throws SemanticException;
    
-    public MethodInstance genericMethodInstance(Position pos, ReferenceType container, Flags flags, Type returnType, String name, List formals, List throwTypes, List typeVars);
+    public MethodInstance methodInstance(Position pos, ReferenceType container, Flags flags, Type returnType, String name, List formals, List throwTypes, List typeVars);
     
-    public ConstructorInstance genericConstructorInstance(Position pos, ClassType container, Flags flags, List formals, List throwTypes, List typeVars);
+    public ConstructorInstance constructorInstance(Position pos, ClassType container, Flags flags, List formals, List throwTypes, List typeVars);
 }

@@ -9,11 +9,11 @@ import polyglot.util.*;
 import polyglot.visit.*;
 import polyglot.ext.jl.types.*;
 
-public class GenericConstructorInstance_c extends ConstructorInstance_c implements GenericConstructorInstance {
+public class JL5ConstructorInstance_c extends ConstructorInstance_c implements JL5ConstructorInstance {
 
     protected List typeVariables;
    
-    public GenericConstructorInstance_c(TypeSystem ts, Position pos, ClassType container, Flags flags, List formals, List excTypes, List typeVariables){
+    public JL5ConstructorInstance_c(TypeSystem ts, Position pos, ClassType container, Flags flags, List formals, List excTypes, List typeVariables){
         super(ts, pos, container, flags, formals, excTypes);
         this.typeVariables = typeVariables;
     }
@@ -45,4 +45,8 @@ public class GenericConstructorInstance_c extends ConstructorInstance_c implemen
         return null;
     }
 
+    public boolean isGeneric(){
+        if ((typeVariables != null) && !typeVariables.isEmpty()) return true;
+        return false;
+    }
 }

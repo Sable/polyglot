@@ -33,7 +33,7 @@ public class JL5NodeFactory_c extends NodeFactory_c implements JL5NodeFactory {
             n = new JL5ClassDecl_c(pos, flags, name, superType, interfaces, body);
         }
         else {
-            n = new JL5GenericClassDecl_c(pos, flags, name, superType, interfaces, body, paramTypes);
+            n = new JL5ClassDecl_c(pos, flags, name, superType, interfaces, body, paramTypes);
         }
         return n;
     }
@@ -47,7 +47,7 @@ public class JL5NodeFactory_c extends NodeFactory_c implements JL5NodeFactory {
             n = new JL5ConstructorDecl_c(pos, flags, name, formals, throwTypes, body);
         }
         else {
-            n = new JL5GenericConstructorDecl_c(pos, flags, name, formals, throwTypes, body, typeParams);
+            n = new JL5ConstructorDecl_c(pos, flags, name, formals, throwTypes, body, typeParams);
         }
         return n;
     }
@@ -96,7 +96,7 @@ public class JL5NodeFactory_c extends NodeFactory_c implements JL5NodeFactory {
             n = new JL5MethodDecl_c(pos, flags, returnType, name, formals, throwTypes, body);
         }
         else {
-            n = new JL5GenericMethodDecl_c(pos, flags, returnType, name, formals, throwTypes, body, typeParams);
+            n = new JL5MethodDecl_c(pos, flags, returnType, name, formals, throwTypes, body, typeParams);
         }
         return n;
     }
@@ -146,8 +146,8 @@ public class JL5NodeFactory_c extends NodeFactory_c implements JL5NodeFactory {
         return n;
     }
 
-    public ParamTypeNode ParamTypeNode(Position pos, BoundedTypeNode.Kind kind, List bounds, String id){
-        ParamTypeNode n = new ParamTypeNode_c(pos, kind, bounds, id);
+    public ParamTypeNode ParamTypeNode(Position pos, List bounds, String id){
+        ParamTypeNode n = new ParamTypeNode_c(pos, bounds, id);
         return n;
     }
     
@@ -156,46 +156,46 @@ public class JL5NodeFactory_c extends NodeFactory_c implements JL5NodeFactory {
         return n;
     }
     
-    public AmbGenericQualifierNode AmbGenericQualifierNode(Position pos, QualifierNode qual, String name, List args){
-        AmbGenericQualifierNode n = new AmbGenericQualifierNode_c(pos, qual, name, args);
+    public AmbQualifierNode JL5AmbQualifierNode(Position pos, QualifierNode qual, String name, List args){
+        AmbQualifierNode n = new JL5AmbQualifierNode_c(pos, qual, name, args);
         return n;
     }
     
-    public AmbGenericTypeNode AmbGenericTypeNode(Position pos, QualifierNode qual, String name, List args){
-        AmbGenericTypeNode n = new AmbGenericTypeNode_c(pos, qual, name, args);
+    public AmbTypeNode JL5AmbTypeNode(Position pos, QualifierNode qual, String name, List args){
+        AmbTypeNode n = new JL5AmbTypeNode_c(pos, qual, name, args);
         return n;
     }
     
-    public GenericConstructorCall GenericThisCall(Position pos, List args, List typeArgs){
-        return GenericThisCall(pos, null, args, typeArgs);
+    public ConstructorCall JL5ThisCall(Position pos, List args, List typeArgs){
+        return JL5ThisCall(pos, null, args, typeArgs);
     }
 
-    public GenericConstructorCall GenericThisCall(Position pos, Expr outer, List args, List typeArgs){
-        GenericConstructorCall n = new GenericConstructorCall_c(pos, ConstructorCall.THIS, outer, args, typeArgs);
+    public ConstructorCall JL5ThisCall(Position pos, Expr outer, List args, List typeArgs){
+        ConstructorCall n = new JL5ConstructorCall_c(pos, ConstructorCall.THIS, outer, args, typeArgs);
         return n;
     }
 
-    public GenericConstructorCall GenericSuperCall(Position pos, List args, List typeArgs){
-        return GenericSuperCall(pos, null, args, typeArgs);
+    public ConstructorCall JL5SuperCall(Position pos, List args, List typeArgs){
+        return JL5SuperCall(pos, null, args, typeArgs);
     }
 
-    public GenericConstructorCall GenericSuperCall(Position pos, Expr outer, List args, List typeArgs){
-        GenericConstructorCall n = new GenericConstructorCall_c(pos, ConstructorCall.SUPER, outer, args, typeArgs);
+    public ConstructorCall JL5SuperCall(Position pos, Expr outer, List args, List typeArgs){
+        ConstructorCall n = new JL5ConstructorCall_c(pos, ConstructorCall.SUPER, outer, args, typeArgs);
         return n;
     }
 
-    public GenericCall GenericCall(Position pos, Receiver target, String name, List args, List typeArgs){
-        GenericCall n = new GenericCall_c(pos, target, name, args, typeArgs);
+    public Call JL5Call(Position pos, Receiver target, String name, List args, List typeArgs){
+        Call n = new JL5Call_c(pos, target, name, args, typeArgs);
         return n;
     }
 
-    public GenericNew GenericNew(Position pos, Expr qualifier, TypeNode tn, List arguments, ClassBody body, List typeArgs){
-        GenericNew n = new GenericNew_c(pos, qualifier, tn, arguments, body, typeArgs);
+    public New JL5New(Position pos, Expr qualifier, TypeNode tn, List arguments, ClassBody body, List typeArgs){
+        New n = new JL5New_c(pos, qualifier, tn, arguments, body, typeArgs);
         return n;
     }
     
-    public GenericNew GenericNew(Position pos, TypeNode tn, List arguments, ClassBody body, List typeArgs){
-        GenericNew n = new GenericNew_c(pos, null, tn, arguments, body, typeArgs);
+    public New JL5New(Position pos, TypeNode tn, List arguments, ClassBody body, List typeArgs){
+        New n = new JL5New_c(pos, null, tn, arguments, body, typeArgs);
         return n;
     }
 

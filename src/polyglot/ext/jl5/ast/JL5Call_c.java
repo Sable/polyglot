@@ -8,11 +8,11 @@ import polyglot.types.*;
 import polyglot.visit.*;
 import polyglot.ext.jl5.types.*;
 
-public class GenericCall_c extends Call_c implements GenericCall {
+public class JL5Call_c extends Call_c implements JL5Call {
 
     protected List typeArguments;
 
-    public GenericCall_c(Position pos, Receiver target, String name, List arguments, List typeArguments){
+    public JL5Call_c(Position pos, Receiver target, String name, List arguments, List typeArguments){
         super(pos, target, name, arguments);
         this.typeArguments = typeArguments;
     }
@@ -21,15 +21,15 @@ public class GenericCall_c extends Call_c implements GenericCall {
         return typeArguments;
     }
     
-    public GenericCall typeArguments(List args){
-        GenericCall_c n = (GenericCall_c) copy();
+    public JL5Call typeArguments(List args){
+        JL5Call_c n = (JL5Call_c) copy();
         n.typeArguments = args;
         return n;
     }
 
-    public GenericCall_c reconstruct(Receiver target, List arguments, List typeArgs) {
+    public JL5Call_c reconstruct(Receiver target, List arguments, List typeArgs) {
         if (target != this.target || ! CollectionUtil.equals(arguments, this.arguments) || ! CollectionUtil.equals(typeArgs, this.typeArguments)){
-            GenericCall_c n = (GenericCall_c)copy();
+            JL5Call_c n = (JL5Call_c)copy();
             n.target = target;
             n.arguments = TypedList.copyAndCheck(arguments, Expr.class, true);
             n.typeArguments = TypedList.copyAndCheck(typeArgs, TypeNode.class, false);
@@ -61,14 +61,14 @@ public class GenericCall_c extends Call_c implements GenericCall {
          }
                  
 
-         MethodInstance mi = ts.genericMethodInstance(position(), ts.Object(), Flags.NONE, ts.unknownType(position()), name, l, Collections.EMPTY_LIST, typeVars);
+         MethodInstance mi = ts.methodInstance(position(), ts.Object(), Flags.NONE, ts.unknownType(position()), name, l, Collections.EMPTY_LIST, typeVars);
          return call.methodInstance(mi);
                              
     }
 
  
     public Node typeCheck(TypeChecker tc) throws SemanticException {
-        GenericCall_c n = (GenericCall_c)super.typeCheck(tc);
+        JL5Call_c n = (JL5Call_c)super.typeCheck(tc);
 
         return checkTypeArguments(tc, n.methodInstance());
     }
@@ -78,21 +78,24 @@ public class GenericCall_c extends Call_c implements GenericCall {
         // recheck args and 
         // reset this type
         
-        if (!(mi instanceof GenericMethodInstance)) {
+        if (!((JL5MethodInstance)mi).isGeneric()) {
             throw new SemanticException("Cannot call method: "+mi.name()+" with type arguments", position());
         }
-        GenericMethodInstance gmi = (GenericMethodInstance)mi;
+        JL5MethodInstance gmi = (JL5MethodInstance)mi;
         
         if (typeArguments.size() != 0 && typeArguments.size() != gmi.typeVariables().size()){
             throw new SemanticException("Must specify all type arguments of none", position());
         }
 
         JL5TypeSystem ts = (JL5TypeSystem)tc.typeSystem();
-        GenericCall_c gCall = this;
+        JL5Call_c gCall = this;
         if (typeArguments.size() == 0) return gCall;
         for (int i = 0; i < gmi.typeVariables().size(); i++) {
             IntersectionType foundType = (IntersectionType)gmi.typeVariables().get(i);            
             TypeNode correspondingArg = (TypeNode)typeArguments.get(i);
+            if (correspondingArg instanceof BoundedTypeNode){
+                throw new SemanticException("Wilcard argument not allowed here", correspondingArg.position());
+            }
             if (!ts.isSubtype(correspondingArg.type(), foundType)){
                 throw new SemanticException("Invalid type argument ",correspondingArg.position());
             }
@@ -107,7 +110,7 @@ public class GenericCall_c extends Call_c implements GenericCall {
                 }
             }
             if (gmi.returnType() instanceof IntersectionType && ((IntersectionType)gmi.returnType()).name().equals(foundType.name())){
-                gCall = (GenericCall_c)this.type(correspondingArg.type());
+                gCall = (JL5Call_c)this.type(correspondingArg.type());
             }
         }
        

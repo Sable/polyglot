@@ -13,7 +13,7 @@ public class JL5TypeBuilder extends TypeBuilder {
         super(job, ts, nf);
     }
 
-    public TypeBuilder pushGenericClass(Position pos, Flags flags, String name) throws SemanticException {
+    /*public TypeBuilder pushGenericClass(Position pos, Flags flags, String name) throws SemanticException {
         GenericParsedClassType t = newGenericClass(pos, flags, name);
         return pushClass(t);
     }
@@ -66,5 +66,5 @@ public class JL5TypeBuilder extends TypeBuilder {
             return ct;
         }
         
-    }
+    }*/
 }

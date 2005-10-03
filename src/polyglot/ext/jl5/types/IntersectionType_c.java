@@ -115,4 +115,34 @@ public class IntersectionType_c extends ClassType_c implements IntersectionType 
     public String toString(){
         return name+":"+bounds;
     }
+
+    
+    public boolean descendsFromImpl(Type ancestor) {
+        // not sure about array types??
+        if (ancestor instanceof ClassType){
+            return isAnyBoundSubtype(ancestor);
+        }
+        /*else if (ancestor instanceof PrimitiveType){
+            return isAnyBoundAutoUnboxingValid(ancestor);
+        }*/
+        return super.descendsFromImpl(ancestor);
+    }
+
+    private boolean isAnyBoundSubtype(Type ancestor){
+        if (bounds == null || bounds.isEmpty()) return ((ClassType)ancestor).fullName().equals("java.lang.Object");
+        for (Iterator it = bounds.iterator(); it.hasNext(); ){
+            if (ts.isSubtype((Type)it.next(), ancestor)) return true;
+        }
+        return false;
+    }
+
+    /*private boolean isAnyBoundAutoUnboxingValid(Type ancestor){
+        if (bounds == null || bounds.isEmpty()) return false;
+        for (Iterator it = bounds.iterator(); it.hasNext(); ){
+            if (ts.isSubtype((Type)it.next(), ancestor)) return true;
+        }
+        return false;
+    }*/
+
+    
 }

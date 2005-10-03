@@ -4,13 +4,17 @@ import polyglot.util.*;
 import java.util.*;
 import polyglot.visit.*;
 import polyglot.ast.*;
+import polyglot.ext.jl.ast.*;
 
-public class ParamTypeNode_c extends BoundedTypeNode_c implements ParamTypeNode {
+public class ParamTypeNode_c extends TypeNode_c implements ParamTypeNode {
+    
     protected String id;
-
-    public ParamTypeNode_c(Position pos, BoundedTypeNode.Kind kind, List boundsList, String id){
-        super(pos, kind, boundsList);
+    protected List bounds;
+    
+    public ParamTypeNode_c(Position pos, List bounds, String id){
+        super(pos);
         this.id = id;
+        this.bounds = bounds;
     }
     
     public ParamTypeNode id(String id){
@@ -23,12 +27,41 @@ public class ParamTypeNode_c extends BoundedTypeNode_c implements ParamTypeNode 
         return this.id;
     }
 
+    public ParamTypeNode bounds(List l){
+        ParamTypeNode_c n = (ParamTypeNode_c) copy();
+        n.bounds = l;
+        return n;
+    }
+
+    public List bounds(){
+        return bounds;
+    }
+
+    public ParamTypeNode reconstruct(List bounds){
+        if (!CollectionUtil.equals(bounds, this.bounds)){
+            ParamTypeNode_c n = (ParamTypeNode_c) copy();
+            n.bounds = bounds;
+            return n;
+        }
+        return this;
+    }
+
+    public Node visitChildren(NodeVisitor v){
+        List bounds = visitList(this.bounds, v);
+        return reconstruct(bounds);
+    }
+    
     public void prettyPrint(CodeWriter w, PrettyPrinter tr){
         w.write(id);
-        //print(id, w, tr);
-        if (boundsList() != null && !boundsList().isEmpty()){
+        if (bounds() != null && !bounds().isEmpty()){
             w.write(" extends ");
-            prettyPrintBoundsList(w, tr);
+            for (Iterator it = bounds.iterator(); it.hasNext(); ){
+                TypeNode tn = (TypeNode)it.next();
+                print(tn, w, tr);
+                if (it.hasNext()){
+                    w.write(" & ");
+                }
+            }
         }
     }
 }

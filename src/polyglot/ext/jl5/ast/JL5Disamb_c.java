@@ -68,11 +68,10 @@ public class JL5Disamb_c extends Disamb_c implements JL5Disamb {
 
         // no variable found. try
         // might be a generic type parameter
-        ClassType ct = c.currentClass();
-        if (ct instanceof GenericParsedClassType){
-            GenericParsedClassType gt = (GenericParsedClassType)ct;
-            if (gt.hasTypeVariable(name)){
-                IntersectionType it =  gt.getTypeVariable(name);
+        JL5ParsedClassType ct = (JL5ParsedClassType)c.currentClass();
+        if (ct.isGeneric()){
+            if (ct.hasTypeVariable(name)){
+                IntersectionType it =  ct.getTypeVariable(name);
                 return nf.CanonicalTypeNode(pos, it);
             }
         }
@@ -81,14 +80,14 @@ public class JL5Disamb_c extends Disamb_c implements JL5Disamb {
         // header 
         if (c.inCode()){
             CodeInstance ci = c.currentCode();
-            if (ci instanceof GenericMethodInstance){
-                if (((GenericMethodInstance)ci).hasTypeVariable(name)){
-                    return nf.CanonicalTypeNode(pos, ((GenericMethodInstance)ci).getTypeVariable(name));
+            if (ci instanceof JL5MethodInstance && ((JL5MethodInstance)ci).isGeneric()){
+                if (((JL5MethodInstance)ci).hasTypeVariable(name)){
+                    return nf.CanonicalTypeNode(pos, ((JL5MethodInstance)ci).getTypeVariable(name));
                 }
             }
-            else if (ci instanceof GenericConstructorInstance){
-                if (((GenericConstructorInstance)ci).hasTypeVariable(name)){
-                    return nf.CanonicalTypeNode(pos, ((GenericConstructorInstance)ci).getTypeVariable(name));
+            else if (ci instanceof JL5ConstructorInstance && ((JL5ConstructorInstance)ci).isGeneric()){
+                if (((JL5ConstructorInstance)ci).hasTypeVariable(name)){
+                    return nf.CanonicalTypeNode(pos, ((JL5ConstructorInstance)ci).getTypeVariable(name));
                 }
             }
         }

@@ -166,12 +166,8 @@ parser Grm extends polyglot.ext.jl.parse.Grm  {:
         return tn;
     }
 
-    public ParamTypeNode toParamType(Position pos, String id, BoundedTypeNode bounds){
-        List boundsList = null;
-        if (bounds != null){
-            boundsList = bounds.boundsList();
-        }
-        ParamTypeNode tn = nf.ParamTypeNode(pos, BoundedTypeNode.UPPER, boundsList, id);
+    public ParamTypeNode toParamType(Position pos, String id, List bounds){
+        ParamTypeNode tn = nf.ParamTypeNode(pos, bounds, id);
         return tn;
     }
                                                                 
@@ -226,8 +222,8 @@ non terminal TypeNode type_parameter;
 non terminal List type_parameter_list;
 non terminal TypeNode type_parameter_1;
 non terminal List type_parameter_list_1;
-non terminal BoundedTypeNode type_bound, type_bound_opt;
-non terminal BoundedTypeNode type_bound_1;
+non terminal List type_bound, type_bound_opt;
+non terminal List type_bound_1;
 non terminal List additional_bound_list, additional_bound_list_opt;
 non terminal List additional_bound_list_1;
 non terminal TypeNode additional_bound;
@@ -287,13 +283,13 @@ class_or_interface ::=
 		name:a
         {: RESULT = a.toType(); :}
 	|	class_or_interface:a LT:b type_argument_list_1:c DOT:d name:e
-        {: RESULT = parser.nf.AmbTypeNode(parser.pos(a, e), parser.nf.AmbGenericQualifierNode(parser.pos(a, c), ((AmbTypeNode)a).qual(), ((AmbTypeNode)a).name(), c), e.toString()); :}
+        {: RESULT = parser.nf.AmbTypeNode(parser.pos(a, e), parser.nf.JL5AmbQualifierNode(parser.pos(a, c), ((AmbTypeNode)a).qual(), ((AmbTypeNode)a).name(), c), e.toString()); :}
 	;
 override class_or_interface_type ::=
 		class_or_interface:a
         {: RESULT = a; :}
 	|	class_or_interface:a LT:b type_argument_list_1:c
-        {: RESULT = parser.nf.AmbGenericTypeNode(parser.pos(a, c), ((AmbTypeNode)a).qual(), ((AmbTypeNode)a).name(), c); :}
+        {: RESULT = parser.nf.JL5AmbTypeNode(parser.pos(a, c), ((AmbTypeNode)a).qual(), ((AmbTypeNode)a).name(), c); :}
 	;
 
 
@@ -305,9 +301,9 @@ override array_type ::=	primitive_type:a dims:b
 	|	name:a dims:b
         {: RESULT = parser.array(a.toType(), b.intValue()); :}
 	|	class_or_interface:a LT type_argument_list_1:b DOT name:c dims:d
-        {: RESULT = parser.array(parser.nf.AmbTypeNode(parser.pos(a, c), parser.nf.AmbGenericQualifierNode(parser.pos(a, b), ((AmbTypeNode)a).qual(), ((AmbTypeNode)a).name(), b), c.toString()), d.intValue()); :}
+        {: RESULT = parser.array(parser.nf.AmbTypeNode(parser.pos(a, c), parser.nf.JL5AmbQualifierNode(parser.pos(a, b), ((AmbTypeNode)a).qual(), ((AmbTypeNode)a).name(), b), c.toString()), d.intValue()); :}
 	|	class_or_interface:a LT type_argument_list_1:b dims:c
-        {: RESULT = parser.array(parser.nf.AmbGenericTypeNode(parser.pos(a, b), ((AmbTypeNode)a).qual(), ((AmbTypeNode)a).name(), b), c.intValue()); :}
+        {: RESULT = parser.array(parser.nf.JL5AmbTypeNode(parser.pos(a, b), ((AmbTypeNode)a).qual(), ((AmbTypeNode)a).name(), b), c.intValue()); :}
 	;
 
 type_arguments_opt ::= 
@@ -365,13 +361,13 @@ reference_type_1 ::=
 		reference_type:a GT
         {: RESULT = a; :}
 	|	class_or_interface:a LT:b type_argument_list_2:c
-        {: RESULT = parser.nf.AmbGenericTypeNode(parser.pos(a, c), ((AmbTypeNode)a).qual(), ((AmbTypeNode)a).name(), c); :}
+        {: RESULT = parser.nf.JL5AmbTypeNode(parser.pos(a, c), ((AmbTypeNode)a).qual(), ((AmbTypeNode)a).name(), c); :}
 	;
 reference_type_2 ::=
 		reference_type:a RSHIFT
         {: RESULT = a; :}
 	|	class_or_interface:a LT:b type_argument_list_3:c
-        {: RESULT = parser.nf.AmbGenericTypeNode(parser.pos(a, c), ((AmbTypeNode)a).qual(), ((AmbTypeNode)a).name(), c); :}
+        {: RESULT = parser.nf.JL5AmbTypeNode(parser.pos(a, c), ((AmbTypeNode)a).qual(), ((AmbTypeNode)a).name(), c); :}
 	;
 reference_type_3 ::=
 		reference_type:a URSHIFT
@@ -616,29 +612,29 @@ override explicit_constructor_invocation ::=
 		THIS:a LPAREN:b argument_list_opt:c RPAREN:d SEMICOLON:e
         {: RESULT = parser.nf.ThisCall(parser.pos(a, e), c); :}
 	|	type_arguments:a THIS:b LPAREN:c argument_list_opt:d RPAREN:e SEMICOLON:f
-        {: RESULT = parser.nf.GenericThisCall(parser.pos(a, f), d, a); :}
+        {: RESULT = parser.nf.JL5ThisCall(parser.pos(a, f), d, a); :}
 	|	SUPER:a LPAREN:b argument_list_opt:c RPAREN:d SEMICOLON:e
         {: RESULT = parser.nf.SuperCall(parser.pos(a, e), c); :}
 	|	type_arguments:a SUPER:b LPAREN:c argument_list_opt:d RPAREN:e SEMICOLON:f
-        {: RESULT = parser.nf.GenericSuperCall(parser.pos(a, f), d, a); :}
+        {: RESULT = parser.nf.JL5SuperCall(parser.pos(a, f), d, a); :}
 	|	primary:a DOT:b SUPER:c LPAREN:d argument_list_opt:e RPAREN:f SEMICOLON:g
         {: RESULT = parser.nf.SuperCall(parser.pos(a, g, c), a, e); :}
 	|	primary:a DOT:b type_arguments:c SUPER:d
 			LPAREN:e argument_list_opt:f RPAREN:g SEMICOLON:h
-        {: RESULT = parser.nf.GenericSuperCall(parser.pos(a, h, d), a, f, c); :}
+        {: RESULT = parser.nf.JL5SuperCall(parser.pos(a, h, d), a, f, c); :}
 	|	name:a DOT:b SUPER:c LPAREN:d argument_list_opt:e RPAREN:f SEMICOLON:g
         {: RESULT = parser.nf.SuperCall(parser.pos(a, g, d), a.toExpr(), e); :}
 	|	name:a DOT:b type_arguments:c SUPER:d LPAREN:e argument_list_opt:f RPAREN:g SEMICOLON:h
-        {: RESULT = parser.nf.GenericSuperCall(parser.pos(a, h, d), a.toExpr(), f, c); :}
+        {: RESULT = parser.nf.JL5SuperCall(parser.pos(a, h, d), a.toExpr(), f, c); :}
 	|	primary:a DOT:b THIS:c LPAREN:d argument_list_opt:e RPAREN:f SEMICOLON:g
         {: RESULT = parser.nf.ThisCall(parser.pos(a, g, c), a, e); :}
 	|	primary:a DOT:b type_arguments:c THIS:d
 			LPAREN:e argument_list_opt:f RPAREN:g SEMICOLON:h
-        {: RESULT = parser.nf.GenericThisCall(parser.pos(a, h, d), a, f, c); :}
+        {: RESULT = parser.nf.JL5ThisCall(parser.pos(a, h, d), a, f, c); :}
 	|	name:a DOT:b THIS:c LPAREN:d argument_list_opt:e RPAREN:f SEMICOLON:g
         {: RESULT = parser.nf.ThisCall(parser.pos(a, g, d), a.toExpr(), e); :}
 	|	name:a DOT:b type_arguments:c THIS:d LPAREN:e argument_list_opt:f RPAREN:g SEMICOLON:h
-        {: RESULT = parser.nf.GenericThisCall(parser.pos(a, h, d), a.toExpr(), f, c); :}
+        {: RESULT = parser.nf.JL5ThisCall(parser.pos(a, h, d), a.toExpr(), f, c); :}
 	;
 
 // 19.9.1) Interface Declarations
@@ -749,13 +745,13 @@ override class_instance_creation_expression ::=
 		NEW:a class_or_interface_type:b LPAREN:c argument_list_opt:d RPAREN:e class_body_opt:f
         {: RESULT = parser.nf.JL5New(parser.pos(a, f), b, d, f); :}
 	|	NEW:a type_arguments:b class_or_interface_type:c LPAREN:d argument_list_opt:e RPAREN:f class_body_opt:g
-        {: RESULT = parser.nf.GenericNew(parser.pos(a, g), c, e, g, b); :}
+        {: RESULT = parser.nf.JL5New(parser.pos(a, g), c, e, g, b); :}
 	|	primary:a DOT:b NEW:c type_arguments_opt:d IDENTIFIER:e type_arguments_opt:f LPAREN:g argument_list_opt:h RPAREN:i class_body_opt:j
         {: TypeNode aa = (new JL5Name(parser, parser.pos(e), e.getIdentifier())).toType();
-           RESULT = parser.nf.GenericNew(parser.pos(a, j), a, parser.nf.AmbGenericTypeNode(parser.pos(e, f), ((AmbTypeNode)aa).qual(), ((AmbTypeNode)aa).name(), f), h, j, d); :}
+           RESULT = parser.nf.JL5New(parser.pos(a, j), a, parser.nf.JL5AmbTypeNode(parser.pos(e, f), ((AmbTypeNode)aa).qual(), ((AmbTypeNode)aa).name(), f), h, j, d); :}
 	|	name:a DOT:b NEW:c type_arguments_opt:d IDENTIFIER:e type_arguments_opt:f LPAREN:g argument_list_opt:h RPAREN:i class_body_opt:j
         {: TypeNode aa = (new JL5Name(parser, parser.pos(e), e.getIdentifier())).toType();
-           RESULT = parser.nf.GenericNew(parser.pos(a, j), a.toExpr(), parser.nf.AmbGenericTypeNode(parser.pos(e, f), ((AmbTypeNode)aa).qual(), ((AmbTypeNode)aa).name(), f), h, j, d); :}
+           RESULT = parser.nf.JL5New(parser.pos(a, j), a.toExpr(), parser.nf.JL5AmbTypeNode(parser.pos(e, f), ((AmbTypeNode)aa).qual(), ((AmbTypeNode)aa).name(), f), h, j, d); :}
 ;
 array_creation_init ::=
 		NEW:a primitive_type:b dims:c array_initializer:d
@@ -774,16 +770,16 @@ extend method_invocation ::=
 // from the grammar. <3F256C06.7000600@sun.com>
 //	|	type_arguments name LPAREN argument_list_opt RPAREN
     primary:a DOT:b type_arguments:c IDENTIFIER:d LPAREN:e argument_list_opt:f RPAREN:g
-        {: RESULT = parser.nf.GenericCall(parser.pos(a, g), a, d.getIdentifier(), f, c); :}
+        {: RESULT = parser.nf.JL5Call(parser.pos(a, g), a, d.getIdentifier(), f, c); :}
 	|	
     name:a DOT:b type_arguments:c IDENTIFIER:d LPAREN:e argument_list_opt:f RPAREN:g
-        {: RESULT = parser.nf.GenericCall(parser.pos(a, g), a.prefix == null ? null : a.prefix.toReceiver(), a.name, f, c); :}
+        {: RESULT = parser.nf.JL5Call(parser.pos(a, g), a.prefix == null ? null : a.prefix.toReceiver(), a.name, f, c); :}
 	|
     SUPER:a DOT:b type_arguments:c IDENTIFIER:d LPAREN:e argument_list_opt:f RPAREN:g
-        {: RESULT = parser.nf.GenericCall(parser.pos(a, g, d), parser.nf.Super(parser.pos(a)), d.getIdentifier(), f, c); :}
+        {: RESULT = parser.nf.JL5Call(parser.pos(a, g, d), parser.nf.Super(parser.pos(a)), d.getIdentifier(), f, c); :}
     |
     name:a DOT:b SUPER:c DOT:d type_arguments:e IDENTIFIER:f LPAREN:g argument_list_opt:h RPAREN:i
-        {: RESULT = parser.nf.GenericCall(parser.pos(f, i), parser.nf.Super(parser.pos(c), a.toType()), f.getIdentifier(), h, e); :}
+        {: RESULT = parser.nf.JL5Call(parser.pos(f, i), parser.nf.Super(parser.pos(c), a.toType()), f.getIdentifier(), h, e); :}
 	;
 extend array_access ::=
 	array_creation_init:a LBRACK:b expression:c RBRACK:d
@@ -807,13 +803,13 @@ override cast_expression ::=
 	|	LPAREN:a name:b LT:c type_argument_list_1:d dims_opt:e RPAREN:f
 			unary_expression_not_plus_minus:g
         {: AmbTypeNode aa = (AmbTypeNode)b.toType();
-           RESULT = parser.nf.Cast(parser.pos(a, g, b), parser.array(parser.nf.AmbGenericTypeNode(parser.pos(b, d), aa.qual(), aa.name(), d), e.intValue()), g); :}
+           RESULT = parser.nf.Cast(parser.pos(a, g, b), parser.array(parser.nf.JL5AmbTypeNode(parser.pos(b, d), aa.qual(), aa.name(), d), e.intValue()), g); :}
 	|	LPAREN:a name:b LT:c type_argument_list_1:d DOT:e
 			class_or_interface_type:f dims_opt:g RPAREN:h
 			unary_expression_not_plus_minus:i
         {: AmbTypeNode aa = (AmbTypeNode)b.toType();
            AmbTypeNode bb = (AmbTypeNode)f;
-           RESULT = parser.nf.Cast(parser.pos(a, i, b), parser.array(parser.nf.AmbTypeNode(parser.pos(b, f), parser.nf.AmbGenericQualifierNode(parser.pos(b, d), aa.qual(), aa.name(), d), bb.name()), g.intValue()), i); :}
+           RESULT = parser.nf.Cast(parser.pos(a, i, b), parser.array(parser.nf.AmbTypeNode(parser.pos(b, f), parser.nf.JL5AmbQualifierNode(parser.pos(b, d), aa.qual(), aa.name(), d), bb.name()), g.intValue()), i); :}
 	;
 override relational_expression ::=
 		shift_expression:a
@@ -896,13 +892,24 @@ type_bound_opt ::=
 ;
 type_bound ::=
 		EXTENDS reference_type:a additional_bound_list_opt:b
-        {: RESULT = parser.toExtendsType(a, b); :}
+        {: if (b == null) {
+                List l = new TypedList(new LinkedList(), TypeNode.class, false);
+                l.add(a);
+                RESULT = l;
+           } 
+           else {
+                b.add(0, a);
+                RESULT = b;
+           }:}
 	;
 type_bound_1 ::=
 		EXTENDS reference_type_1:a
-        {: RESULT = parser.toExtendsType(a); :}
+        {: List l = new TypedList(new LinkedList(), TypeNode.class, false);
+           l.add(a);
+           RESULT = l; :}
 	|	EXTENDS reference_type:a additional_bound_list_1:b
-        {: RESULT = parser.toExtendsType(a, b); :}
+        {: b.add(0, a);
+           RESULT = b; :}
 	;
 additional_bound_list_opt ::= 
     additional_bound_list:a
