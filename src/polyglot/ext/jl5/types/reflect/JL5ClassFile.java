@@ -33,5 +33,30 @@ public class JL5ClassFile extends ClassFile implements JL5LazyClassInitializer {
         }
     }
     
-    
+   
+    /*public void readAttributes(DataInputStream in) throws IOException {
+        int numAttributes = in.readUnsignedShort();
+        attrs = new Attribute[numAttributes];
+
+        for (int i = 0; i < numAttributes; i++){
+            int nameIndex = in.readUnsignedShort();
+            int length = in.readInt();
+            if ("InnerClasses".equals(constants[nameIndex].value())) {
+                innerClasses = new InnerClasses(in, nameIndex, length);
+                attrs[i] = innerClasses;
+            }
+            else if ("Signature".equals(constants[nameIndex].value())){
+                signature = new Signature(in, nameIndex, length);
+                attrs[i] = signature;
+            }
+            else {
+                long n = in.skip(length);
+                if (n != length) {
+                    throw new EOFException();
+                }
+            }
+        }
+    }*/
+
+
 }

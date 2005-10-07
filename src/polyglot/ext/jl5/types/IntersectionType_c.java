@@ -12,10 +12,12 @@ public class IntersectionType_c extends ClassType_c implements IntersectionType 
     protected polyglot.types.Package package_; // package is same as reified type
     protected List bounds;
     protected Flags flags;
+    protected List restrictions;
     
-    public IntersectionType_c(TypeSystem ts){
-        super(ts);
-        bounds = new TypedList(new LinkedList(), ClassType.class, false);
+    public IntersectionType_c(TypeSystem ts, Position pos, String id, List bounds){
+        super(ts, pos);
+        this.name = id;
+        this.bounds = bounds;
     }
 
     public List bounds(){
@@ -109,11 +111,12 @@ public class IntersectionType_c extends ClassType_c implements IntersectionType 
     }
 
     public String translate(Resolver c){
-        return name;
+        StringBuffer sb = new StringBuffer(name);
+        return sb.toString();
     }
 
     public String toString(){
-        return name+":"+bounds;
+        return name;//+":"+bounds;
     }
 
     
@@ -129,7 +132,9 @@ public class IntersectionType_c extends ClassType_c implements IntersectionType 
     }
 
     private boolean isAnyBoundSubtype(Type ancestor){
-        if (bounds == null || bounds.isEmpty()) return ((ClassType)ancestor).fullName().equals("java.lang.Object");
+        System.out.println("bounds: "+bounds);
+        if (bounds == null || bounds.isEmpty()) return true;
+        //return ((ClassType)ancestor).fullName().equals("java.lang.Object");
         for (Iterator it = bounds.iterator(); it.hasNext(); ){
             if (ts.isSubtype((Type)it.next(), ancestor)) return true;
         }
@@ -144,5 +149,29 @@ public class IntersectionType_c extends ClassType_c implements IntersectionType 
         return false;
     }*/
 
-    
+    public void pushRestriction(TypeNode t){
+        if (restrictions == null){
+            // make TypedList with TypeNode
+            restrictions = new ArrayList();
+        }
+        restrictions.add(t);
+    }
+
+    public void popRestriction(TypeNode t){
+        System.out.println("removing restr: "+t);
+        restrictions.remove(t);
+    }
+
+    public List restrictions(){
+        return this.restrictions;
+    }
+
+    public TypeNode restriction(){
+        if (restrictions == null || restrictions.isEmpty()) return null;
+        TypeNode tn = (TypeNode)restrictions.get(restrictions.size()-1);    
+        if (tn.type() instanceof IntersectionType){
+            return ((IntersectionType)tn.type()).restriction();
+        }
+        return tn;
+    }
 }

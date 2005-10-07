@@ -323,6 +323,16 @@ public class JL5TypeSystem_c extends TypeSystem_c implements JL5TypeSystem {
          assert_(excTypes);
          return new JL5MethodInstance_c(this, pos, container, flags, returnType, name, argTypes, excTypes);
     }
+
+    public IntersectionType intersectionType(Position pos, String name, List bounds){
+        assert_(bounds);
+        return new IntersectionType_c(this, pos, name, bounds);
+    }
+    
+    public ParameterizedType parameterizedType(JL5ParsedClassType ct){
+        
+        return new ParameterizedType_c(ct);
+    }
    
     public boolean isValidAnnotationValueType(Type t) {
         // must be one of primitive, String, Class, enum, annotation or 
@@ -492,11 +502,42 @@ public class JL5TypeSystem_c extends TypeSystem_c implements JL5TypeSystem {
         }
     }
     
-    public MethodInstance methodInstance(Position pos, ReferenceType container, Flags flags, Type returnType, String name, List formals, List throwTypes, List typeVars){
-        return new JL5MethodInstance_c(this, pos, container, flags, returnType, name, formals, throwTypes, typeVars);
+    public void handleTypeRestrictions(List typeVariables, List typeArguments) throws SemanticException{
+        if (typeVariables.size() != typeArguments.size()){
+            throw new SemanticException("Restrict all type variables or none.");
+        }
+        for (int i = 0; i < typeVariables.size(); i++){
+            IntersectionType iType = (IntersectionType)typeVariables.get(i);
+            TypeNode restriction = (TypeNode)typeArguments.get(i);
+            System.out.println("rest type: "+restriction.type()+" iType: "+iType);
+            if (!isSubtype(restriction.type(), iType)){
+                throw new SemanticException("Invalid type argument", restriction.position());
+            }
+            iType.pushRestriction(restriction);
+        }
     }
     
-    public ConstructorInstance constructorInstance(Position pos, ClassType container, Flags flags, List formals, List throwTypes, List typeVars){
-        return new JL5ConstructorInstance_c(this, pos, container, flags, formals, throwTypes, typeVars);
+    public void resetTypeRestrictions(List typeVariables, List typeArguments) throws SemanticException{
+        for (int i = 0; i < typeVariables.size(); i++){
+            IntersectionType iType = (IntersectionType)typeVariables.get(i);
+            TypeNode restriction = (TypeNode)typeArguments.get(i);
+            iType.popRestriction(restriction);
+        }
+    }
+    
+    public Type findRequiredType(IntersectionType iType, ParameterizedType pType){
+        String id = iType.name();
+
+        // maybe its a type variable in the raw type of pType
+        // then the required type is the corresponding argument type in pType
+
+        if (pType.isGeneric()){
+            for (int i = 0; i < pType.typeVariables().size(); i++){
+               if (((IntersectionType)pType.typeVariables().get(i)).name().equals(iType.name())){
+                    return (Type)pType.typeArguments().get(i);       
+                }
+            }
+        }
+        return this.Object();
     }
 }

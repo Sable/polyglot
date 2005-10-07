@@ -95,6 +95,9 @@ parser Grm extends polyglot.ext.jl.parse.Grm {:
     }
 
     public ParamTypeNode toParamType(Position pos, String id, List bounds){
+        if (bounds == null){
+            bounds = new TypedList(new LinkedList(), TypeNode.class, false);
+        }
         ParamTypeNode tn = nf.ParamTypeNode(pos, bounds, id);
         return tn;
     }
@@ -721,13 +724,13 @@ method_declaration ::=
 
 method_header ::=
     modifiers_or_annotations_opt:a type:b method_declarator:c throws_opt:d {:
-                                                                           RESULT = parser.nf.JL5MethodDecl(parser.pos(a, d), a, parser.array(b, c.dims().intValue()), c.name(), c.formals(), d, null, null); 
+                                                                           RESULT = parser.nf.JL5MethodDecl(parser.pos(a, d), a, parser.array(b, c.dims().intValue()), c.name(), c.formals(), d, null, new TypedList(new LinkedList(), TypeNode.class, false)); 
                                                                            :}
  |  modifiers_or_annotations_opt:a LT:b type_parameter_list_1:c type:d method_declarator:e throws_opt:f {:
                                                                                                         RESULT = parser.nf.JL5MethodDecl(parser.pos(a, f), a, parser.array(d, e.dims().intValue()), e.name(), e.formals(), f, null, c); 
                                                                                                         :}
  |  modifiers_or_annotations_opt:a VOID:b method_declarator:c throws_opt:e {:
-                                                                           RESULT = parser.nf.JL5MethodDecl(parser.pos(a, e), a, parser.nf.CanonicalTypeNode(parser.pos(b), parser.ts.Void()), c.name(), c.formals(), e, null, null); 
+                                                                           RESULT = parser.nf.JL5MethodDecl(parser.pos(a, e), a, parser.nf.CanonicalTypeNode(parser.pos(b), parser.ts.Void()), c.name(), c.formals(), e, null, new TypedList(new LinkedList(), TypeNode.class, false)); 
                                                                            :}
  |  modifiers_or_annotations_opt:a LT:b type_parameter_list_1:c VOID:d method_declarator:e throws_opt:f {:
                                                                                                         RESULT = parser.nf.JL5MethodDecl(parser.pos(a, f), a, parser.nf.CanonicalTypeNode(parser.pos(d), parser.ts.Void()), e.name(), e.formals(), f, null, c); 
@@ -786,7 +789,7 @@ static_initializer ::=
 
 constructor_declaration ::=
     modifiers_or_annotations_opt:a constructor_declarator:b throws_opt:c constructor_body:d {:
-                                                                                            RESULT = parser.nf.JL5ConstructorDecl(parser.pos(a, d), a, b.name(), b.formals(), c, d, null); 
+                                                                                            RESULT = parser.nf.JL5ConstructorDecl(parser.pos(a, d), a, b.name(), b.formals(), c, d, new TypedList(new LinkedList(), TypeNode.class, false)); 
                                                                                             :}
  |  modifiers_or_annotations_opt:a LT:b type_parameter_list_1:c constructor_declarator:d throws_opt:e constructor_body:f {:
                                                                                                                          RESULT = parser.nf.JL5ConstructorDecl(parser.pos(a, f), a, d.name(), d.formals(), e, f, c); 
@@ -862,13 +865,13 @@ interface_declaration ::=
            FlagAnnotations fl = new FlagAnnotations();
            fl.classicFlags(Flags.INTERFACE.set(JL5Flags.ANNOTATION));
            fl.annotations(new TypedList(new LinkedList(), AnnotationElem.class, false));
-           RESULT = parser.nf.JL5ClassDecl(parser.pos(a, d), fl, c.getIdentifier(), null, l, d, null); 
+           RESULT = parser.nf.JL5ClassDecl(parser.pos(a, d), fl, c.getIdentifier(), null, l, d, new TypedList(new LinkedList(), TypeNode.class, false)); 
                                                     :}
  |  modifiers_or_annotations:a AT:b INTERFACE:c IDENTIFIER:d annotation_body:e {:
                                                                                List l = new TypedList(new LinkedList(), TypeNode.class, false);
            l.add(parser.nf.CanonicalTypeNode(parser.pos(b, e), parser.ts.Annotation()));
            a.classicFlags(Flags.INTERFACE.set(JL5Flags.ANNOTATION));
-           RESULT = parser.nf.JL5ClassDecl(parser.pos(b, e), a, d.getIdentifier() ,null, l, e, null); 
+           RESULT = parser.nf.JL5ClassDecl(parser.pos(b, e), a, d.getIdentifier() ,null, l, e, new TypedList(new LinkedList(), TypeNode.class, false)); 
                                                                                :};
 
 extends_interfaces_opt ::=
@@ -1319,7 +1322,7 @@ primary_no_new_array ::=
 
 class_instance_creation_expression ::=
     NEW:a class_or_interface_type:b LPAREN:c argument_list_opt:d RPAREN:e class_body_opt:f {:
-                                                                                           RESULT = parser.nf.JL5New(parser.pos(a, f), b, d, f); 
+                                                                                           RESULT = parser.nf.JL5New(parser.pos(a, f), b, d, f, new TypedList(new LinkedList(), TypeNode.class, false)); 
                                                                                            :}
  |  NEW:a type_arguments:b class_or_interface_type:c LPAREN:d argument_list_opt:e RPAREN:f class_body_opt:g {:
                                                                                                             RESULT = parser.nf.JL5New(parser.pos(a, g), c, e, g, b); 
@@ -1408,23 +1411,23 @@ field_access ::=
 
 method_invocation ::=
     name:a LPAREN argument_list_opt:b RPAREN:d {:
-                                               RESULT = parser.nf.Call(parser.pos(a,d),
+                                               RESULT = parser.nf.JL5Call(parser.pos(a,d),
                 a.prefix == null ? null : a.prefix.toReceiver(),
-                a.name, b); 
+                a.name, b, new TypedList(new LinkedList(), TypeNode.class, false)); 
                                                :}
  |  primary:a DOT IDENTIFIER:b LPAREN argument_list_opt:c RPAREN:d {:
-                                                                   RESULT = parser.nf.Call(parser.pos(b,d), a,
-                b.getIdentifier(), c); 
+                                                                   RESULT = parser.nf.JL5Call(parser.pos(b,d), a,
+                b.getIdentifier(), c, new TypedList(new LinkedList(), TypeNode.class, false)); 
                                                                    :}
  |  SUPER:a DOT IDENTIFIER:b LPAREN argument_list_opt:c RPAREN:d {:
-                                                                 RESULT = parser.nf.Call(parser.pos(a,d, b),
+                                                                 RESULT = parser.nf.JL5Call(parser.pos(a,d, b),
                 parser.nf.Super(parser.pos(a)),
-                b.getIdentifier(), c); 
+                b.getIdentifier(), c, new TypedList(new LinkedList(), TypeNode.class, false)); 
                                                                  :}
  |  name:a DOT SUPER:n DOT IDENTIFIER:b LPAREN argument_list_opt:c RPAREN:d {:
-                                                                            RESULT = parser.nf.Call(parser.pos(b,d),
+                                                                            RESULT = parser.nf.JL5Call(parser.pos(b,d),
                 parser.nf.Super(parser.pos(n), a.toType()),
-                b.getIdentifier(), c); 
+                b.getIdentifier(), c, new TypedList(new LinkedList(), TypeNode.class, false)); 
                                                                             :}
  |  primary:a DOT:b type_arguments:c IDENTIFIER:d LPAREN:e argument_list_opt:f RPAREN:g {:
                                                                                         RESULT = parser.nf.JL5Call(parser.pos(a, g), a, d.getIdentifier(), f, c); 
@@ -1678,7 +1681,9 @@ class_or_interface ::=
 
 type_arguments_opt ::=
     type_arguments:a {:  RESULT = a;  :}
- |  {:  RESULT = null;  :};
+ |  {:
+    RESULT = new TypedList(new LinkedList(), TypeNode.class, false); 
+    :};
 
 type_arguments ::=
     LT type_argument_list_1:a {:  RESULT = a;  :};
@@ -1810,7 +1815,7 @@ class_body_opt ::=
 
 enum_declaration ::=
     modifiers_or_annotations_opt:a ENUM:b IDENTIFIER:c interfaces_opt:d enum_body:e {:
-                                                                                    RESULT = parser.nf.JL5ClassDecl(parser.pos(b, e), a, c.getIdentifier(), parser.nf.CanonicalTypeNode(parser.pos(b, e), parser.ts.Enum()), d, e, null); 
+                                                                                    RESULT = parser.nf.JL5ClassDecl(parser.pos(b, e), a, c.getIdentifier(), parser.nf.CanonicalTypeNode(parser.pos(b, e), parser.ts.Enum()), d, e, new TypedList(new LinkedList(), TypeNode.class, false)); 
                                                                                     :};
 
 enum_body ::=
@@ -1897,12 +1902,14 @@ array_creation_init ::=
 instanceof_expression ::=
     relational_expression:a {:  RESULT = a;  :}
  |  instanceof_expression:a INSTANCEOF:b reference_type:c {:
-                                                          RESULT = parser.nf.Instanceof(parser.pos(a, c), a, c); 
+                                                          RESULT = parser.nf.JL5Instanceof(parser.pos(a, c), a, c); 
                                                           :};
 
 type_parameters_opt ::=
     type_parameters:a {:  RESULT = a;  :}
- |  {:  RESULT = null;  :};
+ |  {:
+    RESULT = new TypedList(new LinkedList(), TypeNode.class, false); 
+    :};
 
 type_parameters ::=
     LT type_parameter_list_1:a {:  RESULT = a;  :};
@@ -2118,10 +2125,10 @@ relational_expression_nn ::=
 instanceof_expression_nn ::=
     relational_expression_nn:a {:  RESULT = a;  :}
  |  name:a INSTANCEOF:b reference_type:c {:
-                                         RESULT = parser.nf.Instanceof(parser.pos(a, c), a.toExpr(), c); 
+                                         RESULT = parser.nf.JL5Instanceof(parser.pos(a, c), a.toExpr(), c); 
                                          :}
  |  instanceof_expression_nn:a INSTANCEOF:b reference_type:c {:
-                                                             RESULT = parser.nf.Instanceof(parser.pos(a, c), a, c); 
+                                                             RESULT = parser.nf.JL5Instanceof(parser.pos(a, c), a, c); 
                                                              :};
 
 equality_expression_nn ::=

@@ -19,8 +19,7 @@ import polyglot.ext.jl.ast.*;
  * or interface. It may be a public or other top-level class, or an inner
  * named class, or an anonymous class.
  */
-public class JL5ClassDecl_c extends ClassDecl_c implements JL5ClassDecl, ApplicationCheck
-{
+public class JL5ClassDecl_c extends ClassDecl_c implements JL5ClassDecl, ApplicationCheck {
     protected List annotations;
     protected List paramTypes;
 
@@ -92,34 +91,6 @@ public class JL5ClassDecl_c extends ClassDecl_c implements JL5ClassDecl, Applica
         return reconstruct(superClass, interfaces, body, annots, paramTypes);
     }
 
-      public Node buildTypes(TypeBuilder tb) throws SemanticException {
-        JL5ParsedClassType type = (JL5ParsedClassType)tb.currentClass();
-        if (!type.isGeneric()){
-            return super.buildTypes(tb);
-        }
-        // for each param type - create intersection type and 
-        // add to type
-        for (Iterator it = paramTypes.iterator(); it.hasNext(); ){
-            ParamTypeNode n = (ParamTypeNode)it.next();
-            IntersectionType iType = new IntersectionType_c(tb.typeSystem());
-            iType.name(n.id());
-            
-            ArrayList typeList = new ArrayList();
-            if (n.bounds() != null){
-                for (int i = 0; i < n.bounds().size(); i++){//Iterator typesIt = n.boundsList().iterator(); typesIt.hasNext(); ){
-                    typeList.add(tb.typeSystem().unknownType(position()));
-                }
-            }
-            iType.bounds(typeList);
-            type.addTypeVariable(iType);
-        }
-        if (type != null){
-            return type(type).flags(type.flags());
-        }
-        return this;
-    }
-
-
     protected void disambiguateSuperType(AmbiguityRemover ar) throws SemanticException {
         JL5TypeSystem ts = (JL5TypeSystem)ar.typeSystem();
         if (JL5Flags.isAnnotationModifier(flags())){
@@ -130,44 +101,18 @@ public class JL5ClassDecl_c extends ClassDecl_c implements JL5ClassDecl, Applica
         }
     }
 
+    // still need this - will cause an extra disamb pass which will permit
+    // the type variables to fully disambigute themselves
+    // before they may be needed as args in superClass or interfaces
     public NodeVisitor disambiguateEnter(AmbiguityRemover ar) throws SemanticException {
         if (ar.kind() == JL5AmbiguityRemover.TYPE_VARS) {
-            return ar.bypass(superClass).bypass(interfaces).bypass(body);
+            return ar.bypass(superClass).bypass(interfaces);
         }
         else {
             return super.disambiguateEnter(ar);
         }
     }       
 
-    public Node disambiguate(AmbiguityRemover ar) throws SemanticException {
-        if (ar.kind() == JL5AmbiguityRemover.TYPE_VARS) {
-            JL5ParsedClassType genType = (JL5ParsedClassType)type();
-            // for each param type - create intersection type and 
-            // add to type
-            for (Iterator it = paramTypes.iterator(); it.hasNext(); ){
-                ParamTypeNode n = (ParamTypeNode)it.next();
-                if (genType.hasTypeVariable(n.id())){
-                    IntersectionType iType = genType.getTypeVariable(n.id());
-                    ArrayList typeList = new ArrayList();
-                    if (n.bounds() != null){
-                        for (Iterator typesIt = n.bounds().iterator(); typesIt.hasNext(); ){
-                            typeList.add(((TypeNode)typesIt.next()).type());
-                        }
-                    }
-                    iType.bounds(typeList);
-                }
-            }
-            if (genType != null){
-                return type(genType).flags(genType.flags());
-            }
-            return this;
-     
-        }
-        else {
-            return super.disambiguate(ar);
-        }
-    }
-    
     public Node typeCheck(TypeChecker tc) throws SemanticException {
         if (JL5Flags.isEnumModifier(flags()) && flags().isAbstract()){
             throw new SemanticException("Enum types cannot have abstract modifier", this.position());
@@ -380,71 +325,19 @@ public class JL5ClassDecl_c extends ClassDecl_c implements JL5ClassDecl, Applica
     public void prettyPrintHeader(CodeWriter w, PrettyPrinter tr) {
         prettyPrintModifiers(w, tr);
         prettyPrintName(w, tr);
-        w.write("<");
-        for (Iterator it = paramTypes.iterator(); it.hasNext(); ){
-            ParamTypeNode next = (ParamTypeNode)it.next();
-            print(next, w, tr);
-            if (it.hasNext()){
-                w.write(", ");
+        if (paramTypes != null && !paramTypes.isEmpty()){
+            w.write("<");
+            for (Iterator it = paramTypes.iterator(); it.hasNext(); ){
+                ParamTypeNode next = (ParamTypeNode)it.next();
+                print(next, w, tr);
+                if (it.hasNext()){
+                    w.write(", ");
+                }
             }
+            w.write("> ");
         }
-        w.write("> ");
-
         prettyPrintHeaderRest(w, tr);
 
     }
-    /*    for (Iterator it = annotations.iterator(); it.hasNext(); ){
-            print((AnnotationElem)it.next(), w, tr);
-        }
-        if (flags.isInterface()) {
-            if (JL5Flags.isAnnotationModifier(flags)){
-                w.write(JL5Flags.clearAnnotationModifier(flags).clearInterface().clearAbstract().translate());
-                w.write("@");
-            }
-            else{
-                w.write(flags.clearInterface().clearAbstract().translate());
-            }
-        }
-        else {
-            w.write(flags.translate());
-        }
-
-        if (flags.isInterface()) {
-            w.write("interface ");
-        }
-        else if (JL5Flags.isEnumModifier(flags)){
-        }
-        else {
-            w.write("class ");
-        }
-
-        w.write(name);
-
-        if (superClass() != null && !JL5Flags.isEnumModifier(type.flags())) {
-            w.write(" extends ");
-            print(superClass(), w, tr);
-        }
-
-        if (! interfaces.isEmpty() && !JL5Flags.isAnnotationModifier(type.flags())) {
-            if (flags.isInterface()) {
-                w.write(" extends ");
-            }
-            else {
-                w.write(" implements ");
-            }
-
-            for (Iterator i = interfaces().iterator(); i.hasNext(); ) {
-                TypeNode tn = (TypeNode) i.next();
-                print(tn, w, tr);
-
-                if (i.hasNext()) {
-                    w.write (", ");
-                }
-            }
-        }
-
-        w.write(" {");
-    }*/
-
 
 }

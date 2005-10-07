@@ -53,7 +53,11 @@ public interface JL5TypeSystem extends TypeSystem {
     
     public void checkAnnotationApplicability(AnnotationElem annotation, Node n) throws SemanticException;
    
-    public MethodInstance methodInstance(Position pos, ReferenceType container, Flags flags, Type returnType, String name, List formals, List throwTypes, List typeVars);
+    public IntersectionType intersectionType(Position pos, String name, List bounds);
+    public ParameterizedType parameterizedType(JL5ParsedClassType type);
     
-    public ConstructorInstance constructorInstance(Position pos, ClassType container, Flags flags, List formals, List throwTypes, List typeVars);
+    public void handleTypeRestrictions(List typeVariables, List typeArguments) throws SemanticException;
+    public void resetTypeRestrictions(List typeVariables, List typeArguments) throws SemanticException;
+
+    public Type findRequiredType(IntersectionType iType, ParameterizedType pType);
 }

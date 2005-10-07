@@ -32,7 +32,9 @@ public class ExtensionInfo extends polyglot.ext.jl.ExtensionInfo {
     public static final polyglot.frontend.Pass.ID TYPE_CHECK_ALL = new polyglot.frontend.Pass.ID("type-check-all");
     public static final polyglot.frontend.Pass.ID APPLICATION_CHECK = new polyglot.frontend.Pass.ID("application-check");
     public static final polyglot.frontend.Pass.ID GENERIC_TYPE_HANDLER = new polyglot.frontend.Pass.ID("generic-type-handler");
-    public static final polyglot.frontend.Pass.ID GENERIC_TYPE_ALL = new polyglot.frontend.Pass.ID("generic-type-all");
+    public static final polyglot.frontend.Pass.ID ADD_TYPE_VARS = new polyglot.frontend.Pass.ID("add-type-vars");
+    //public static final polyglot.frontend.Pass.ID GENERIC_ARGS = new polyglot.frontend.Pass.ID("generic-args");
+    //public static final polyglot.frontend.Pass.ID GENERIC_RESET = new polyglot.frontend.Pass.ID("generic-reset");
     
     public String defaultFileExtension() {
         return "java";
@@ -62,11 +64,14 @@ public class ExtensionInfo extends polyglot.ext.jl.ExtensionInfo {
         // TODO: add passes as needed by your compiler
         //afterPass(passes, Pass.DISAM_ALL, new VisitorPass(ENUM_SWITCH_DISAMBIGUATE, job, new LeftoverAmbiguityRemover(job, ts, nf, LeftoverAmbiguityRemover.SWITCH_CASES)));
         
-        replacePass(passes, Pass.BUILD_TYPES, new VisitorPass(Pass.BUILD_TYPES, job, new JL5TypeBuilder(job, ts, nf)));
+        //replacePass(passes, Pass.BUILD_TYPES, new VisitorPass(Pass.BUILD_TYPES, job, new JL5TypeBuilder(job, ts, nf)));
         
-        beforePass(passes, Pass.CLEAN_SIGS, new VisitorPass(GENERIC_TYPE_HANDLER, job, new JL5AmbiguityRemover(job, ts, nf, JL5AmbiguityRemover.TYPE_VARS)));
+        beforePass(passes, Pass.CLEAN_SUPER, new VisitorPass(GENERIC_TYPE_HANDLER, job, new JL5AmbiguityRemover(job, ts, nf, JL5AmbiguityRemover.TYPE_VARS)));
         
-        //afterPass(passes, GENERIC_TYPE_HANDLER, new BarrierPass(GENERIC_TYPE_ALL, job));
+        afterPass(passes, GENERIC_TYPE_HANDLER, new VisitorPass(ADD_TYPE_VARS, job, new AddTypeVarsVisitor(job, ts, nf)));
+        
+        //beforePass(passes, Pass.TYPE_CHECK, new VisitorPass(GENERIC_ARGS, job, new GenericTypeHandler(job, ts, nf)));
+        //afterPass(passes, Pass.TYPE_CHECK, new VisitorPass(GENERIC_RESET, job, new GenericTypeReseter(job, ts, nf)));
         afterPass(passes, Pass.TYPE_CHECK, new BarrierPass(TYPE_CHECK_ALL, job));
         beforePass(passes, Pass.REACH_CHECK, new VisitorPass(APPLICATION_CHECK, job, new ApplicationChecker(job, ts, nf)));
 

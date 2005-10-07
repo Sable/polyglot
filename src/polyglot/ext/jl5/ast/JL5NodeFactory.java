@@ -22,10 +22,6 @@ public interface JL5NodeFactory extends NodeFactory {
     public JL5ClassBody JL5ClassBody(Position pos, List members);
     public JL5ConstructorDecl JL5ConstructorDecl(Position pos, FlagAnnotations flags, String name, List formals, List throwTypes, Block body, List typeParams);
     public JL5Block JL5Block(Position pos, List statements);
-    public JL5New JL5New(Position pos, Expr qualifier, TypeNode tn, List arguments, ClassBody body);
-    public JL5New JL5New(Position pos, TypeNode tn, List arguments);
-    public JL5New JL5New(Position pos, TypeNode tn, List arguments, ClassBody body);
-    public JL5New JL5New(Position pos, Expr qualifier, TypeNode tn, List arguments);
 
     public JL5Field JL5Field(Position pos, Receiver target, String name);
 
@@ -80,5 +76,6 @@ public interface JL5NodeFactory extends NodeFactory {
     public New JL5New(Position pos, TypeNode tn, List arguments, ClassBody body, List typeArgs);
 
 
+    public JL5Instanceof JL5Instanceof(Position pos, Expr expr, TypeNode tn);
 }
 

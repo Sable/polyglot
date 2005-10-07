@@ -5,6 +5,7 @@ import polyglot.util.*;
 import polyglot.types.*;
 import java.util.*;
 import polyglot.ext.jl5.types.*;
+import polyglot.ext.jl5.visit.*;
 import polyglot.ast.*;
 import polyglot.visit.*;
 
@@ -12,10 +13,6 @@ public class JL5New_c extends New_c implements JL5New {
 
     protected List typeArguments;
     
-    public JL5New_c (Position pos, Expr qualifier, TypeNode tn, List arguments, ClassBody body){
-        super(pos, qualifier, tn, arguments, body);
-    }
-
     public JL5New_c(Position pos, Expr qualifier, TypeNode tn, List arguments, ClassBody body, List typeArguments){
         super(pos, qualifier, tn, arguments, body);
         this.typeArguments = typeArguments;
@@ -39,7 +36,7 @@ public class JL5New_c extends New_c implements JL5New {
             n.qualifier = qualifier;
             n.arguments = TypedList.copyAndCheck(arguments, Expr.class, true);
             n.body = body;
-            n.typeArguments = typeArgs;
+            n.typeArguments = TypedList.copyAndCheck(typeArgs, TypeNode.class, false);
             return n;
         }
         return this;
@@ -55,26 +52,6 @@ public class JL5New_c extends New_c implements JL5New {
         return reconstruct(qualifier, tn, arguments, body, typeArgs);
     }
 
-    public Node buildTypes(TypeBuilder tb) throws SemanticException {
-        New_c n = (New_c) super.buildTypes(tb);
-        JL5TypeSystem ts = (JL5TypeSystem)tb.typeSystem();
-
-        List l = new ArrayList(arguments.size());
-        for (int i = 0; i < arguments.size(); i++) {
-            l.add(ts.unknownType(position()));
-        }
-
-        List typeVars = new ArrayList(typeArguments.size());
-        for (int i = 0; i < typeArguments.size(); i++){
-            typeVars.add(ts.unknownType(position()));
-        }
-        
-        ConstructorInstance ci = ts.constructorInstance(position(), ts.Object(), Flags.NONE, l, Collections.EMPTY_LIST, typeVars);
-        return n.constructorInstance(ci);
-
-    }
-               
-    
     public Node typeCheck(TypeChecker tc) throws SemanticException {
         if (tn.type().isClass()){
             ClassType ct = (ClassType)tn.type();
@@ -83,5 +60,27 @@ public class JL5New_c extends New_c implements JL5New {
             }
         }
         return super.typeCheck(tc);
+    }
+
+    protected Node typeCheckEpilogue(TypeChecker tc) throws SemanticException {
+        JL5TypeSystem ts = (JL5TypeSystem)tc.typeSystem();
+        JL5New_c n = (JL5New_c)super.typeCheckEpilogue(tc);
+        if (n.type() instanceof ParameterizedType){
+            // should check arguments here - if any are intersection types
+            // in the methodInstance then they need to be checked against 
+            // the typeArgs
+            ConstructorInstance ci = constructorInstance();
+            for (int i = 0; i < ci.formalTypes().size(); i++ ){
+                Type t = (Type)ci.formalTypes().get(i);
+                if (t instanceof IntersectionType){
+                    Type other = ts.findRequiredType((IntersectionType)t, (ParameterizedType)n.type());
+                    if (!ts.isImplicitCastValid(((Expr)arguments().get(i)).type(), other)){
+                        throw new SemanticException("Found arg of type: "+((Expr)arguments().get(i)).type()+" expected: "+other, ((Expr)arguments().get(i)).position());
+                    }
+                }
+            }
+        }
+
+        return n;
     }
 }

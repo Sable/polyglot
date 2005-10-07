@@ -55,22 +55,6 @@ public class JL5NodeFactory_c extends NodeFactory_c implements JL5NodeFactory {
         JL5Block n = new JL5AbstractBlock_c(pos, statements);
         return n;
     }
-    public JL5New JL5New(Position pos, Expr qualifier, TypeNode tn, List arguments, ClassBody body){
-        JL5New n = new JL5New_c(pos, qualifier, tn, arguments, body);
-        return n;
-    }
-    public JL5New JL5New(Position pos, TypeNode tn, List arguments){
-        JL5New n = new JL5New_c(pos, null, tn, arguments, null);
-        return n;
-    }
-    public JL5New JL5New(Position pos, TypeNode tn, List arguments, ClassBody body){
-        JL5New n = new JL5New_c(pos, null, tn, arguments, body);
-        return n;
-    }
-    public JL5New JL5New(Position pos, Expr qualifier, TypeNode tn, List arguments){
-        JL5New n = new JL5New_c(pos, qualifier, tn, arguments, null);
-        return n;
-    }
     public JL5Field JL5Field(Position pos, Receiver target, String name){
         JL5Field n = new JL5Field_c(pos, target, name);
         return n;
@@ -199,7 +183,10 @@ public class JL5NodeFactory_c extends NodeFactory_c implements JL5NodeFactory {
         return n;
     }
 
-    
+    public JL5Instanceof JL5Instanceof(Position pos, Expr expr, TypeNode tn){
+        JL5Instanceof n = new JL5Instanceof_c(pos, expr, tn);
+        return n;
+    }
     // TODO:  Override factory methods for overriden AST nodes.
     // TODO:  Override factory methods for AST nodes with new extension nodes.
 }

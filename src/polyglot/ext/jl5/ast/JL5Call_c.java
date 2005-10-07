@@ -7,6 +7,7 @@ import polyglot.util.*;
 import polyglot.types.*;
 import polyglot.visit.*;
 import polyglot.ext.jl5.types.*;
+import polyglot.ext.jl5.visit.*;
 
 public class JL5Call_c extends Call_c implements JL5Call {
 
@@ -45,76 +46,68 @@ public class JL5Call_c extends Call_c implements JL5Call {
         return reconstruct(target, arguments, typeArgs);
     }
     
-    public Node buildTypes(TypeBuilder tb) throws SemanticException {
-         Call_c call = (Call_c) super.buildTypes(tb);
-
-         JL5TypeSystem ts = (JL5TypeSystem)tb.typeSystem();
-
-         List l = new ArrayList(arguments.size());
-         for (int i = 0; i < arguments.size(); i++) {
-            l.add(ts.unknownType(position()));
-         }
-
-         List typeVars = new ArrayList(typeArguments.size());
-         for (int i = 0; i < typeArguments.size(); i++){
-            typeVars.add(ts.unknownType(position()));
-         }
-                 
-
-         MethodInstance mi = ts.methodInstance(position(), ts.Object(), Flags.NONE, ts.unknownType(position()), name, l, Collections.EMPTY_LIST, typeVars);
-         return call.methodInstance(mi);
-                             
-    }
-
  
     public Node typeCheck(TypeChecker tc) throws SemanticException {
         JL5Call_c n = (JL5Call_c)super.typeCheck(tc);
 
-        return checkTypeArguments(tc, n.methodInstance());
+        return checkTypeArguments(tc, n);
     }
 
-    private Node checkTypeArguments(TypeChecker tc, MethodInstance mi) throws SemanticException {
+    private Node checkTypeArguments(TypeChecker tc, JL5Call_c n) throws SemanticException {
         // check that each type arg is a subtype of the mi typeVars list
         // recheck args and 
         // reset this type
+       
+        /*for (Iterator it = mi.formalTypes().iterator(); it.hasNext(); ){
+            Type next = (Type)it.next();
+            if (next instanceof IntersectionType){
+            }
+        }*/
         
-        if (!((JL5MethodInstance)mi).isGeneric()) {
-            throw new SemanticException("Cannot call method: "+mi.name()+" with type arguments", position());
+        if (!typeArguments.isEmpty() && !((JL5MethodInstance)n.methodInstance()).isGeneric()) {
+            throw new SemanticException("Cannot call method: "+n.methodInstance().name()+" with type arguments", position());
         }
-        JL5MethodInstance gmi = (JL5MethodInstance)mi;
+        JL5MethodInstance gmi = (JL5MethodInstance)n.methodInstance();
         
-        if (typeArguments.size() != 0 && typeArguments.size() != gmi.typeVariables().size()){
+        /*if (typeArguments.size() != 0 && typeArguments.size() != gmi.typeVariables().size()){
             throw new SemanticException("Must specify all type arguments of none", position());
-        }
+        }*/
 
         JL5TypeSystem ts = (JL5TypeSystem)tc.typeSystem();
-        JL5Call_c gCall = this;
-        if (typeArguments.size() == 0) return gCall;
-        for (int i = 0; i < gmi.typeVariables().size(); i++) {
-            IntersectionType foundType = (IntersectionType)gmi.typeVariables().get(i);            
+        //Call gCall = this.methodInstance(gmi);
+        
+        // here return gCall with restricted return type if necessary
+        //if (typeArguments.size() == 0) return gCall;
+        //
+        // add restrictions 
+        for (int i = 0; i < typeArguments.size(); i++) {
             TypeNode correspondingArg = (TypeNode)typeArguments.get(i);
             if (correspondingArg instanceof BoundedTypeNode){
                 throw new SemanticException("Wilcard argument not allowed here", correspondingArg.position());
             }
-            if (!ts.isSubtype(correspondingArg.type(), foundType)){
-                throw new SemanticException("Invalid type argument ",correspondingArg.position());
-            }
-            for (int j = 0; j < arguments().size(); j++){
-                Expr next = (Expr)arguments().get(j);
-                Type formalType = (Type)gmi.formalTypes().get(j);
-                if (formalType instanceof IntersectionType && ((IntersectionType)formalType).name().equals(foundType.name())){
-                    // there is a new restrictive type
-                    if (!ts.isSubtype(next.type(), correspondingArg.type())){
-                        throw new SemanticException("arg has incorrect type: ", next.position());
-                    }
+        }
+        /*for (int j = 0; j < arguments().size(); j++){
+            Expr next = (Expr)arguments().get(j);
+            Type formalType = (Type)gmi.formalTypes().get(j);
+            if (formalType instanceof IntersectionType && !((IntersectionType)formalType).restrictions().isEmpty()){
+                List list = ((IntersectionType)formalType).restrictions();
+                TypeNode restriction = (TypeNode)list.get(list.size()-1);
+                // there is a new restrictive type
+                if (!ts.isSubtype(next.type(), restriction.type())){
+                    throw new SemanticException("Arg has incorrect type: "+restriction+" expected", next.position());
                 }
             }
-            if (gmi.returnType() instanceof IntersectionType && ((IntersectionType)gmi.returnType()).name().equals(foundType.name())){
-                gCall = (JL5Call_c)this.type(correspondingArg.type());
-            }
+        }*/
+        if (gmi.returnType() instanceof IntersectionType && ((IntersectionType)gmi.returnType()).restriction() != null){
+            TypeNode restriction = ((IntersectionType)gmi.returnType()).restriction();
+            return n.type(restriction.type());
         }
-       
-        return gCall;
+        else if (gmi.returnType() instanceof IntersectionType){
+            return n.type(((IntersectionType)gmi.returnType()).superType());
+        }
+        else {
+            return n.type(gmi.returnType());
+        }
         
     }
 

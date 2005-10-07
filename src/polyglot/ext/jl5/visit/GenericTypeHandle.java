@@ -7,4 +7,5 @@ import polyglot.types.*;
 public interface GenericTypeHandle {
 
     Node handleGenericType(GenericTypeHandler ac) throws SemanticException;
+    Node resetGenericTypeRestrictions(GenericTypeReseter ac) throws SemanticException;
 }

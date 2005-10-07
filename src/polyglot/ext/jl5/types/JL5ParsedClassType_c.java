@@ -47,6 +47,10 @@ public class JL5ParsedClassType_c extends ParsedClassType_c implements JL5Parsed
         }
         return enumConstants;
     }
+   
+    protected void freeInit(){
+        
+    }
     
     public List annotationElems(){
         if (annotationElems == null){
@@ -118,18 +122,22 @@ public class JL5ParsedClassType_c extends ParsedClassType_c implements JL5Parsed
 
     public boolean descendsFromImpl(Type ancestor){
         if (ancestor instanceof IntersectionType){
-            return isSubtypeOfAllBounds(((IntersectionType)ancestor).bounds());
+            return isSubtypeOfAllBoundsAndRestrictions(((IntersectionType)ancestor).bounds(), ((IntersectionType)ancestor).restriction());
         }
         else{
             return super.descendsFromImpl(ancestor);
         }
     }
 
-    private boolean isSubtypeOfAllBounds(List bounds){
-        if (bounds == null || bounds.isEmpty()) return true;
-        for (Iterator it = bounds.iterator(); it.hasNext(); ){
-            Object next = it.next();
-            if (!typeSystem().isSubtype(this, (Type)next)) return false;
+    private boolean isSubtypeOfAllBoundsAndRestrictions(List bounds, TypeNode restriction){
+        if (bounds != null){
+            for (Iterator it = bounds.iterator(); it.hasNext(); ){
+                Object next = it.next();
+                if (!typeSystem().isSubtype(this, (Type)next)) return false;
+            }
+        }
+        if (restriction != null){
+            if (!typeSystem().isSubtype(this, restriction.type())) return false;
         }
         return true;
     }
@@ -146,6 +154,7 @@ public class JL5ParsedClassType_c extends ParsedClassType_c implements JL5Parsed
     }
 
     public boolean hasTypeVariable(String name){
+        if (typeVariables == null || typeVariables.isEmpty()) return false;
         for (Iterator it = typeVariables.iterator(); it.hasNext(); ){
             IntersectionType iType = (IntersectionType)it.next();
             if (iType.name().equals(name)) return true;
@@ -164,6 +173,20 @@ public class JL5ParsedClassType_c extends ParsedClassType_c implements JL5Parsed
     public boolean isGeneric(){
         if ((typeVariables != null) && !typeVariables.isEmpty()) return true;
         return false;
+    }
+
+    public String toString(){
+        StringBuffer sb = new StringBuffer(super.toString());
+        if ((typeVariables != null) && !typeVariables.isEmpty()){
+            sb.append("<");
+            sb.append(typeVariables);
+            sb.append(">");
+        }
+        return sb.toString();
+    }
+
+    public LazyClassInitializer init(){
+        return this.init;
     }
 }
 

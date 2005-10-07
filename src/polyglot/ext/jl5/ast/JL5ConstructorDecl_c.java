@@ -68,37 +68,6 @@ public class JL5ConstructorDecl_c extends ConstructorDecl_c implements JL5Constr
         return reconstruct(formals, throwTypes, body, annotations, paramTypes);
     }
 
-    public Node buildTypes(TypeBuilder tb) throws SemanticException {
-        JL5TypeSystem ts = (JL5TypeSystem)tb.typeSystem();
-
-        List l = new ArrayList(formals.size());
-        for (int i = 0; i < formals.size(); i++) {
-            l.add(ts.unknownType(position()));
-        }
-
-        List m = new ArrayList(throwTypes().size());
-        for (int i = 0; i < throwTypes().size(); i++) {
-            m.add(ts.unknownType(position()));
-        }
-
-        List typeVars = new ArrayList(paramTypes.size());
-        for (Iterator it = paramTypes.iterator(); it.hasNext(); ){
-            ParamTypeNode n = (ParamTypeNode)it.next();
-            IntersectionType iType = new IntersectionType_c(tb.typeSystem());
-            iType.name(n.id());
-            ArrayList typeList = new ArrayList();
-            if (n.bounds() != null){
-                for (int i = 0; i < n.bounds().size(); i++){
-                    typeList.add(tb.typeSystem().unknownType(position()));
-                }
-            }
-            iType.bounds(typeList);
-            typeVars.add(iType);
-        }
-        ConstructorInstance ci = ts.constructorInstance(position(), ts.Object(), Flags.NONE, l, m, typeVars);
-
-        return constructorInstance(ci);
-    }
 
     public NodeVisitor disambiguateEnter(AmbiguityRemover ar) throws SemanticException {
         if (ar.kind() == JL5AmbiguityRemover.TYPE_VARS) {
@@ -109,74 +78,39 @@ public class JL5ConstructorDecl_c extends ConstructorDecl_c implements JL5Constr
         }
     }
 
-   public Node disambiguate(AmbiguityRemover ar) throws SemanticException {
-        if (ar.kind() == JL5AmbiguityRemover.TYPE_VARS){
-            JL5ConstructorInstance gci = (JL5ConstructorInstance)constructorInstance();
-          // for each param type - create intersection type and 
-            // add to type
-            for (Iterator it = paramTypes.iterator(); it.hasNext(); ){
-                ParamTypeNode n = (ParamTypeNode)it.next();
-                if (gci.hasTypeVariable(n.id())){
-                    IntersectionType iType = gci.getTypeVariable(n.id());
-                    ArrayList typeList = new ArrayList();
-                    if (n.bounds() != null){
-                        for (Iterator typesIt = n.bounds().iterator(); typesIt.hasNext(); ){
-                            typeList.add(((TypeNode)typesIt.next()).type());
-                        }
-                    }
-                    iType.bounds(typeList);
-                }
-            }
-            return this.constructorInstance(gci);
-        }
-        else {
-            return super.disambiguate(ar);
-        }
-    }
-
-    protected ConstructorInstance makeConstructorInstance(ClassType ct, TypeSystem ts) throws SemanticException {
-
-        List argTypes = new LinkedList();
-        List excTypes = new LinkedList();
-
-        for (Iterator i = formals.iterator(); i.hasNext(); ) {
-            Formal f = (Formal) i.next();
-            argTypes.add(f.declType());
-        }
-
-        for (Iterator i = throwTypes().iterator(); i.hasNext(); ) {
-            TypeNode tn = (TypeNode) i.next();
-            excTypes.add(tn.type());
-        }
-
-        List typeVars = new ArrayList(paramTypes.size());
-        for (Iterator it = paramTypes.iterator(); it.hasNext(); ){
-            ParamTypeNode n = (ParamTypeNode)it.next();
-            IntersectionType iType = new IntersectionType_c(ts);
-            iType.name(n.id());
-            iType.bounds(n.bounds());
-            typeVars.add(iType);
-        }
-
-        return ((JL5TypeSystem)ts).constructorInstance(position(), ct, flags, argTypes, excTypes, typeVars);
-    }
-
     public void prettyPrintHeader(CodeWriter w, PrettyPrinter tr) {
         w.begin(0);
         w.write(flags().translate());
 
-        w.write("<");
-        for (Iterator it = paramTypes.iterator(); it.hasNext(); ){
-            ParamTypeNode next = (ParamTypeNode)it.next();
-            print(next, w, tr);
-            if (it.hasNext()){
-                w.write(", ");
+        if ((paramTypes != null) && !paramTypes.isEmpty()){
+            w.write("<");
+            for (Iterator it = paramTypes.iterator(); it.hasNext(); ){
+                ParamTypeNode next = (ParamTypeNode)it.next();
+                print(next, w, tr);
+                if (it.hasNext()){
+                    w.write(", ");
+                }
             }
+            w.write("> ");
         }
-        w.write("> ");
-
+        
         w.write(name);
         w.write("(");
+        w.begin(0);
+
+        for (Iterator i = formals.iterator(); i.hasNext(); ) {
+            Formal f = (Formal) i.next();
+            print(f, w, tr);
+
+            if (i.hasNext()) {
+            w.write(",");
+            w.allowBreak(0, " ");
+            }
+        }
+
+        w.end();
+        w.write(")");
+
         if (! throwTypes().isEmpty()) {
             w.allowBreak(6);
             w.write("throws ");

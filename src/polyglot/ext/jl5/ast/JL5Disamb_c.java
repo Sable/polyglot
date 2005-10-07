@@ -57,7 +57,7 @@ public class JL5Disamb_c extends Disamb_c implements JL5Disamb {
 
 
     protected Node disambiguateNoPrefix() throws SemanticException {
-        
+       
         // First try local variables and fields
         VarInstance vi = c.findVariableSilent(name);
         
@@ -69,7 +69,9 @@ public class JL5Disamb_c extends Disamb_c implements JL5Disamb {
         // no variable found. try
         // might be a generic type parameter
         JL5ParsedClassType ct = (JL5ParsedClassType)c.currentClass();
-        if (ct.isGeneric()){
+       
+        
+        if ((ct != null ) && ct.isGeneric()){
             if (ct.hasTypeVariable(name)){
                 IntersectionType it =  ct.getTypeVariable(name);
                 return nf.CanonicalTypeNode(pos, it);

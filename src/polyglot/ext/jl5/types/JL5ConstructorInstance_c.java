@@ -13,9 +13,8 @@ public class JL5ConstructorInstance_c extends ConstructorInstance_c implements J
 
     protected List typeVariables;
    
-    public JL5ConstructorInstance_c(TypeSystem ts, Position pos, ClassType container, Flags flags, List formals, List excTypes, List typeVariables){
+    public JL5ConstructorInstance_c(TypeSystem ts, Position pos, ClassType container, Flags flags, List formals, List excTypes){
         super(ts, pos, container, flags, formals, excTypes);
-        this.typeVariables = typeVariables;
     }
     
     public List typeVariables(){

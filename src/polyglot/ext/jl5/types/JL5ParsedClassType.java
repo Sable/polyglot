@@ -23,4 +23,6 @@ public interface JL5ParsedClassType extends ParsedClassType{
     IntersectionType getTypeVariable(String name);
 
     boolean isGeneric();
+
+    LazyClassInitializer init();
 }

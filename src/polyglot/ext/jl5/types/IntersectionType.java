@@ -2,6 +2,7 @@ package polyglot.ext.jl5.types;
 
 import polyglot.types.*;
 import java.util.*;
+import polyglot.ast.*;
 
 public interface IntersectionType extends ClassType {
 
@@ -12,4 +13,9 @@ public interface IntersectionType extends ClassType {
     void addBound(ClassType bound);
 
     void name(String name);
+
+    void pushRestriction(TypeNode restriction);
+    void popRestriction(TypeNode restriction);
+    List restrictions();
+    TypeNode restriction();
 }
