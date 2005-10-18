@@ -54,60 +54,43 @@ public class JL5Call_c extends Call_c implements JL5Call {
     }
 
     private Node checkTypeArguments(TypeChecker tc, JL5Call_c n) throws SemanticException {
-        // check that each type arg is a subtype of the mi typeVars list
-        // recheck args and 
-        // reset this type
        
-        /*for (Iterator it = mi.formalTypes().iterator(); it.hasNext(); ){
-            Type next = (Type)it.next();
-            if (next instanceof IntersectionType){
-            }
-        }*/
-        
+        // can only call a method with type args if it was declared as generic
         if (!typeArguments.isEmpty() && !((JL5MethodInstance)n.methodInstance()).isGeneric()) {
             throw new SemanticException("Cannot call method: "+n.methodInstance().name()+" with type arguments", position());
         }
-        JL5MethodInstance gmi = (JL5MethodInstance)n.methodInstance();
         
-        /*if (typeArguments.size() != 0 && typeArguments.size() != gmi.typeVariables().size()){
-            throw new SemanticException("Must specify all type arguments of none", position());
-        }*/
-
+        JL5MethodInstance mi = (JL5MethodInstance)n.methodInstance();
         JL5TypeSystem ts = (JL5TypeSystem)tc.typeSystem();
-        //Call gCall = this.methodInstance(gmi);
         
-        // here return gCall with restricted return type if necessary
-        //if (typeArguments.size() == 0) return gCall;
-        //
-        // add restrictions 
+        // wildcards are not allowed for type args for generic call
         for (int i = 0; i < typeArguments.size(); i++) {
             TypeNode correspondingArg = (TypeNode)typeArguments.get(i);
             if (correspondingArg instanceof BoundedTypeNode){
                 throw new SemanticException("Wilcard argument not allowed here", correspondingArg.position());
             }
         }
-        /*for (int j = 0; j < arguments().size(); j++){
-            Expr next = (Expr)arguments().get(j);
-            Type formalType = (Type)gmi.formalTypes().get(j);
-            if (formalType instanceof IntersectionType && !((IntersectionType)formalType).restrictions().isEmpty()){
-                List list = ((IntersectionType)formalType).restrictions();
-                TypeNode restriction = (TypeNode)list.get(list.size()-1);
-                // there is a new restrictive type
-                if (!ts.isSubtype(next.type(), restriction.type())){
-                    throw new SemanticException("Arg has incorrect type: "+restriction+" expected", next.position());
+
+        // type check call arguments
+        if (target() != null && target().type() instanceof ParameterizedType){
+            for (int i = 0; i < mi.formalTypes().size(); i++){
+                Type t = (Type)mi.formalTypes().get(i);
+                if (t instanceof IntersectionType){
+                    Type other = ts.findRequiredType((IntersectionType)t, (ParameterizedType)target().type());
+                    if (!ts.isImplicitCastValid(((Expr)arguments().get(i)).type(), other)){
+                        throw new SemanticException("Found arg of type: "+((Expr)arguments().get(i)).type()+" expected: "+other, ((Expr)arguments().get(i)).position());
+                    }
                 }
             }
-        }*/
-        if (gmi.returnType() instanceof IntersectionType && ((IntersectionType)gmi.returnType()).restriction() != null){
-            TypeNode restriction = ((IntersectionType)gmi.returnType()).restriction();
-            return n.type(restriction.type());
+        
+
+            // set return type
+            if (mi.returnType() instanceof IntersectionType){
+                Type other = ts.findRequiredType((IntersectionType)mi.returnType(), (ParameterizedType)target().type());
+                return n.type(other);
+            }
         }
-        else if (gmi.returnType() instanceof IntersectionType){
-            return n.type(((IntersectionType)gmi.returnType()).superType());
-        }
-        else {
-            return n.type(gmi.returnType());
-        }
+        return n.type(mi.returnType());
         
     }
 

@@ -34,6 +34,32 @@ public class JL5Field_c extends Field_c implements JL5Field {
 
         JL5Field_c f = (JL5Field_c)fieldInstance(fi).type(fi.type());
         f.checkConsistency(c);
+        
+        if (target() != null && target().type() instanceof ParameterizedType &&  fi.type() instanceof IntersectionType){
+            Type other = ts.findRequiredType((IntersectionType)fi.type(), (ParameterizedType)target().type());
+            return f.type(other);
+        }
+       
+
+        /*System.out.println("checking field: "+this);
+        JL5ParsedClassType ct = (JL5ParsedClassType)c.currentClass();
+        System.out.println("ct class: "+ct.getClass());
+        System.out.println("anon: "+ct.isAnonymous());
+        System.out.println("class: "+ct+" is a: "+ct.getClass());
+        ClassType out = ct.outer();
+        while (out != null){
+            System.out.println("class outer: "+out+" is a: "+ out.getClass());
+            out = out.outer();
+            //System.out.println("class args :" +ct.typeArguments());
+        }
+        ReferenceType st = (ReferenceType)ct.superType();
+        while (st != null){
+            System.out.println("class super: "+st+" is a: "+ st.getClass());
+            st = (ReferenceType)st.superType();
+        }
+        System.out.println(this.type());
+        */
+        
         return f;
         
     }

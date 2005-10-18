@@ -6,17 +6,18 @@ import polyglot.util.*;
 import java.util.*;
 import polyglot.visit.*;
 import polyglot.ast.*;
+import polyglot.ext.jl5.types.*;
 
 public class BoundedTypeNode_c extends TypeNode_c implements BoundedTypeNode {
 
 
     protected BoundedTypeNode.Kind kind;
-    protected List boundsList;
+    protected TypeNode bound;
 
-    public BoundedTypeNode_c(Position pos, BoundedTypeNode.Kind kind, List boundsList){
+    public BoundedTypeNode_c(Position pos, BoundedTypeNode.Kind kind, TypeNode bound){
         super(pos);
         this.kind = kind;
-        this.boundsList = boundsList;
+        this.bound = bound;
     }
     
     public Kind kind(){
@@ -29,41 +30,53 @@ public class BoundedTypeNode_c extends TypeNode_c implements BoundedTypeNode {
         return n;
     }
     
-    public List boundsList(){
-        return this.boundsList;
+    public TypeNode bound(){
+        return this.bound;
     }
     
-    public BoundedTypeNode boundsList(List list){
+    public BoundedTypeNode bound(TypeNode bound){
         BoundedTypeNode_c n = (BoundedTypeNode_c) copy();
-        n.boundsList = list;
+        n.bound = bound;
         return n;
     }
    
-    public BoundedTypeNode reconstruct(List bounds){
-        if (!CollectionUtil.equals(bounds, boundsList)){
+    public BoundedTypeNode reconstruct(TypeNode bound){
+        if (bound != this.bound){
             BoundedTypeNode_c n = (BoundedTypeNode_c) copy();
-            n.boundsList = bounds;
+            n.bound = bound;
             return n;
         }
         return this;
     }
     
     public Node visitChildren(NodeVisitor v){
-        List bounds = visitList(boundsList, v);
-        return reconstruct(bounds);
-    }
-    
-    public void prettyPrintBoundsList(CodeWriter w, PrettyPrinter tr){
-        if (boundsList == null) return;
-        for (Iterator it = boundsList.iterator(); it.hasNext(); ){
-            TypeNode tn = (TypeNode)it.next();
-            print(tn, w, tr);
-            if (it.hasNext()){
-                w.write(" & ");
-            }
+        if (bound != null){
+            TypeNode bound = (TypeNode)visitChild(this.bound, v);
+            return reconstruct(bound);
         }
+        return this;
+    }
+   
+    public Node disambiguate(AmbiguityRemover v){
+        JL5TypeSystem ts = (JL5TypeSystem)v.typeSystem();
+        if (bound == null ) {
+            return this.type(ts.anyType());
+        }
+        else if (kind == BoundedTypeNode.SUPER) {
+            return this.type(ts.anySuperType(bound.type()));
+        }
+        else if (kind == BoundedTypeNode.EXTENDS){
+            return this.type(ts.anySubType(bound.type()));
+        }
+        return this;    
     }
     
     public void prettyPrint(CodeWriter w, PrettyPrinter tr){
+        w.write("?");
+        if (bound != null){
+            w.write(kind.toString());
+            w.write(" ");
+            print(bound, w, tr);
+        }
     }
 }

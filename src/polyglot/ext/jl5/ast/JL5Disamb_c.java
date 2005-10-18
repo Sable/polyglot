@@ -18,7 +18,7 @@ public class JL5Disamb_c extends Disamb_c implements JL5Disamb {
                 return ((JL5NodeFactory)nf).JL5Field(pos, tn, name).fieldInstance(fi);
             }
             catch(NoMemberException e){
-                if (e.getKind() != e.FIELD){
+                if (e.getKind() != e.FIELD && e.getKind() != JL5NoMemberException.ENUM_CONSTANT){
                     throw e;
                 }
             }
@@ -50,7 +50,7 @@ public class JL5Disamb_c extends Disamb_c implements JL5Disamb {
             return ((JL5NodeFactory)nf).JL5Field(pos, r, name).fieldInstance(fi).targetImplicit(true);
         } else if (vi instanceof LocalInstance) {
             LocalInstance li = (LocalInstance) vi;
-            return nf.Local(pos, name).localInstance(li);
+            return ((JL5NodeFactory)nf).JL5Local(pos, name).localInstance(li);
         }
         return null;
     }
@@ -69,7 +69,7 @@ public class JL5Disamb_c extends Disamb_c implements JL5Disamb {
         // no variable found. try
         // might be a generic type parameter
         JL5ParsedClassType ct = (JL5ParsedClassType)c.currentClass();
-       
+    
         
         if ((ct != null ) && ct.isGeneric()){
             if (ct.hasTypeVariable(name)){
@@ -119,10 +119,10 @@ public class JL5Disamb_c extends Disamb_c implements JL5Disamb {
             return nf.PackageNode(pos, ts.packageForName(name));
         }
 
-        //return null;
+        return null;
  
         
-        Node result = null;
+        //Node result = null;
         //if (result == null){
             // make special AmbNoPrefix node and return it (it should 
             // extend Expr)
@@ -131,8 +131,8 @@ public class JL5Disamb_c extends Disamb_c implements JL5Disamb {
             // switch expr (this situation may arise for case labels)
             // otherwise as far as I know its an error
                 
-            result = ((JL5NodeFactory)nf).JL5AmbExpr(pos, name);
+          //  result = ((JL5NodeFactory)nf).JL5AmbExpr(pos, name);
         //}
-        return result;
+        //return result;
     }
 }

@@ -13,7 +13,7 @@ import java.io.*;
  * @author Nate Nystrom
  *         (<a href="mailto:nystrom@cs.purdue.edu">nystrom@cs.purdue.edu</a>)
  */
-class InnerClasses extends Attribute {
+public class InnerClasses extends Attribute {
   Info[] classes;
 
   static class Info {
@@ -35,7 +35,7 @@ class InnerClasses extends Attribute {
    * @exception IOException
    *        If an error occurs while reading.
    */
-  InnerClasses(DataInputStream in, int nameIndex, int length) throws IOException
+  public InnerClasses(DataInputStream in, int nameIndex, int length) throws IOException
   {
     super(nameIndex, length);
 

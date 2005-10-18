@@ -19,10 +19,18 @@ public interface JL5ParsedClassType extends ParsedClassType{
     List typeVariables();
     void addTypeVariable(IntersectionType type);
 
+    void typeVariables(List vars);
+    
     boolean hasTypeVariable(String name);
     IntersectionType getTypeVariable(String name);
 
     boolean isGeneric();
 
     LazyClassInitializer init();
+
+    /*List typeArguments();
+    void typeArguments(List args);
+
+    boolean isParameterized();*/
+
 }

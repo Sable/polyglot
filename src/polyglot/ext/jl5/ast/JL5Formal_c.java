@@ -57,6 +57,7 @@ public class JL5Formal_c extends Formal_c implements JL5Formal, ApplicationCheck
         JL5TypeSystem ts = (JL5TypeSystem)tc.typeSystem();
         ts.checkDuplicateAnnotations(annotations);
         return super.typeCheck(tc);
+        
     }
 
     public Node applicationCheck(ApplicationChecker appCheck) throws SemanticException {

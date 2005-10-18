@@ -92,6 +92,7 @@ public class ParamTypeNode_c extends TypeNode_c implements ParamTypeNode, TypeVa
             CodeInstance ci = am.context().currentCode();
             if (ci instanceof JL5MethodInstance){
                 ((JL5MethodInstance)ci).addTypeVariable((IntersectionType)type());
+                System.out.println("add type var: "+type()+" to mi: "+ci);
             }
             else if (ci instanceof JL5ConstructorInstance){
                 ((JL5ConstructorInstance)ci).addTypeVariable((IntersectionType)type());

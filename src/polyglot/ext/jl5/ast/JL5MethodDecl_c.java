@@ -98,6 +98,18 @@ public class JL5MethodDecl_c extends MethodDecl_c implements JL5MethodDecl, Appl
         }
     }
 
+    public Node disambiguate(AmbiguityRemover ar) throws SemanticException {
+        if (ar.kind() == AmbiguityRemover.SIGNATURES) {
+            Context c = ar.context();
+            TypeSystem ts = ar.typeSystem();
+            ParsedClassType ct = c.currentClassScope();
+            JL5MethodInstance mi = (JL5MethodInstance)makeMethodInstance(ct, ts);
+            mi.typeVariables(((JL5MethodInstance)methodInstance()).typeVariables());
+            return flags(mi.flags()).methodInstance(mi);
+         }
+         return this;
+    }
+
     public Node typeCheck(TypeChecker tc) throws SemanticException {
         // check no duplicate annotations used
         JL5TypeSystem ts = (JL5TypeSystem)tc.typeSystem();

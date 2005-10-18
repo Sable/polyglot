@@ -116,7 +116,40 @@ public class JL5TypeSystem_c extends TypeSystem_c implements JL5TypeSystem {
             return FLOAT_WRAPPER = load("java.lang.Float");
         }
     }
-    
+   
+    public boolean isAutoEquivalent(Type t1, Type t2){
+        if (t1.isPrimitive()){
+            if (t1.isInt() && equals(INTEGER_WRAPPER, t2)) return true;
+            if (t1.isByte() && equals(BYTE_WRAPPER, t2)) return true;
+            if (t1.isShort() && equals(SHORT_WRAPPER, t2)) return true;
+            if (t1.isChar() && equals(CHARACTER_WRAPPER, t2)) return true;
+            if (t1.isBoolean() && equals(BOOLEAN_WRAPPER, t2)) return true;
+            if (t1.isLong() && equals(LONG_WRAPPER, t2)) return true;
+            if (t1.isDouble() && equals(DOUBLE_WRAPPER, t2)) return true;
+            if (t1.isFloat() && equals(FLOAT_WRAPPER, t2)) return true;
+        }
+        else if (t2.isPrimitive()){
+            if (t2.isInt() && equals(INTEGER_WRAPPER, t1)) return true;
+            if (t2.isByte() && equals(BYTE_WRAPPER, t1)) return true;
+            if (t2.isShort() && equals(SHORT_WRAPPER, t1)) return true;
+            if (t2.isChar() && equals(CHARACTER_WRAPPER, t1)) return true;
+            if (t2.isBoolean() && equals(BOOLEAN_WRAPPER, t1)) return true;
+            if (t2.isLong() && equals(LONG_WRAPPER, t1)) return true;
+            if (t2.isDouble() && equals(DOUBLE_WRAPPER, t1)) return true;
+            if (t2.isFloat() && equals(FLOAT_WRAPPER, t1)) return true;
+        }
+        return false;
+    }
+
+    public boolean isNumericWrapper(Type t){
+        if (equals(INTEGER_WRAPPER, t) || equals(BYTE_WRAPPER, t) || equals(SHORT_WRAPPER, t) || equals(CHARACTER_WRAPPER, t) || equals(LONG_WRAPPER, t) || equals(DOUBLE_WRAPPER, t) || equals(FLOAT_WRAPPER, t)) return true;
+        return false;
+    }
+   
+    public boolean isIntOrLessWrapper(Type t){
+        if (equals(INTEGER_WRAPPER, t) || equals(BYTE_WRAPPER, t) || equals(SHORT_WRAPPER, t) || equals(CHARACTER_WRAPPER, t) ) return true;
+        return false;
+    }
     
     protected final Flags TOP_LEVEL_CLASS_FLAGS = JL5Flags.setAnnotationModifier(JL5Flags.setEnumModifier(super.TOP_LEVEL_CLASS_FLAGS));
 
@@ -159,6 +192,7 @@ public class JL5TypeSystem_c extends TypeSystem_c implements JL5TypeSystem {
         assert_(container);
 
         Flags access = Flags.NONE;
+
         if (container.flags().isPrivate() || JL5Flags.isEnumModifier(container.flags())){
             access = access.Private();
         }
@@ -502,7 +536,7 @@ public class JL5TypeSystem_c extends TypeSystem_c implements JL5TypeSystem {
         }
     }
     
-    public void handleTypeRestrictions(List typeVariables, List typeArguments) throws SemanticException{
+    /*public void handleTypeRestrictions(List typeVariables, List typeArguments) throws SemanticException{
         if (typeVariables.size() != typeArguments.size()){
             throw new SemanticException("Restrict all type variables or none.");
         }
@@ -523,7 +557,7 @@ public class JL5TypeSystem_c extends TypeSystem_c implements JL5TypeSystem {
             TypeNode restriction = (TypeNode)typeArguments.get(i);
             iType.popRestriction(restriction);
         }
-    }
+    }*/
     
     public Type findRequiredType(IntersectionType iType, ParameterizedType pType){
         String id = iType.name();
@@ -538,6 +572,60 @@ public class JL5TypeSystem_c extends TypeSystem_c implements JL5TypeSystem {
                 }
             }
         }
+        if (((JL5ParsedClassType)pType.superType()).isGeneric()){
+            for (int i = 0; i < ((JL5ParsedClassType)pType.superType()).typeVariables().size(); i++)
+                if (((IntersectionType)((JL5ParsedClassType)pType.superType()).typeVariables().get(i)).name().equals(iType.name())){
+                    Type result = (Type)((ParameterizedType)pType.superType()).typeArguments().get(i);
+                    if (result instanceof IntersectionType){
+                        if (pType.isGeneric()){
+                            for (int j = 0; j < pType.typeVariables().size(); j++){
+                               if (((IntersectionType)pType.typeVariables().get(j)).name().equals(((IntersectionType)result).name())){
+                                    return (Type)pType.typeArguments().get(j); 
+                               }
+                            }
+                        }
+                    }
+                    else {
+                        return result;
+                    }
+                }
+        }
         return this.Object();
+    }
+
+    public boolean equals(TypeObject arg1, TypeObject arg2){
+        if (arg1 instanceof ParameterizedType) return ((ParameterizedType)arg1).equalsImpl(arg2);
+        /*System.out.println("arg1 class: "+arg1.getClass());
+        if (arg1 instanceof JL5ParsedClassType){
+            return arg1.equalsImpl(arg2);
+        }*/
+        return super.equals(arg1, arg2);
+    }
+    
+    public AnyType anyType(){
+        return new AnyType_c(this);
+    }
+    public AnyType anySuperType(Type t){
+        return new AnySuperType_c(this, t);
+    }
+    public AnyType anySubType(Type t){
+        return new AnySubType_c(this, t);
+    }
+
+    public ClassType findMemberClass(ClassType container, String name, ClassType currClass) throws SemanticException{
+        if (container instanceof ParameterizedType){
+            return super.findMemberClass(((ParameterizedType)container).baseType(), name, currClass);
+        }
+        return super.findMemberClass(container, name, currClass);
+    }
+
+    public ImportTable importTable(String sourceName, polyglot.types.Package pkg){
+        assert_(pkg);
+        return new JL5ImportTable(this, systemResolver, pkg, sourceName);
+    }
+
+    public ImportTable importTable(polyglot.types.Package pkg){
+        assert_(pkg);
+        return new JL5ImportTable(this, systemResolver, pkg);
     }
 }

@@ -10,15 +10,15 @@ public interface BoundedTypeNode extends TypeNode {
           public Kind(String name) {super(name); }
       }
 
-      public static final Kind UPPER = new Kind("upper");
-      public static final Kind LOWER = new Kind("lower");
+      public static final Kind SUPER = new Kind("super");
+      public static final Kind EXTENDS = new Kind("extends");
 
       Kind kind();
 
       BoundedTypeNode kind(Kind kind);
 
-      List boundsList();
+      TypeNode bound();
 
-      BoundedTypeNode boundsList(List list);
+      BoundedTypeNode bound(TypeNode bound);
       
 }

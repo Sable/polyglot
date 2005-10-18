@@ -137,32 +137,32 @@ parser Grm extends polyglot.ext.jl.parse.Grm  {:
     }
 
     public BoundedTypeNode toSuperType(TypeNode a) {
-        List l = new TypedList(new LinkedList(), TypeNode.class, false);
-        l.add(a);
-        BoundedTypeNode tn = nf.BoundedTypeNode(a.position(), BoundedTypeNode.LOWER, l);
+        /*List l = new TypedList(new LinkedList(), TypeNode.class, false);
+        l.add(a);*/
+        BoundedTypeNode tn = nf.BoundedTypeNode(a.position(), BoundedTypeNode.SUPER, a);
         return tn;
     }
 
     public BoundedTypeNode toExtendsType(TypeNode a) {
-        List l = new TypedList(new LinkedList(), TypeNode.class, false);
-        l.add(a);
-        BoundedTypeNode tn = nf.BoundedTypeNode(a.position(), BoundedTypeNode.UPPER, l);
+        /*List l = new TypedList(new LinkedList(), TypeNode.class, false);
+        l.add(a);*/
+        BoundedTypeNode tn = nf.BoundedTypeNode(a.position(), BoundedTypeNode.EXTENDS, a);
         return tn;
     }
 
-    public BoundedTypeNode toExtendsType(TypeNode a, List bounds) {
+    /*public BoundedTypeNode toExtendsType(TypeNode a, List bounds) {
         if (bounds == null){
             bounds = new TypedList(new LinkedList(), TypeNode.class, false);
         }
         bounds.add(0, a);
         BoundedTypeNode tn = nf.BoundedTypeNode(a.position(), BoundedTypeNode.UPPER, bounds);
         return tn;
-    }
+    }*/
                                      
 
     public BoundedTypeNode toBoundedType(Position pos) {
-        List l = new TypedList(new LinkedList(), TypeNode.class, false);
-        BoundedTypeNode tn = nf.BoundedTypeNode(pos, BoundedTypeNode.UPPER, l);
+        /*List l = new TypedList(new LinkedList(), TypeNode.class, false);*/
+        BoundedTypeNode tn = nf.BoundedTypeNode(pos, null, null);
         return tn;
     }
 
@@ -448,11 +448,11 @@ extend import_declaration ::=
 	;
 static_single_type_import_declaration ::= 
 		IMPORT:a STATIC:b name:c SEMICOLON:d
-        {: RESULT = parser.nf.Import(parser.pos(a, d), Import.CLASS, c.toString()); :}
+        {: RESULT = parser.nf.JL5Import(parser.pos(a, d), JL5Import.MEMBER, c.toString()); :}
 	;
 static_type_import_on_demand_declaration ::=
 		IMPORT:a STATIC:b name:c DOT MULT SEMICOLON:d
-        {: RESULT = parser.nf.Import(parser.pos(a, d), Import.PACKAGE, c.toString()); :}
+        {: RESULT = parser.nf.JL5Import(parser.pos(a, d), JL5Import.ALL_MEMBERS, c.toString()); :}
 	;
 extend type_declaration ::=
     enum_declaration:a
@@ -764,6 +764,20 @@ array_creation_init ::=
         {: RESULT = parser.nf.NewArray(parser.pos(a, d), b,
                         c.intValue(), d); :}
 	;
+override field_access ::=
+    primary:a DOT IDENTIFIER:b
+        {: RESULT = parser.nf.JL5Field(parser.pos(a, b, b), a,
+           b.getIdentifier()); :}
+    |   SUPER:n DOT IDENTIFIER:a
+        {: RESULT = parser.nf.JL5Field(parser.pos(a),
+           parser.nf.Super(parser.pos(n)),
+           a.getIdentifier()); :}
+    |   name:a DOT SUPER:n DOT IDENTIFIER:b
+        {: RESULT = parser.nf.JL5Field(parser.pos(b),
+           parser.nf.Super(parser.pos(n), a.toType()),
+           b.getIdentifier()); :}
+;
+
 override method_invocation ::=
 // the following production appeared in the prototype 2.2 spec, but it
 // introduces ambiguities in the grammar (consider the expression
@@ -1132,6 +1146,7 @@ conditional_or_expression_nn ::=
 	|	conditional_or_expression_nn:a OROR:b conditional_and_expression:c
         {: RESULT = parser.nf.Binary(parser.pos(a, c), a, Binary.COND_OR, c); :}
 	;
+
 conditional_expression_nn ::=
 		conditional_or_expression_nn:a
         {: RESULT = a; :}

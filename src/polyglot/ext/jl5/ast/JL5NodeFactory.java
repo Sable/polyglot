@@ -50,12 +50,14 @@ public interface JL5NodeFactory extends NodeFactory {
     public JL5Formal JL5Formal(Position pos, FlagAnnotations flags, TypeNode type, String name);
     
     public JL5LocalDecl JL5LocalDecl(Position pos, FlagAnnotations flags, TypeNode type, String name, Expr init);
-    
+   
+    public JL5Local JL5Local(Position pos, String name);
+
     public JL5PackageNode JL5PackageNode(Position pos, FlagAnnotations flags, Package package_);
 
     public ParamTypeNode ParamTypeNode(Position pos, List bounds, String id);
     
-    public BoundedTypeNode BoundedTypeNode(Position pos, BoundedTypeNode.Kind kind, List bounds);
+    public BoundedTypeNode BoundedTypeNode(Position pos, BoundedTypeNode.Kind kind, TypeNode bound);
 
     public AmbQualifierNode JL5AmbQualifierNode(Position pos, QualifierNode qual, String name, List args);
     
@@ -77,5 +79,7 @@ public interface JL5NodeFactory extends NodeFactory {
 
 
     public JL5Instanceof JL5Instanceof(Position pos, Expr expr, TypeNode tn);
+
+    public JL5Import JL5Import(Position pos, Import.Kind kind, String name);
 }
 

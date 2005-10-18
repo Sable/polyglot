@@ -22,15 +22,15 @@ import polyglot.frontend.*;
  *         (<a href="mailto:nystrom@cs.purdue.edu">nystrom@cs.purdue.edu</a>)
  */
 public class ClassFile implements LazyClassInitializer {
-    Constant[] constants;       // The constant pool
+    protected Constant[] constants;       // The constant pool
     int modifiers;      // This class's modifer bit field
     int thisClass;              
     int superClass;             
     int[] interfaces;           
     protected Field[] fields;
     protected Method[] methods;
-    Attribute[] attrs;
-    InnerClasses innerClasses;
+    protected Attribute[] attrs;
+    protected InnerClasses innerClasses;
     File classFileSource;
     private ExtensionInfo extensionInfo;
     
@@ -395,7 +395,7 @@ public class ClassFile implements LazyClassInitializer {
      * Convert a String into a type.  Throws a SemanticException if this
      * cannot be done.
      */
-    ClassType typeForName(TypeSystem ts, String name) throws SemanticException {
+    public ClassType typeForName(TypeSystem ts, String name) throws SemanticException {
 	if (Report.should_report(verbose,2))
 	    Report.report(2, "resolving " + name);
         return (ClassType) ts.systemResolver().find(name);
@@ -756,7 +756,7 @@ public class ClassFile implements LazyClassInitializer {
    * @exception IOException
    *        If an error occurs while reading.
    */
-  void readAttributes(DataInputStream in)
+  public void readAttributes(DataInputStream in)
        throws IOException
   {
     int numAttributes = in.readUnsignedShort();

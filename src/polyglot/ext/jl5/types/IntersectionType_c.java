@@ -132,7 +132,6 @@ public class IntersectionType_c extends ClassType_c implements IntersectionType 
     }
 
     private boolean isAnyBoundSubtype(Type ancestor){
-        System.out.println("bounds: "+bounds);
         if (bounds == null || bounds.isEmpty()) return true;
         //return ((ClassType)ancestor).fullName().equals("java.lang.Object");
         for (Iterator it = bounds.iterator(); it.hasNext(); ){
@@ -149,7 +148,7 @@ public class IntersectionType_c extends ClassType_c implements IntersectionType 
         return false;
     }*/
 
-    public void pushRestriction(TypeNode t){
+    /*public void pushRestriction(TypeNode t){
         if (restrictions == null){
             // make TypedList with TypeNode
             restrictions = new ArrayList();
@@ -173,5 +172,5 @@ public class IntersectionType_c extends ClassType_c implements IntersectionType 
             return ((IntersectionType)tn.type()).restriction();
         }
         return tn;
-    }
+    }*/
 }

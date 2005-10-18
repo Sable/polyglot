@@ -5,9 +5,12 @@ import polyglot.types.*;
 import polyglot.frontend.*;
 import polyglot.ext.jl5.types.*;
 import java.io.*;
+import polyglot.util.*;
 
 public class JL5ClassFile extends ClassFile implements JL5LazyClassInitializer {
 
+    protected Signature signature;
+    
     public JL5ClassFile(File classFileSource, byte[] code, ExtensionInfo ext){
         super(classFileSource, code, ext);
     }
@@ -33,11 +36,26 @@ public class JL5ClassFile extends ClassFile implements JL5LazyClassInitializer {
         }
     }
     
-   
-    /*public void readAttributes(DataInputStream in) throws IOException {
+  
+    public ParsedClassType type(TypeSystem ts) throws SemanticException {
+    
+        JL5ParsedClassType t = (JL5ParsedClassType)super.type(ts);
+        if (signature != null){
+            try {
+                signature.parseSignature(ts, t.position());
+            }
+            catch(IOException e){
+            }
+
+            t.typeVariables(signature.typeVariables());
+        }
+        return t;
+    }
+    
+    public void readAttributes(DataInputStream in) throws IOException {
         int numAttributes = in.readUnsignedShort();
         attrs = new Attribute[numAttributes];
-
+    
         for (int i = 0; i < numAttributes; i++){
             int nameIndex = in.readUnsignedShort();
             int length = in.readInt();
@@ -46,7 +64,7 @@ public class JL5ClassFile extends ClassFile implements JL5LazyClassInitializer {
                 attrs[i] = innerClasses;
             }
             else if ("Signature".equals(constants[nameIndex].value())){
-                signature = new Signature(in, nameIndex, length);
+                signature = new Signature(in, nameIndex, length, this);
                 attrs[i] = signature;
             }
             else {
@@ -56,7 +74,7 @@ public class JL5ClassFile extends ClassFile implements JL5LazyClassInitializer {
                 }
             }
         }
-    }*/
+    }
 
 
 }

@@ -125,6 +125,10 @@ public class JL5NodeFactory_c extends NodeFactory_c implements JL5NodeFactory {
         JL5LocalDecl n = new JL5LocalDecl_c(pos, flags, type, name, init);
         return n;
     }
+    public JL5Local JL5Local(Position pos, String name){
+        JL5Local n = new JL5Local_c(pos, name);
+        return n;
+    }
     public JL5PackageNode JL5PackageNode(Position pos, FlagAnnotations fl, Package package_){
         JL5PackageNode n = new JL5PackageNode_c(pos, fl, package_);
         return n;
@@ -135,8 +139,8 @@ public class JL5NodeFactory_c extends NodeFactory_c implements JL5NodeFactory {
         return n;
     }
     
-    public BoundedTypeNode BoundedTypeNode(Position pos, BoundedTypeNode.Kind kind, List bounds){
-        BoundedTypeNode n = new BoundedTypeNode_c(pos, kind, bounds);
+    public BoundedTypeNode BoundedTypeNode(Position pos, BoundedTypeNode.Kind kind, TypeNode bound){
+        BoundedTypeNode n = new BoundedTypeNode_c(pos, kind, bound);
         return n;
     }
     
@@ -185,6 +189,11 @@ public class JL5NodeFactory_c extends NodeFactory_c implements JL5NodeFactory {
 
     public JL5Instanceof JL5Instanceof(Position pos, Expr expr, TypeNode tn){
         JL5Instanceof n = new JL5Instanceof_c(pos, expr, tn);
+        return n;
+    }
+
+    public JL5Import JL5Import(Position pos, Import.Kind kind, String name){
+        JL5Import n = new JL5Import_c(pos, kind, name);
         return n;
     }
     // TODO:  Override factory methods for overriden AST nodes.

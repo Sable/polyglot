@@ -61,6 +61,10 @@ public class JL5MethodInstance_c extends MethodInstance_c implements JL5MethodIn
         return null;
     }
 
+    public void typeVariables(List vars){
+        typeVariables = vars;
+    }
+    
     public boolean isGeneric(){
         if ((typeVariables != null) && !typeVariables.isEmpty()) return true;
         return false;

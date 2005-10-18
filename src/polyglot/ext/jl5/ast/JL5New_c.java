@@ -8,6 +8,7 @@ import polyglot.ext.jl5.types.*;
 import polyglot.ext.jl5.visit.*;
 import polyglot.ast.*;
 import polyglot.visit.*;
+import polyglot.frontend.*;
 
 public class JL5New_c extends New_c implements JL5New {
 
@@ -66,6 +67,13 @@ public class JL5New_c extends New_c implements JL5New {
         JL5TypeSystem ts = (JL5TypeSystem)tc.typeSystem();
         JL5New_c n = (JL5New_c)super.typeCheckEpilogue(tc);
         if (n.type() instanceof ParameterizedType){
+            // check no wilcards
+            for (Iterator it = ((ParameterizedType)n.type()).typeArguments().iterator(); it.hasNext(); ){
+                Type tn = (Type)it.next();
+                if (tn instanceof AnyType || tn instanceof AnySubType || tn instanceof AnySuperType){
+                    throw new SemanticException("Unexpected type", n.position());
+                }
+            }
             // should check arguments here - if any are intersection types
             // in the methodInstance then they need to be checked against 
             // the typeArgs
@@ -83,4 +91,53 @@ public class JL5New_c extends New_c implements JL5New {
 
         return n;
     }
+
+    protected TypeNode partialDisambTypeNode(TypeNode tn, TypeChecker tc, ClassType outer) throws SemanticException {
+        if (tn instanceof CanonicalTypeNode) {
+            return tn;
+        }
+
+        String name = null;
+
+        //System.out.println("tn is a: "+tn.getClass());
+        if (tn instanceof AmbTypeNode && ((AmbTypeNode) tn).qual() == null) {
+            name = ((AmbTypeNode) tn).name();
+            //System.out.println("name: "+name);
+        }
+        else {
+            throw new SemanticException(
+                "Cannot instantiate an member class.",
+                tn.position());
+        }
+        
+        TypeSystem ts = tc.typeSystem();
+        NodeFactory nf = tc.nodeFactory();
+        Context c = tc.context();
+
+
+        ClassType ct = ts.findMemberClass(outer, name, c.currentClass());
+        if (tn instanceof JL5AmbTypeNode){
+            
+            ParameterizedType pt = new ParameterizedType_c((JL5ParsedClassType)ct);
+            ArrayList typeArgs = new ArrayList(((JL5AmbTypeNode)tn).typeArguments().size());
+            for (Iterator it = ((JL5AmbTypeNode)tn).typeArguments().iterator(); it.hasNext(); ){
+                TypeNode arg = (TypeNode)it.next();
+                    Job sj = tc.job().spawn(tc.context(), arg, Pass.CLEAN_SUPER, Pass.DISAM_ALL);
+                    if (! sj.status()) {
+                        if (! sj.reportedErrors()) {
+                            throw new SemanticException("Could not disambiguate type.", this.tn.position());
+                        }
+                        throw new SemanticException();
+                    }
+                arg = (TypeNode)sj.ast();
+                typeArgs.add(arg.type());
+            }
+            pt.typeArguments(typeArgs);
+            
+            CanonicalTypeNode ctn = nf.CanonicalTypeNode(tn.position(), pt);
+            return ctn; 
+        }
+        return nf.CanonicalTypeNode(tn.position(), ct);
+    }
+             
 }

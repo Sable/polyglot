@@ -91,6 +91,12 @@ public class JL5ClassDecl_c extends ClassDecl_c implements JL5ClassDecl, Applica
         return reconstruct(superClass, interfaces, body, annots, paramTypes);
     }
 
+    public Context enterScope(Node child, Context c){
+        TypeSystem ts = c.typeSystem();
+        c = c.pushClass(type, ts.staticTarget(type).toClass());
+        return super.enterScope(child, c);
+    }
+    
     protected void disambiguateSuperType(AmbiguityRemover ar) throws SemanticException {
         JL5TypeSystem ts = (JL5TypeSystem)ar.typeSystem();
         if (JL5Flags.isAnnotationModifier(flags())){
@@ -106,7 +112,7 @@ public class JL5ClassDecl_c extends ClassDecl_c implements JL5ClassDecl, Applica
     // before they may be needed as args in superClass or interfaces
     public NodeVisitor disambiguateEnter(AmbiguityRemover ar) throws SemanticException {
         if (ar.kind() == JL5AmbiguityRemover.TYPE_VARS) {
-            return ar.bypass(superClass).bypass(interfaces);
+            return ar.bypass(superClass).bypass(interfaces).bypass(body);
         }
         else {
             return super.disambiguateEnter(ar);

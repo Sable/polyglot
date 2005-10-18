@@ -47,14 +47,15 @@ public class JL5AmbTypeNode_c extends AmbTypeNode_c implements JL5AmbTypeNode {
         Node n = ar.nodeFactory().disamb().disambiguate(this, ar, position(), qual(), name());
 
         if (n instanceof CanonicalTypeNode && ((CanonicalTypeNode)n).type() instanceof JL5ParsedClassType){
-            ParameterizedType nt = ((JL5TypeSystem)ar.typeSystem()).parameterizedType((JL5ParsedClassType)((CanonicalTypeNode)n).type());
+
+            ParameterizedType pt = new ParameterizedType_c((JL5ParsedClassType)((CanonicalTypeNode)n).type());
             ArrayList typeArgs = new ArrayList(typeArguments.size());
             for (Iterator it = typeArguments.iterator(); it.hasNext(); ){
                 typeArgs.add(((TypeNode)it.next()).type());
             }
-            nt.typeArguments(typeArgs);
+            pt.typeArguments(typeArgs);
             
-            CanonicalTypeNode an = ar.nodeFactory().CanonicalTypeNode(n.position(), nt);
+            CanonicalTypeNode an = ar.nodeFactory().CanonicalTypeNode(n.position(), pt);
             return an;
         }
         else if (n instanceof TypeNode){

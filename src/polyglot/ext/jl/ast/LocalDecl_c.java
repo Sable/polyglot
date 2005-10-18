@@ -12,11 +12,11 @@ import java.util.*;
  * of a local variable.
  */
 public class LocalDecl_c extends Stmt_c implements LocalDecl {
-    Flags flags;
-    TypeNode type;
-    String name;
-    Expr init;
-    LocalInstance li;
+    protected Flags flags;
+    protected TypeNode type;
+    protected String name;
+    protected Expr init;
+    protected LocalInstance li;
 
     public LocalDecl_c(Position pos, Flags flags, TypeNode type,
                        String name, Expr init)

@@ -126,12 +126,33 @@ public class ExtendedFor_c extends Loop_c implements ExtendedFor
         Type t = expr.type();
         if (t.isArray()){
             ArrayType aType = (ArrayType)t;
+            t = aType.base();
             /*if (!aType.base().isImplicitCastValid(type.type())){
                 throw new SemanticException("Type mismatch in EnhancedFor, array or collection of "+type.type()+" expected.", expr.position());
             }*/
         }
         
         // Check that type is the same as elements in expr
+        LocalDecl ld = (LocalDecl)varDecls.get(0);
+        Type declType = ld.type().type();
+        if (!ts.isImplicitCastValid(t, declType)){
+            throw new SemanticException("Incompatible types: ", expr.position());
+        }
+
+        //System.out.println("expr; "+expr+" is a "+expr.getClass());
+        if (expr instanceof Local && ld.localInstance().equals(((Local)expr).localInstance())){
+            throw new SemanticException("Varaible: "+expr+" may not have been initialized", expr.position());
+        }
+        if (expr instanceof NewArray){
+            if (((NewArray)expr).init() != null){
+                for (Iterator it = ((NewArray)expr).init().elements().iterator(); it.hasNext(); ){
+                    Expr next = (Expr)it.next();
+                    if (next instanceof Local && ld.localInstance().equals(((Local)next).localInstance())){
+                        throw new SemanticException("Varaible: "+next+" may not have been initialized", next.position());
+                    }
+                }
+            }
+        }
         
 	    return this;
     }

@@ -8,4 +8,7 @@ public interface ParameterizedType extends JL5ParsedClassType {
     List typeArguments();
     void typeArguments(List args);
 
+    JL5ParsedClassType baseType();
+
+    boolean equalsImpl(TypeObject t);
 }
