@@ -48,6 +48,7 @@ public interface JL5NodeFactory extends NodeFactory {
     public JL5FieldDecl JL5FieldDecl(Position pos, FlagAnnotations flags, TypeNode type, String name, Expr init);
     
     public JL5Formal JL5Formal(Position pos, FlagAnnotations flags, TypeNode type, String name);
+    public JL5Formal JL5Formal(Position pos, FlagAnnotations flags, TypeNode type, String name, boolean variable);
     
     public JL5LocalDecl JL5LocalDecl(Position pos, FlagAnnotations flags, TypeNode type, String name, Expr init);
    

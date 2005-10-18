@@ -121,6 +121,10 @@ public class JL5NodeFactory_c extends NodeFactory_c implements JL5NodeFactory {
         JL5Formal n = new JL5Formal_c(pos, flags, type, name);
         return n;
     }
+    public JL5Formal JL5Formal(Position pos, FlagAnnotations flags, TypeNode type, String name, boolean variable){
+        JL5Formal n = new JL5Formal_c(pos, flags, type, name, variable);
+        return n;
+    }
     public JL5LocalDecl JL5LocalDecl(Position pos, FlagAnnotations flags, TypeNode type, String name, Expr init){
         JL5LocalDecl n = new JL5LocalDecl_c(pos, flags, type, name, init);
         return n;

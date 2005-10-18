@@ -12,6 +12,7 @@ import polyglot.types.*;
 public class JL5Formal_c extends Formal_c implements JL5Formal, ApplicationCheck {
 
     protected List annotations;
+    protected boolean variable = false;
     
     public JL5Formal_c(Position pos, FlagAnnotations flags, TypeNode type, String name){
         super(pos, flags.classicFlags(), type, name);
@@ -24,6 +25,18 @@ public class JL5Formal_c extends Formal_c implements JL5Formal, ApplicationCheck
         }
     }
     
+    public JL5Formal_c(Position pos, FlagAnnotations flags, TypeNode type, String name, boolean variable){
+        super(pos, flags.classicFlags(), type, name);
+        if (flags.annotations() != null){
+            this.annotations = flags.annotations();
+        
+        }
+        else {
+            this.annotations = new TypedList(new LinkedList(), AnnotationElem.class, true);
+        }
+        this.variable = variable;
+    }
+    
     public List annotations(){
         return annotations;
     }
@@ -34,6 +47,10 @@ public class JL5Formal_c extends Formal_c implements JL5Formal, ApplicationCheck
         return n;
     }
 
+    public boolean isVariable(){
+        return variable;
+    }
+    
     protected Formal reconstruct(TypeNode type, List annotations){
         if (this.type() != type || !CollectionUtil.equals(annotations, this.annotations)){
             JL5Formal_c n = (JL5Formal_c)copy();
@@ -50,6 +67,13 @@ public class JL5Formal_c extends Formal_c implements JL5Formal, ApplicationCheck
         return reconstruct(type, annots);
     }
 
+    public Node disambiguate(AmbiguityRemover ar) throws SemanticException {
+        if (isVariable()){
+            ((JL5ArrayType)type().type()).setVariable();
+        }
+        return super.disambiguate(ar);
+    }
+    
     public Node typeCheck(TypeChecker tc) throws SemanticException {
         if (!flags().clear(Flags.FINAL).equals(Flags.NONE)){
             throw new SemanticException("Modifier: "+flags().clearFinal()+" not allowed here.", position());
@@ -75,6 +99,17 @@ public class JL5Formal_c extends Formal_c implements JL5Formal, ApplicationCheck
                 print((AnnotationElem)it.next(), w, tr);
             }
         }
-        super.prettyPrint(w, tr);
+        w.write(flags.translate());
+        if (isVariable()){
+            w.write(((ArrayType)type.type()).base().toString());
+            //print(type, w, tr);
+            w.write(" ...");
+        }
+        else {
+            print(type, w, tr);
+        }
+        w.write(" ");
+        w.write(name);
+        
     }
 }

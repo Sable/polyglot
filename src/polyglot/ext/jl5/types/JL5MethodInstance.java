@@ -16,4 +16,6 @@ public interface JL5MethodInstance extends MethodInstance{
 
     void typeVariables(List vars);
     boolean isGeneric();
+
+    boolean callValidImpl(List typeArgs);
 }

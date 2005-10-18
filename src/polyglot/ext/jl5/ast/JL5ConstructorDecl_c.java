@@ -137,6 +137,19 @@ public class JL5ConstructorDecl_c extends ConstructorDecl_c implements JL5Constr
         n.annotations = annotations;
         return n;
     }
+   
+    public Node typeCheck(TypeChecker tc) throws SemanticException {
+    
+        // check at most last formal is variable
+        for (int i = 0; i < formals.size(); i++){
+            JL5Formal f = (JL5Formal)formals.get(i);
+            if (i != formals.size()-1 && f.isVariable()){
+                throw new SemanticException("Only last formal can be variable in constructor declaration.", f.position());
+            }
+        }
+
+        return super.typeCheck(tc);
+    }
     
     public Node addMembers(AddMemberVisitor tc) throws SemanticException {
         TypeSystem ts = tc.typeSystem();

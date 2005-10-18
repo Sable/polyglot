@@ -12,4 +12,6 @@ public interface JL5ConstructorInstance extends ConstructorInstance{
     IntersectionType getTypeVariable(String name);
 
     boolean isGeneric();
+
+    boolean callValidImpl(List typeArgs);
 }

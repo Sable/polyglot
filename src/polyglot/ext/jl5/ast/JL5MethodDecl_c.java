@@ -114,7 +114,14 @@ public class JL5MethodDecl_c extends MethodDecl_c implements JL5MethodDecl, Appl
         // check no duplicate annotations used
         JL5TypeSystem ts = (JL5TypeSystem)tc.typeSystem();
         ts.checkDuplicateAnnotations(annotations);
-        
+    
+        // check at most last formal is variable
+        for (int i = 0; i < formals.size(); i++){
+            JL5Formal f = (JL5Formal)formals.get(i);
+            if (i != formals.size()-1 && f.isVariable()){
+                throw new SemanticException("Only last formal can be variable in method declaration.", f.position());
+            }
+        }
         return super.typeCheck(tc);
     }
 

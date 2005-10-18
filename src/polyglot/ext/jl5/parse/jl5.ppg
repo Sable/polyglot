@@ -585,6 +585,8 @@ override formal_parameter ::=
                      parser.array(b, c.dims), c.name); :}
     |
     modifiers_or_annotations_opt:a type:b ELLIPSIS:c IDENTIFIER:d
+        {: RESULT = parser.nf.JL5Formal(parser.pos(b, d, d), a, parser.nf.ArrayTypeNode(parser.pos(b), b), d.getIdentifier(), true);
+        :}
     ;
 
 override local_variable_declaration ::=

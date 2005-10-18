@@ -69,4 +69,44 @@ public class JL5MethodInstance_c extends MethodInstance_c implements JL5MethodIn
         if ((typeVariables != null) && !typeVariables.isEmpty()) return true;
         return false;
     }
+
+    public boolean callValidImpl(List argTypes){
+        List l1 = this.formalTypes();
+        List l2 = argTypes;
+
+        for (int i = 0; i < l1.size(); i++){
+            Type t1 = (Type)l1.get(i);
+            if (l2.size() > i){
+                Type t2 = (Type)l2.get(i);
+            
+
+                if (t1 instanceof JL5ArrayType && ((JL5ArrayType)t1).isVariable()){
+                    if (ts.isImplicitCastValid(t2, t1)){
+                        return true;
+                    }
+                    for (int j = i; j < l2.size(); j++){
+                        Type tv = (Type)l2.get(j);
+                        if (!ts.isImplicitCastValid(tv, ((ArrayType)t1).base())){
+                            return false;
+                        }
+                    }
+                }
+                else {
+                    if (!ts.isImplicitCastValid(t2, t1)) {
+                        return false;
+                    }
+                }
+            }
+            else {
+                if (t1 instanceof JL5ArrayType && ((JL5ArrayType)t1).isVariable()){
+                    return true;
+                }
+                else {
+                    return false;
+                }
+            }
+        }
+
+        return true; 
+    }
 }

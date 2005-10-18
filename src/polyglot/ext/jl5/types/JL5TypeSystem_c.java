@@ -357,6 +357,13 @@ public class JL5TypeSystem_c extends TypeSystem_c implements JL5TypeSystem {
          assert_(excTypes);
          return new JL5MethodInstance_c(this, pos, container, flags, returnType, name, argTypes, excTypes);
     }
+    public ConstructorInstance constructorInstance(Position pos, ClassType container, Flags flags, List argTypes, List excTypes) {
+
+         assert_(container);
+         assert_(argTypes);
+         assert_(excTypes);
+         return new JL5ConstructorInstance_c(this, pos, container, flags, argTypes, excTypes);
+    }
 
     public IntersectionType intersectionType(Position pos, String name, List bounds){
         assert_(bounds);
@@ -627,5 +634,9 @@ public class JL5TypeSystem_c extends TypeSystem_c implements JL5TypeSystem {
     public ImportTable importTable(polyglot.types.Package pkg){
         assert_(pkg);
         return new JL5ImportTable(this, systemResolver, pkg);
+    }
+
+    protected ArrayType arrayType(Position pos, Type type){
+        return new JL5ArrayType_c(this, pos, type);
     }
 }
