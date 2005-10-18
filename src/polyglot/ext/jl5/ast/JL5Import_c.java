@@ -34,8 +34,6 @@ public class JL5Import_c extends Import_c implements JL5Import{
                 "\" not found.", position());
         }
 
-        System.out.println("class: "+name);
-        System.out.println("class: "+StringUtil.getPackageComponent(name));
         // check class is exists and is accessible
         Named nt;
         if (kind() == JL5Import.MEMBER){
@@ -54,25 +52,46 @@ public class JL5Import_c extends Import_c implements JL5Import{
                 // given name
                 if (kind() == JL5Import.MEMBER){
                     String id = StringUtil.getShortNameComponent(name);
-                    /*if (!isIdStaticMember(t.toClass(), id)){
+                    if (!isIdStaticMember(t.toClass(), id, tc.typeSystem())){
                         throw new SemanticException("Cannot import: "+id+" from class: "+t, position());
-                    }*/
+                    }
                 }
             }
         }
+
+        findStaticMemberImportCollisions(tc);
         
         return this; 
     }
 
-    private boolean isIdStaticMember(ClassType t, String id){
-        FieldInstance fi = t.fieldNamed(id);
-        if (fi != null) return true;
+    private void findStaticMemberImportCollisions(TypeChecker tc) throws SemanticException {
+        if (kind() == JL5Import.MEMBER){
+            String id = StringUtil.getShortNameComponent(name);
+            List l = ((JL5ImportTable)tc.context().importTable()).memberImports();
+            for (Iterator it = l.iterator(); it.hasNext(); ){
+                String next = (String)it.next();
+                String nextId = StringUtil.getShortNameComponent(next);
+                if (nextId.equals(id) && !next.equals(name)){
+                    throw new SemanticException("The import statement "+this+" collides with another import statement.", position());
+                }
+            }
+        }
+    }
+    
+    private boolean isIdStaticMember(ClassType t, String id, TypeSystem ts){
+        try {
+            FieldInstance fi = ts.findField(t, id);
+            if (fi != null && fi.flags().isStatic()) return true;
+        }
+        catch(SemanticException e){}
 
-        List list = t.methodsNamed(id);
-        if (!list.isEmpty()) return true;
+        if (ts.hasMethodNamed(t, id)) return true;
 
-        ClassType ct = t.memberClassNamed(id);
-        if (ct != null) return true;
+        try {
+            ClassType ct = ts.findMemberClass(t, id);
+            if (ct != null && ct.flags().isStatic()) return true;
+        }
+        catch(SemanticException e){}
 
         return false;
     }

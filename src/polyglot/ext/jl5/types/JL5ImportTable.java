@@ -52,7 +52,7 @@ public class JL5ImportTable extends ImportTable {
                     }
                     catch (SemanticException e){
                     }
-                    if (result != null) return result;
+                    if (result != null && ((ClassType)result).flags().isStatic()) return result;
                 }                                    
             }
         }
@@ -60,6 +60,7 @@ public class JL5ImportTable extends ImportTable {
         for (Iterator it = staticClassImports.iterator(); it.hasNext(); ){
             String next = (String)it.next();
             Named nt = ts.forName(next);
+            
             if (nt instanceof Type){
                 Type t = (Type)nt;
                 try {
@@ -67,7 +68,7 @@ public class JL5ImportTable extends ImportTable {
                 }
                 catch(SemanticException e){
                 }
-                if (result != null) return result;
+                if (result != null && ((ClassType)result).flags().isStatic()) return result;
             }
         }
 
