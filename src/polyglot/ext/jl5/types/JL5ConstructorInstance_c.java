@@ -44,6 +44,10 @@ public class JL5ConstructorInstance_c extends ConstructorInstance_c implements J
         return null;
     }
 
+    public void typeVariables(List vars){
+        typeVariables = vars;
+    }
+    
     public boolean isGeneric(){
         if ((typeVariables != null) && !typeVariables.isEmpty()) return true;
         return false;

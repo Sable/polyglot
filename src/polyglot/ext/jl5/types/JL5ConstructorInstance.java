@@ -11,6 +11,8 @@ public interface JL5ConstructorInstance extends ConstructorInstance{
     boolean hasTypeVariable(String name);
     IntersectionType getTypeVariable(String name);
 
+    void typeVariables(List vars);
+
     boolean isGeneric();
 
     boolean callValidImpl(List typeArgs);

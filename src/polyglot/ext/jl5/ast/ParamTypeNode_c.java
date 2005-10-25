@@ -9,7 +9,7 @@ import polyglot.types.*;
 import polyglot.ext.jl5.types.*;
 import polyglot.ext.jl5.visit.*;
 
-public class ParamTypeNode_c extends TypeNode_c implements ParamTypeNode, TypeVarsAdder {
+public class ParamTypeNode_c extends TypeNode_c implements ParamTypeNode{//, TypeVarsAdder {
     
     protected String id;
     protected List bounds;
@@ -53,8 +53,22 @@ public class ParamTypeNode_c extends TypeNode_c implements ParamTypeNode, TypeVa
         List bounds = visitList(this.bounds, v);
         return reconstruct(bounds);
     }
-   
-    // nothihng needed for buildTypesEnter - not a code block like methods
+  
+    
+    
+    public Context enterScope(Context c){
+        //System.out.println("context just before push: "+c);
+        //Throwable tr = new Throwable();
+        //tr.printStackTrace();
+        c = ((JL5Context)c).pushTypeVariable((IntersectionType)type());
+        return super.enterScope(c);
+    }
+
+    public void addDecls(Context c){
+        //System.out.println("adding decls: "+c);
+        ((JL5Context)c).addTypeVariable((IntersectionType)type());
+    }
+    // nothing needed for buildTypesEnter - not a code block like methods
 
     public Node buildTypes(TypeBuilder tb) throws SemanticException {
         // makes a new IntersectionType with a list of bounds which
@@ -87,7 +101,8 @@ public class ParamTypeNode_c extends TypeNode_c implements ParamTypeNode, TypeVa
         return type(iType);
     }
 
-    public NodeVisitor addTypeVars(AddTypeVarsVisitor am){
+   
+    /*public NodeVisitor addTypeVars(AddTypeVarsVisitor am){
         if (am.context().inCode()){
             CodeInstance ci = am.context().currentCode();
             if (ci instanceof JL5MethodInstance){
@@ -103,7 +118,7 @@ public class ParamTypeNode_c extends TypeNode_c implements ParamTypeNode, TypeVa
             ct.addTypeVariable((IntersectionType)type());
         }
         return am.bypassChildren(this);
-    }
+    }*/
     
     public void prettyPrint(CodeWriter w, PrettyPrinter tr){
         w.write(id);

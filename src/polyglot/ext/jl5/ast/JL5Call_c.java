@@ -73,6 +73,7 @@ public class JL5Call_c extends Call_c implements JL5Call {
 
         // type check call arguments
         if (target() != null && target().type() instanceof ParameterizedType){
+            //System.out.println("target is param");
             for (int i = 0; i < mi.formalTypes().size(); i++){
                 Type t = (Type)mi.formalTypes().get(i);
                 if (t instanceof IntersectionType){
@@ -84,11 +85,21 @@ public class JL5Call_c extends Call_c implements JL5Call {
             }
         
 
+            //System.out.println("mi.return type is a: "+mi.returnType().getClass());
             // set return type
             if (mi.returnType() instanceof IntersectionType){
                 Type other = ts.findRequiredType((IntersectionType)mi.returnType(), (ParameterizedType)target().type());
                 return n.type(other);
             }
+
+            // this has to be done recursively on IntersectionType args
+            // of parameterized types
+            /*else if (mi.returnType() instanceof ParameterizedType){
+                for (Iterator it = ((ParameterizedType)mi.returnType()).typeArguments(); it.hasNext()){
+                    Type next = (Type)it.next();
+                    if (next instanceof IntersectionType
+                }
+            }*/
         }
         return n.type(mi.returnType());
         

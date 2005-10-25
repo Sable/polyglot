@@ -17,6 +17,9 @@ public class JL5TypeSystem_c extends TypeSystem_c implements JL5TypeSystem {
     protected ClassType ENUM_;
     protected ClassType ANNOTATION_;
     
+    // this is for extended for
+    protected ClassType ITERABLE_;
+    
     public ClassType Enum() { 
         if (ENUM_ != null) {
             return ENUM_;
@@ -32,6 +35,15 @@ public class JL5TypeSystem_c extends TypeSystem_c implements JL5TypeSystem {
         }
         else {
             return ANNOTATION_ = load("java.lang.annotation.Annotation");
+        }
+    }
+  
+    public ClassType Iterable() { 
+        if (ITERABLE_ != null) {
+            return ITERABLE_;
+        }
+        else {
+            return ITERABLE_ = load("java.lang.Iterable");
         }
     }
   
@@ -293,7 +305,11 @@ public class JL5TypeSystem_c extends TypeSystem_c implements JL5TypeSystem {
         if (container == null){
             throw new InternalCompilerError("Cannot access enum constant \"" + name + "\" within a null container type.");
         }
-        EnumInstance ei = ((JL5ParsedClassType)container).enumConstantNamed(name);
+        EnumInstance ei = null;
+        
+        if (container instanceof JL5ParsedClassType){
+            ei = ((JL5ParsedClassType)container).enumConstantNamed(name);
+        }
 
         if (ei != null){
             return Collections.singleton(ei);
@@ -601,7 +617,9 @@ public class JL5TypeSystem_c extends TypeSystem_c implements JL5TypeSystem {
     }
 
     public boolean equals(TypeObject arg1, TypeObject arg2){
+        //System.out.println("ts: arg1: "+arg1.getClass());
         if (arg1 instanceof ParameterizedType) return ((ParameterizedType)arg1).equalsImpl(arg2);
+        if (arg1 instanceof IntersectionType) return ((IntersectionType)arg1).equalsImpl(arg2);
         /*System.out.println("arg1 class: "+arg1.getClass());
         if (arg1 instanceof JL5ParsedClassType){
             return arg1.equalsImpl(arg2);
@@ -638,5 +656,19 @@ public class JL5TypeSystem_c extends TypeSystem_c implements JL5TypeSystem {
 
     protected ArrayType arrayType(Position pos, Type type){
         return new JL5ArrayType_c(this, pos, type);
+    }
+
+    public boolean isEquivalent(TypeObject arg1, TypeObject arg2){
+        if (arg1 instanceof ArrayType && arg2 instanceof ArrayType){
+            //System.out.println("is equiv both arrays");
+            return isEquivalent(((ArrayType)arg1).base(), ((ArrayType)arg2).base());
+        }
+        if (arg1 instanceof IntersectionType) {
+            return ((IntersectionType)arg1).isEquivalent(arg2);
+        }
+        else if (arg2 instanceof IntersectionType){
+            return ((IntersectionType)arg2).isEquivalent(arg1);
+        }
+        return this.equals(arg1, arg2);
     }
 }

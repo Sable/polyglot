@@ -66,14 +66,24 @@ public class JL5Disamb_c extends Disamb_c implements JL5Disamb {
             if (n != null) return n;
         }
 
+        //System.out.println("try disamb: "+name);
+        //System.out.println("context: "+((JL5Context)c).inTypeVariable());
+        //if (((JL5Context)c).inTypeVariable()){
+        IntersectionType res = ((JL5Context)c).findTypeVariableInThisScope(name);
+        //System.out.println("res: "+res);
+        if (res != null){
+            return nf.CanonicalTypeNode(pos, res);
+        }
+        //}
+        
         // no variable found. try
         // might be a generic type parameter
-        JL5ParsedClassType ct = (JL5ParsedClassType)c.currentClass();
+        /*JL5ParsedClassType ct = (JL5ParsedClassType)c.currentClass();
     
         
         if ((ct != null ) && ct.isGeneric()){
             if (ct.hasTypeVariable(name)){
-                IntersectionType it =  ct.getTypeVariable(name);
+          /*      IntersectionType it =  ct.getTypeVariable(name);
                 return nf.CanonicalTypeNode(pos, it);
             }
         }
@@ -92,7 +102,7 @@ public class JL5Disamb_c extends Disamb_c implements JL5Disamb {
                     return nf.CanonicalTypeNode(pos, ((JL5ConstructorInstance)ci).getTypeVariable(name));
                 }
             }
-        }
+        }*/
         
         if (typeOK()) {
             try {

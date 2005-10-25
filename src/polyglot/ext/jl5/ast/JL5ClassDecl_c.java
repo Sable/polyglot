@@ -83,17 +83,19 @@ public class JL5ClassDecl_c extends ClassDecl_c implements JL5ClassDecl, Applica
     }
 
     public Node visitChildren(NodeVisitor v){
+        List annots = visitList(this.annotations, v); 
+        List paramTypes = visitList(this.paramTypes, v);
         TypeNode superClass = (TypeNode) visitChild(this.superClass, v);
         List interfaces = visitList(this.interfaces, v);
         ClassBody body = (ClassBody) visitChild(this.body, v);
-        List annots = visitList(this.annotations, v); 
-        List paramTypes = visitList(this.paramTypes, v);
         return reconstruct(superClass, interfaces, body, annots, paramTypes);
     }
 
     public Context enterScope(Node child, Context c){
-        TypeSystem ts = c.typeSystem();
-        c = c.pushClass(type, ts.staticTarget(type).toClass());
+        //if (child != this.paramTypes) {
+        //TypeSystem ts = c.typeSystem();
+        //c = c.pushClass(type, ts.staticTarget(type).toClass());
+        //}
         return super.enterScope(child, c);
     }
     
@@ -189,7 +191,14 @@ public class JL5ClassDecl_c extends ClassDecl_c implements JL5ClassDecl, Applica
         TypeSystem ts = tc.typeSystem();
         NodeFactory nf = tc.nodeFactory();
         addGenEnumMethods(ts, nf);
+        addTypeParameters();
         return super.addMembers(tc);
+    }
+
+    protected void addTypeParameters(){
+        for (Iterator it = paramTypes.iterator(); it.hasNext(); ){
+            ((JL5ParsedClassType)this.type()).addTypeVariable((IntersectionType)((ParamTypeNode)it.next()).type());
+        }
     }
     
     protected void addGenEnumMethods(TypeSystem ts, NodeFactory nf){

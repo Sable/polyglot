@@ -14,6 +14,7 @@ public interface IntersectionType extends ClassType {
 
     void name(String name);
 
+    boolean isEquivalent(TypeObject arg2);
     /*void pushRestriction(TypeNode restriction);
     void popRestriction(TypeNode restriction);
     List restrictions();

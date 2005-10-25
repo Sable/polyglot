@@ -2,11 +2,14 @@ package polyglot.ext.jl5.types.reflect;
 
 import polyglot.types.reflect.*;
 import java.io.*;
+import polyglot.ext.jl5.types.*;
+import polyglot.types.*;
 
 public class JL5Method extends Method{
 
-    boolean defaultVal;
-    
+    protected boolean defaultVal;
+    protected Signature signature;
+
     public JL5Method(DataInputStream in, ClassFile clazz) {
         super(in, clazz);
     }
@@ -36,7 +39,11 @@ public class JL5Method extends Method{
                 if ("AnnotationDefault".equals(name.value())){
                     defaultVal = true;
                 }
-                                                                              
+                
+                if("Signature".equals(name.value())){
+                    signature = new Signature(in, nameIndex, length, clazz);
+                    attrs[i] = signature;
+                }
             }
 
             if (attrs[i] == null){
@@ -53,5 +60,45 @@ public class JL5Method extends Method{
         return defaultVal;
     }
 
+    public MethodInstance methodInstance(TypeSystem ts, ClassType ct){
+        JL5MethodInstance mi = (JL5MethodInstance)super.methodInstance(ts, ct);
+        if (signature != null){
+            try {
+                //System.out.println("for mi: "+mi.name()+" sig: "+signature);
+                signature.parseMethodSignature(ts, mi.position(), ct);
+            }
+            catch(IOException e){
+            }
+            catch(SemanticException e){
+            }
+
+            mi.typeVariables(signature.methodSignature.typeVars());
+            //System.out.println("return type is: "+signature.methodSignature.returnType().getClass()+" val: " +signature.methodSignature.returnType());
+            mi = (JL5MethodInstance)mi.returnType(signature.methodSignature.returnType());
+            //System.out.println("return type is now: "+mi.returnType().getClass()+" val: " +mi.returnType());
+            mi = (JL5MethodInstance)mi.formalTypes(signature.methodSignature.formalTypes());
+            mi = (JL5MethodInstance)mi.throwTypes(signature.methodSignature.throwTypes());
+        }
+        return mi;
+    }
+
+    public ConstructorInstance constructorInstance(TypeSystem ts, ClassType ct, Field[] fields){
+        JL5ConstructorInstance ci = (JL5ConstructorInstance)super.constructorInstance(ts, ct, fields);
+        if (signature != null){
+            try {
+                signature.parseMethodSignature(ts, ci.position(), ct);
+            }
+            catch(IOException e){
+            }
+            catch(SemanticException e){
+            }
+
+            ci.typeVariables(signature.methodSignature.typeVars());
+            ci = (JL5ConstructorInstance)ci.formalTypes(signature.methodSignature.formalTypes());
+            ci = (JL5ConstructorInstance)ci.throwTypes(signature.methodSignature.throwTypes());
+    
+        }
+        return ci;
+    }
 }
 

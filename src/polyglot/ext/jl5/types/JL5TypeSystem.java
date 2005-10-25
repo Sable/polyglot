@@ -16,6 +16,7 @@ public interface JL5TypeSystem extends TypeSystem {
     ClassType Enum();
     
     ClassType Annotation();
+    ClassType Iterable();
 
     ClassType IntegerWrapper();
     ClassType ByteWrapper();
@@ -68,4 +69,6 @@ public interface JL5TypeSystem extends TypeSystem {
     public AnyType anyType();
     public AnyType anySuperType(Type t);
     public AnyType anySubType(Type t);
+
+    public boolean isEquivalent(TypeObject arg1, TypeObject arg2);
 }

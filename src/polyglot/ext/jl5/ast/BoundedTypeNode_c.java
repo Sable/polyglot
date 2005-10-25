@@ -66,6 +66,7 @@ public class BoundedTypeNode_c extends TypeNode_c implements BoundedTypeNode {
             return this.type(ts.anySuperType(bound.type()));
         }
         else if (kind == BoundedTypeNode.EXTENDS){
+            //System.out.println("bound type: "+bound.type()+" is a: "+bound.type().getClass());
             return this.type(ts.anySubType(bound.type()));
         }
         return this;    

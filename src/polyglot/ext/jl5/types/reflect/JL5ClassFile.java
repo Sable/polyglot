@@ -42,12 +42,12 @@ public class JL5ClassFile extends ClassFile implements JL5LazyClassInitializer {
         JL5ParsedClassType t = (JL5ParsedClassType)super.type(ts);
         if (signature != null){
             try {
-                signature.parseSignature(ts, t.position());
+                signature.parseClassSignature(ts, t.position());
             }
             catch(IOException e){
             }
 
-            t.typeVariables(signature.typeVariables());
+            t.typeVariables(signature.classSignature.typeVars());
         }
         return t;
     }

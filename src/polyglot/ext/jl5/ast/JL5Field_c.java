@@ -39,10 +39,19 @@ public class JL5Field_c extends Field_c implements JL5Field {
             Type other = ts.findRequiredType((IntersectionType)fi.type(), (ParameterizedType)target().type());
             return f.type(other);
         }
+
+        if (target() != null && target().type() instanceof ClassType && ((ClassType)target().type()).isAnonymous() && fi.type() instanceof IntersectionType){
+            Type other = ts.findRequiredType((IntersectionType)fi.type(), (ParameterizedType)((ClassType)target().type()).superType());
+            return f.type(other);    
+        }
        
 
         /*System.out.println("checking field: "+this);
-        JL5ParsedClassType ct = (JL5ParsedClassType)c.currentClass();
+        System.out.println("field target: "+this.target());
+        System.out.println("field target kind: "+this.target().getClass());
+        System.out.println("field target type: "+this.target().type());
+        System.out.println("field target type class: "+this.target().type().getClass());*/
+        /*JL5ParsedClassType ct = (JL5ParsedClassType)c.currentClass();
         System.out.println("ct class: "+ct.getClass());
         System.out.println("anon: "+ct.isAnonymous());
         System.out.println("class: "+ct+" is a: "+ct.getClass());
@@ -51,13 +60,13 @@ public class JL5Field_c extends Field_c implements JL5Field {
             System.out.println("class outer: "+out+" is a: "+ out.getClass());
             out = out.outer();
             //System.out.println("class args :" +ct.typeArguments());
-        }
-        ReferenceType st = (ReferenceType)ct.superType();
+        }*/
+        /*ClassType st = (ClassType)((ClassType)this.target().type()).superType();
         while (st != null){
-            System.out.println("class super: "+st+" is a: "+ st.getClass());
-            st = (ReferenceType)st.superType();
-        }
-        System.out.println(this.type());
+            //System.out.println("class super: "+st+" is a: "+ st.getClass());
+            st = (ClassType)st.superType();
+        }*/
+        /*System.out.println(this.type());
         */
         
         return f;
@@ -70,6 +79,9 @@ public class JL5Field_c extends Field_c implements JL5Field {
         return super.isConstant();
     }
     public void checkConsistency(Context c){
-        super.checkConsistency(c);
+        
+        //super.checkConsistency(c);
+        //this consistency checking has problems when dealing with gen
+        //types
     }
 }

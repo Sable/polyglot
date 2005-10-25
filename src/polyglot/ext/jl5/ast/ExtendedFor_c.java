@@ -7,6 +7,7 @@ import polyglot.util.*;
 import java.util.*;
 import polyglot.ext.jl.*;
 import polyglot.ext.jl.ast.*;
+import polyglot.ext.jl5.types.*;
 
 /**
  * An immutable representation of a Java language extended <code>for</code>
@@ -120,10 +121,11 @@ public class ExtendedFor_c extends Loop_c implements ExtendedFor
 
     /** Type check the statement. */
     public Node typeCheck(TypeChecker tc) throws SemanticException {
-	    TypeSystem ts = tc.typeSystem();
+	    JL5TypeSystem ts = (JL5TypeSystem)tc.typeSystem();
 
         // Check that the expr is an array or of type Iterable
         Type t = expr.type();
+        System.out.println("t: "+expr+" is a: "+t.getClass());
         if (t.isArray()){
             ArrayType aType = (ArrayType)t;
             t = aType.base();
@@ -131,10 +133,22 @@ public class ExtendedFor_c extends Loop_c implements ExtendedFor
                 throw new SemanticException("Type mismatch in EnhancedFor, array or collection of "+type.type()+" expected.", expr.position());
             }*/
         }
+        else if (ts.isSubtype(t, ts.Iterable())){
+            System.out.println("t is an iterable");
+            System.out.println("t is a: "+t.getClass());
+            if (t instanceof ParameterizedType){
+                t = (Type)((ParameterizedType)t).typeArguments().get(0);
+            }
+            else {
+                t = ts.Object();
+            }
+        }
         
         // Check that type is the same as elements in expr
         LocalDecl ld = (LocalDecl)varDecls.get(0);
         Type declType = ld.type().type();
+        System.out.println("expr type: "+t+" is a: "+t.getClass());
+        System.out.println("decl type: "+declType+" is a: "+declType.getClass());
         if (!ts.isImplicitCastValid(t, declType)){
             throw new SemanticException("Incompatible types: ", expr.position());
         }

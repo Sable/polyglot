@@ -135,12 +135,12 @@ public class JL5MethodDecl_c extends MethodDecl_c implements JL5MethodDecl, Appl
     }
     
     public Node visitChildren(NodeVisitor v){
+        List annotations = visitList(this.annotations, v);
+        List paramTypes = visitList(this.paramTypes, v);
         List formals = visitList(this.formals, v);
         TypeNode returnType = (TypeNode) visitChild(this.returnType, v);
         List throwTypes = visitList(this.throwTypes, v);
         Block body = (Block) visitChild(this.body, v);
-        List annotations = visitList(this.annotations, v);
-        List paramTypes = visitList(this.paramTypes, v);
         return reconstruct(returnType, formals, throwTypes, body, annotations, paramTypes);
     }
     

@@ -130,6 +130,7 @@ public class JL5ParsedClassType_c extends ParsedClassType_c implements JL5Parsed
     }
 
     public boolean descendsFromImpl(Type ancestor){
+        //System.out.println("descends from: "+this+" ances: "+ancestor+getClass());
         if (ancestor instanceof IntersectionType){
             return isSubtypeOfAllBounds(((IntersectionType)ancestor).bounds());
         }
@@ -147,6 +148,7 @@ public class JL5ParsedClassType_c extends ParsedClassType_c implements JL5Parsed
     }
 
     private boolean isSubtypeOfAllBounds(List bounds){
+        //System.out.println("bounds: "+bounds);
         if (bounds != null){
             for (Iterator it = bounds.iterator(); it.hasNext(); ){
                 Object next = it.next();
@@ -388,4 +390,55 @@ public class JL5ParsedClassType_c extends ParsedClassType_c implements JL5Parsed
         }
         return super.isCastValidImpl(toType);
     }
+    
+    public String translate(Resolver c) {
+        if (isTopLevel()) {
+            if (package_() == null) {
+                return name();
+            }
+
+            // Use the short name if it is unique.
+            if (c != null) {
+                try {
+                    Named x = c.find(name());
+
+                    if (ts.equals(this, x)) {
+                        return name();
+                    }
+                }
+                catch (SemanticException e) {
+                }
+            }
+
+            return package_().translate(c) + "." + name();
+        }
+        else if (isMember()) {
+            // Use only the short name if the outer class is anonymous.
+            if (container().toClass().isAnonymous()) {
+                return name();
+            }
+
+            // Use the short name if it is unique.
+            if (c != null) {
+                try {
+                    Named x = c.find(name());
+
+                    if (ts.equals(this, x) && !(container() instanceof ParameterizedType)) {
+                        return name();
+                    }
+                }
+                catch (SemanticException e) {
+                }
+            }
+
+            return container().translate(c) + "." + name();
+        }
+        else if (isLocal()) {
+            return name();
+        }
+        else {
+            throw new InternalCompilerError("Cannot translate an anonymous class.");
+        }
+    }
+
 }

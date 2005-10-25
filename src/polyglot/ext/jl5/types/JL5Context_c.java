@@ -7,6 +7,11 @@ import polyglot.util.*;
 
 public class JL5Context_c extends Context_c implements JL5Context {
 
+    protected Map typeVars;
+    protected IntersectionType typeVariable;
+
+    public static final Kind TYPE_VAR = new Kind("type-var");
+    
     public JL5Context_c(TypeSystem ts){
         super(ts);
     }
@@ -136,5 +141,41 @@ public class JL5Context_c extends Context_c implements JL5Context {
         }
 
         throw new SemanticException("Method "+name+" not found.");
+    }
+    
+    public JL5Context pushTypeVariable(IntersectionType iType){
+        //System.out.println("pushing type var context: "+iType.name());
+        JL5Context_c v = (JL5Context_c)push();
+        v.typeVariable = iType;
+        v.kind = TYPE_VAR;
+        //System.out.println("v: "+v);
+        //v.outer = this;
+        return v;
+    }
+    
+    public IntersectionType findTypeVariableInThisScope(String name){
+        //System.out.println("search for: "+name+" in: "+this);
+        if (typeVariable != null && typeVariable.name().equals(name)) return typeVariable;
+        //System.out.println("outer: "+((JL5Context)outer).inTypeVariable());
+        if (typeVars != null && typeVars.containsKey(name)) return (IntersectionType)typeVars.get(name);
+        if (outer != null){
+            return ((JL5Context)outer).findTypeVariableInThisScope(name);
+        }
+        return null;
+    }
+
+    public boolean inTypeVariable(){
+        //System.out.println("kind in inTypeVariable :"+kind);
+        return kind == TYPE_VAR;
+    }
+
+    public String toString(){
+        return super.toString() + "type var: "+typeVariable;
+    }
+
+    public JL5Context addTypeVariable(IntersectionType type){
+        if (typeVars == null) typeVars = new HashMap();
+        typeVars.put(type.name(), type);
+        return this;
     }
 }

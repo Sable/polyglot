@@ -119,6 +119,9 @@ public class IntersectionType_c extends ClassType_c implements IntersectionType 
         return name;//+":"+bounds;
     }
 
+    public boolean isCastValidImpl(Type toType){
+        return ts.isCastValid(superType(), toType);
+    }
     
     public boolean descendsFromImpl(Type ancestor) {
         // not sure about array types??
@@ -140,37 +143,37 @@ public class IntersectionType_c extends ClassType_c implements IntersectionType 
         return false;
     }
 
-    /*private boolean isAnyBoundAutoUnboxingValid(Type ancestor){
-        if (bounds == null || bounds.isEmpty()) return false;
-        for (Iterator it = bounds.iterator(); it.hasNext(); ){
-            if (ts.isSubtype((Type)it.next(), ancestor)) return true;
-        }
+    public boolean equalsImpl(TypeObject other){
+        //System.out.println("considering equals for intersection type");
+        //System.out.println("other: "+other.getClass());
+        if (!(other instanceof IntersectionType)) return super.equalsImpl(other);
+        IntersectionType arg2 = (IntersectionType)other;
+        if (this.name.equals(arg2.name()) && allBoundsEqual(arg2)) return true;
         return false;
-    }*/
+    }
 
-    /*public void pushRestriction(TypeNode t){
-        if (restrictions == null){
-            // make TypedList with TypeNode
-            restrictions = new ArrayList();
+    private boolean allBoundsEqual(IntersectionType arg2){
+        //System.out.println("checking bounds: "+bounds()+" arg2 bounds: "+arg2.bounds());
+        if ((bounds == null || bounds.isEmpty()) && (arg2.bounds() == null || arg2.bounds().isEmpty()) ) return true;
+        Iterator it = bounds.iterator();
+        Iterator jt = arg2.bounds().iterator();
+        while (it.hasNext() && jt.hasNext()){
+            if (!ts.equals((Type)it.next(), (Type)jt.next())) {
+                //System.out.println("found unequal bound");
+                return false;
+            }
         }
-        restrictions.add(t);
+        if (it.hasNext() || jt.hasNext()) return false;
+        return true;
+    }
+    
+
+    public boolean isEquivalent(TypeObject arg2){
+        return typeSystem().isSubtype(rawType(), (Type)arg2) || typeSystem().isSubtype((Type)arg2, rawType());
     }
 
-    public void popRestriction(TypeNode t){
-        System.out.println("removing restr: "+t);
-        restrictions.remove(t);
+    public Type rawType(){
+        if (bounds == null || bounds.isEmpty()) return typeSystem().Object();
+        return (Type)bounds.get(0);
     }
-
-    public List restrictions(){
-        return this.restrictions;
-    }
-
-    public TypeNode restriction(){
-        if (restrictions == null || restrictions.isEmpty()) return null;
-        TypeNode tn = (TypeNode)restrictions.get(restrictions.size()-1);    
-        if (tn.type() instanceof IntersectionType){
-            return ((IntersectionType)tn.type()).restriction();
-        }
-        return tn;
-    }*/
 }

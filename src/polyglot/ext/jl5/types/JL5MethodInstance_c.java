@@ -109,4 +109,91 @@ public class JL5MethodInstance_c extends MethodInstance_c implements JL5MethodIn
 
         return true; 
     }
+
+    public boolean canOverrideImpl(MethodInstance mj, boolean quiet) throws SemanticException{
+        MethodInstance mi = this;
+
+        if (!(mi.name().equals(mj.name()) && mi.hasFormals(mj.formalTypes()))) {
+            if (quiet) return false;
+            throw new SemanticException("Arguments are different", mi.position());
+        }
+
+        //System.out.println("ret of mi: "+mi.returnType()+" is a: "+mi.returnType().getClass());
+        //System.out.println("ret of mj: "+mj.returnType()+" is a: "+mj.returnType().getClass());
+
+        // changed to isSubtype may need to add bridge methods - even when no generics used
+        if (! ts.isSubtype(mi.returnType(), mj.returnType())){// && !((JL5TypeSystem)ts).isEquivalent(mi.returnType(), mj.returnType())) {
+            if (quiet) return false;
+            throw new SemanticException(mi.signature() + " in " + mi.container() +
+                                        " cannot override " + 
+                                        mj.signature() + " in " + mj.container() + 
+                                        "; attempting to use incompatible " +
+                                        "return type\n" +                                        
+                                        "found: " + mi.returnType() + "\n" +
+                                        "required: " + mj.returnType(), 
+                                        mi.position());
+        } 
+
+        if (! ts.throwsSubset(mi, mj)) {
+            if (quiet) return false;
+            throw new SemanticException(mi.signature() + " in " + mi.container() +
+                                        " cannot override " + 
+                                        mj.signature() + " in " + mj.container() + 
+                                        "; the throw set is not a subset of the " +
+                                        "overridden method's throw set", 
+                                        mi.position());
+        }   
+
+        if (mi.flags().moreRestrictiveThan(mj.flags())) {
+            if (quiet) return false;
+            throw new SemanticException(mi.signature() + " in " + mi.container() +
+                                        " cannot override " + 
+                                        mj.signature() + " in " + mj.container() + 
+                                        "; attempting to assign weaker " + 
+                                        "access privileges", 
+                                        mi.position());
+        }
+
+        if (mi.flags().isStatic() != mj.flags().isStatic()) {
+            if (quiet) return false;
+            throw new SemanticException(mi.signature() + " in " + mi.container() +
+                                        " cannot override " + 
+                                        mj.signature() + " in " + mj.container() + 
+                                        "; overridden method is " + 
+                                        (mj.flags().isStatic() ? "" : "not") +
+                                        "static", 
+                                        mi.position());
+        }
+
+        if (mi != mj && !mi.equals(mj) && mj.flags().isFinal()) {
+	    // mi can "override" a final method mj if mi and mj are the same method instance.
+            throw new SemanticException(mi.signature() + " in " + mi.container() +
+                                        " cannot override " + 
+                                        mj.signature() + " in " + mj.container() + 
+                                        "; overridden method is final", 
+                                        mi.position());
+        }
+
+        return true;
+    }
+
+    public boolean hasFormalsImpl(List formalTypes){
+        List l1 = this.formalTypes();
+        List l2 = formalTypes;
+
+        Iterator i1 = l1.iterator();
+        Iterator i2 = l2.iterator();
+
+        while (i1.hasNext() && i2.hasNext()) {
+            Type t1 = (Type) i1.next();
+            Type t2 = (Type) i2.next();
+
+            if (! ts.equals(t1, t2) && ! ((JL5TypeSystem)ts).isEquivalent(t1, t2)) {
+                return false;
+            }
+        }
+
+        return ! (i1.hasNext() || i2.hasNext());
+
+    }
 }

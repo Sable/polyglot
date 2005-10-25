@@ -60,11 +60,11 @@ public class JL5ConstructorDecl_c extends ConstructorDecl_c implements JL5Constr
     }
 
     public Node visitChildren(NodeVisitor v){
+        List annotations = visitList(this.annotations, v);
+        List paramTypes = visitList(this.paramTypes, v);
         List formals = visitList(this.formals, v);
         List throwTypes = visitList(this.throwTypes, v);
         Block body = (Block) visitChild(this.body, v);
-        List annotations = visitList(this.annotations, v);
-        List paramTypes = visitList(this.paramTypes, v);
         return reconstruct(formals, throwTypes, body, annotations, paramTypes);
     }
 
@@ -77,6 +77,22 @@ public class JL5ConstructorDecl_c extends ConstructorDecl_c implements JL5Constr
             return super.disambiguateEnter(ar);
         }
     }
+
+    public Node disambiguate(AmbiguityRemover ar) throws SemanticException {
+        if (ar.kind() == AmbiguityRemover.SIGNATURES) {
+            Context c = ar.context();
+            TypeSystem ts = ar.typeSystem();
+
+            ParsedClassType ct = c.currentClassScope();
+
+            JL5ConstructorInstance ci = (JL5ConstructorInstance)makeConstructorInstance(ct, ts);
+            ci.typeVariables(((JL5ConstructorInstance)constructorInstance()).typeVariables());
+            return constructorInstance(ci);
+        }
+
+        return this;
+    }
+
 
     public void prettyPrintHeader(CodeWriter w, PrettyPrinter tr) {
         w.begin(0);
