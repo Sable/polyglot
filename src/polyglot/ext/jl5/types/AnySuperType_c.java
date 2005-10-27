@@ -4,7 +4,7 @@ import polyglot.ext.jl.types.*;
 import polyglot.types.*;
 import java.util.*;
 
-public class AnySuperType_c extends AnyType_c implements AnySuperType{
+public class AnySuperType_c extends Type_c implements AnySuperType{
 
     protected Type bound;
     
@@ -18,11 +18,11 @@ public class AnySuperType_c extends AnyType_c implements AnySuperType{
     }
     
     public String translate(Resolver c){
-        return super.translate(c) + " super "+bound.translate(c);
+        return "? super "+bound.translate(c);
     }
 
     public String toString(){
-        return super.toString()+" super "+bound.toString();
+        return "? super "+bound.toString();
     }
     
 }

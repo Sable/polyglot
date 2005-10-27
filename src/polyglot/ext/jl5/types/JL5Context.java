@@ -1,7 +1,7 @@
 package polyglot.ext.jl5.types;
 
 import polyglot.types.*;
-
+import java.util.*;
 public interface JL5Context extends Context {
 
     public VarInstance findVariableInThisScope(String name);
@@ -12,6 +12,8 @@ public interface JL5Context extends Context {
 
     public boolean inTypeVariable();
 
+
     public JL5Context addTypeVariable(IntersectionType type);
 
+    public MethodInstance findGenericMethod(String name, List argTypes, List inferredTypes) throws SemanticException;
 }

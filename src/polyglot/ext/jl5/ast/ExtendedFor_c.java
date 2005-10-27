@@ -125,7 +125,6 @@ public class ExtendedFor_c extends Loop_c implements ExtendedFor
 
         // Check that the expr is an array or of type Iterable
         Type t = expr.type();
-        System.out.println("t: "+expr+" is a: "+t.getClass());
         if (t.isArray()){
             ArrayType aType = (ArrayType)t;
             t = aType.base();
@@ -134,8 +133,6 @@ public class ExtendedFor_c extends Loop_c implements ExtendedFor
             }*/
         }
         else if (ts.isSubtype(t, ts.Iterable())){
-            System.out.println("t is an iterable");
-            System.out.println("t is a: "+t.getClass());
             if (t instanceof ParameterizedType){
                 t = (Type)((ParameterizedType)t).typeArguments().get(0);
             }
@@ -147,13 +144,10 @@ public class ExtendedFor_c extends Loop_c implements ExtendedFor
         // Check that type is the same as elements in expr
         LocalDecl ld = (LocalDecl)varDecls.get(0);
         Type declType = ld.type().type();
-        System.out.println("expr type: "+t+" is a: "+t.getClass());
-        System.out.println("decl type: "+declType+" is a: "+declType.getClass());
         if (!ts.isImplicitCastValid(t, declType)){
             throw new SemanticException("Incompatible types: ", expr.position());
         }
 
-        //System.out.println("expr; "+expr+" is a "+expr.getClass());
         if (expr instanceof Local && ld.localInstance().equals(((Local)expr).localInstance())){
             throw new SemanticException("Varaible: "+expr+" may not have been initialized", expr.position());
         }

@@ -71,6 +71,15 @@ public class JL5MethodInstance_c extends MethodInstance_c implements JL5MethodIn
     }
 
     public boolean callValidImpl(List argTypes){
+        if (this.isGeneric()){
+            try {
+                List inferredTypes = ((JL5TypeSystem)typeSystem()).inferTypesFromArgs(typeVariables(), formalTypes(), argTypes, new ArrayList());
+                return genericCallValidImpl(argTypes, inferredTypes);
+            }
+            catch(SemanticException e){
+                return false;
+            }
+        }
         List l1 = this.formalTypes();
         List l2 = argTypes;
 
@@ -78,7 +87,7 @@ public class JL5MethodInstance_c extends MethodInstance_c implements JL5MethodIn
             Type t1 = (Type)l1.get(i);
             if (l2.size() > i){
                 Type t2 = (Type)l2.get(i);
-            
+           
 
                 if (t1 instanceof JL5ArrayType && ((JL5ArrayType)t1).isVariable()){
                     if (ts.isImplicitCastValid(t2, t1)){
@@ -118,10 +127,8 @@ public class JL5MethodInstance_c extends MethodInstance_c implements JL5MethodIn
             throw new SemanticException("Arguments are different", mi.position());
         }
 
-        //System.out.println("ret of mi: "+mi.returnType()+" is a: "+mi.returnType().getClass());
-        //System.out.println("ret of mj: "+mj.returnType()+" is a: "+mj.returnType().getClass());
 
-        // changed to isSubtype may need to add bridge methods - even when no generics used
+        // changed to isSubtype may need to add bridge methods - even when no generics used - covariant return types 
         if (! ts.isSubtype(mi.returnType(), mj.returnType())){// && !((JL5TypeSystem)ts).isEquivalent(mi.returnType(), mj.returnType())) {
             if (quiet) return false;
             throw new SemanticException(mi.signature() + " in " + mi.container() +
@@ -196,4 +203,59 @@ public class JL5MethodInstance_c extends MethodInstance_c implements JL5MethodIn
         return ! (i1.hasNext() || i2.hasNext());
 
     }
+
+    public boolean genericMethodCallValidImpl(String name, List argTypes, List inferredTypes){
+        return name().equals(name) && ((JL5TypeSystem)typeSystem()).genericCallValid(this, argTypes, inferredTypes);
+    }
+    
+    // inferred types correspond to typeVars not to formals list
+    public boolean genericCallValidImpl(List argTypes, List inferredTypes){
+        List l1 = this.formalTypes();
+        List l2 = argTypes;
+
+        for (int i = 0; i < l1.size(); i++){
+            Type t1 = (Type)l1.get(i);
+            
+            // handle inferred types
+            if (t1 instanceof IntersectionType && typeVariables().contains(t1)){
+                t1 = (Type)inferredTypes.get(typeVariables().indexOf(t1));
+            }
+            else if (t1 instanceof ParameterizedType){
+                t1 = ((ParameterizedType)t1).convertToInferred(typeVariables(), inferredTypes);
+            }
+            
+            if (l2.size() > i){
+                Type t2 = (Type)l2.get(i);
+           
+
+                if (t1 instanceof JL5ArrayType && ((JL5ArrayType)t1).isVariable()){
+                    if (ts.isImplicitCastValid(t2, t1)){
+                        return true;
+                    }
+                    for (int j = i; j < l2.size(); j++){
+                        Type tv = (Type)l2.get(j);
+                        if (!ts.isImplicitCastValid(tv, ((ArrayType)t1).base())){
+                            return false;
+                        }
+                    }
+                }
+                else {
+                    if (!ts.isImplicitCastValid(t2, t1)) {
+                        return false;
+                    }
+                }
+            }
+            else {
+                if (t1 instanceof JL5ArrayType && ((JL5ArrayType)t1).isVariable()){
+                    return true;
+                }
+                else {
+                    return false;
+                }
+            }
+        }
+
+        return true; 
+    }
+
 }

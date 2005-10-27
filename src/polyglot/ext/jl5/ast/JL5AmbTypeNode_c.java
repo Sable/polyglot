@@ -51,7 +51,9 @@ public class JL5AmbTypeNode_c extends AmbTypeNode_c implements JL5AmbTypeNode {
             ParameterizedType pt = new ParameterizedType_c((JL5ParsedClassType)((CanonicalTypeNode)n).type());
             ArrayList typeArgs = new ArrayList(typeArguments.size());
             for (Iterator it = typeArguments.iterator(); it.hasNext(); ){
-                typeArgs.add(((TypeNode)it.next()).type());
+                TypeNode tn = (TypeNode)it.next();
+                Type t = tn.type();
+                typeArgs.add(t);
             }
             pt.typeArguments(typeArgs);
             

@@ -86,7 +86,7 @@ public class JL5ConstructorDecl_c extends ConstructorDecl_c implements JL5Constr
             ParsedClassType ct = c.currentClassScope();
 
             JL5ConstructorInstance ci = (JL5ConstructorInstance)makeConstructorInstance(ct, ts);
-            ci.typeVariables(((JL5ConstructorInstance)constructorInstance()).typeVariables());
+            ci.typeVariables(paramTypes);
             return constructorInstance(ci);
         }
 

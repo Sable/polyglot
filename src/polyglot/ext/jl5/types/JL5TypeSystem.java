@@ -67,8 +67,22 @@ public interface JL5TypeSystem extends TypeSystem {
     public Type findRequiredType(IntersectionType iType, ParameterizedType pType);
     public boolean equals(TypeObject arg1, TypeObject arg2);
     public AnyType anyType();
-    public AnyType anySuperType(Type t);
-    public AnyType anySubType(Type t);
+    public AnySuperType anySuperType(Type t);
+    public AnySubType anySubType(Type t);
 
     public boolean isEquivalent(TypeObject arg1, TypeObject arg2);
+
+
+    // type inferrence for gen methods
+    public MethodInstance findGenericMethod(ClassType container, String name, List argTypes, ClassType currClass, List inferredTypes) throws SemanticException;
+    public boolean genericMethodCallValid(MethodInstance mi, String name, List argTypes, List inferredTypes);
+    public boolean genericCallValid(ProcedureInstance pi, List argTypes, List inferredTypes);
+    public List allAncestorsOf(ReferenceType rt);
+    public SyntheticType syntheticType(List common);
+
+    public Type deduceInferredType(ParameterizedType ft, ParameterizedType actual, IntersectionType iType);
+    public void updateInferred(int pos, Type infType, List inferred) throws SemanticException;
+    public List inferTypesFromArgs(List typeVariables, List formals, List args, List inferred) throws SemanticException;
+    
+    
 }

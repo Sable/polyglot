@@ -144,20 +144,18 @@ public class JL5Context_c extends Context_c implements JL5Context {
     }
     
     public JL5Context pushTypeVariable(IntersectionType iType){
-        //System.out.println("pushing type var context: "+iType.name());
         JL5Context_c v = (JL5Context_c)push();
         v.typeVariable = iType;
         v.kind = TYPE_VAR;
-        //System.out.println("v: "+v);
         //v.outer = this;
         return v;
     }
     
     public IntersectionType findTypeVariableInThisScope(String name){
-        //System.out.println("search for: "+name+" in: "+this);
         if (typeVariable != null && typeVariable.name().equals(name)) return typeVariable;
-        //System.out.println("outer: "+((JL5Context)outer).inTypeVariable());
-        if (typeVars != null && typeVars.containsKey(name)) return (IntersectionType)typeVars.get(name);
+        if (typeVars != null && typeVars.containsKey(name)){
+            return (IntersectionType)typeVars.get(name);
+        }
         if (outer != null){
             return ((JL5Context)outer).findTypeVariableInThisScope(name);
         }
@@ -165,7 +163,6 @@ public class JL5Context_c extends Context_c implements JL5Context {
     }
 
     public boolean inTypeVariable(){
-        //System.out.println("kind in inTypeVariable :"+kind);
         return kind == TYPE_VAR;
     }
 
@@ -178,4 +175,15 @@ public class JL5Context_c extends Context_c implements JL5Context {
         typeVars.put(type.name(), type);
         return this;
     }
+    
+    public MethodInstance findGenericMethod(String name, List argTypes, List inferredTypes) throws SemanticException {
+        if (this.currentClass() != null && typeSystem().hasMethodNamed(this.currentClass(), name)){
+            return ((JL5TypeSystem)typeSystem()).findGenericMethod(this.currentClass(), name, argTypes, this.currentClass(), inferredTypes);
+        }
+        if (outer != null){
+            return ((JL5Context)outer).findGenericMethod(name, argTypes, inferredTypes);
+        }
+        throw new SemanticException("Method "+name+" not found");
+    }
+    
 }

@@ -138,11 +138,12 @@ public class ParameterizedType_c extends JL5ParsedClassType_c implements Paramet
     }
 
     public boolean descendsFromImpl(Type ancestor){
-        //System.out.println("descends from in param: "+this+" ances: "+ancestor+" is a: "+ancestor.getClass());
         if (!(ancestor instanceof ParameterizedType)){
             return ts.isSubtype(baseType, ancestor);
         }
         else {
+            // first the base types have to have a subtype relationship
+            if (!typeSystem().isSubtype(baseType(), ((ParameterizedType)ancestor).baseType())) return false;
             // if args match its okay 
             return argsDescend((ParameterizedType)ancestor);
             // if args are subtypes its not okay unless one is a type var
@@ -156,45 +157,104 @@ public class ParameterizedType_c extends JL5ParsedClassType_c implements Paramet
             
             Type arg1 = (Type)ancestor.typeArguments().get(i);
             Type arg2 = (Type)typeArguments().get(i);
+            IntersectionType cap1 = (IntersectionType)ancestor.typeVariables().get(i);
+            IntersectionType cap2 = (IntersectionType)baseType().typeVariables().get(i);
             
-            
-            //System.out.println("arg1: "+arg1+" is a: "+arg1.getClass());
-            //System.out.println("arg2: "+arg2+" is a: "+arg2.getClass());
             // if both are AnySubType then arg2 bound must be subtype 
             // of arg1 bound
-            if (arg1 instanceof AnySubType && arg2 instanceof AnySubType){
-                if (!typeSystem().isSubtype(((AnySubType)arg2).bound(), ((AnySubType)arg1).bound())) return false;
-            }
-            // if only ancestor(arg1) is AnySubType then arg2 must be subtype of
-            // bound of arg1
-            else if (arg1 instanceof AnySubType) {
-                //System.out.println("sub: "+typeSystem().isSubtype(arg2, ((AnySubType)arg1).bound()));
-                if (!typeSystem().isSubtype(arg2, ((AnySubType)arg1).bound())) return false;
+            if (arg1 instanceof AnySubType){
+                if (arg2 instanceof AnySubType){
+                    if (!typeSystem().isSubtype(((AnySubType)arg2).bound(), ((AnySubType)arg1).bound())) return false;
+                }
+                else if (arg2 instanceof AnySuperType || arg2 instanceof AnyType){
+                    if (!typeSystem().isSubtype(cap2, ((AnySubType)arg1).bound())) return false;
+                }
+                // if only ancestor(arg1) is AnySubType then arg2 is not
+                // wildcard must be subtype of bound of arg1
+                else {
+                    if (!typeSystem().isSubtype(arg2, ((AnySubType)arg1).bound())) return false;
+                }
             }
             // if both are AnySuperType then arg1 bound must be a subtype
             // of arg2 bound
-            if (arg1 instanceof AnySuperType && arg2 instanceof AnySuperType){
-                if (!typeSystem().isSubtype(((AnySuperType)arg1).bound(), ((AnySuperType)arg2).bound())) return false;
-            }
-            // if only arg1 instanceof AnySuperType then arg1 bounds 
-            // must be a subtype of arg2
             else if (arg1 instanceof AnySuperType){
-                if (!typeSystem().isSubtype(((AnySuperType)arg1).bound(), arg2)) return false;
+                if (arg2 instanceof AnySuperType){
+                    if (!typeSystem().isSubtype(((AnySuperType)arg1).bound(), ((AnySuperType)arg2).bound())) return false;
+                }
+                // if only arg1 instanceof AnySuperType then arg1 bounds 
+                // must be a subtype of arg2
+                else {
+                    if (!typeSystem().isSubtype(((AnySuperType)arg1).bound(), arg2)) return false;
+                }
             }
-            
             // if arg1 is ? then every arg2 is okay
-            if (arg1 instanceof AnyType) continue;
+            else if (arg1 instanceof AnyType) {
+                if (arg2 instanceof AnySubType){
+                    if (!typeSystem().isSubtype(cap2, cap1)) return false;    
+                }
+                else {
+                    if (!typeSystem().isSubtype(arg2, cap1)) return false;   
+                }
+            }
 
-            if (arg1 instanceof IntersectionType && arg2 instanceof IntersectionType){
+            /*else if (arg1 instanceof IntersectionType){
+                if (arg2 instanceof IntersectionType){
                 // need to get infered type here (ie arg2 should never be
                 // an intersection type
-                if (!typeSystem().isSubtype(arg1, arg2)) return false;
-            }
+                    if (((IntersectionType)arg1).name().equals(((IntersectionType)arg2).name())) return true;
+                    if (!typeSystem().isSubtype(arg1, arg2)) return false;
+                }*/
             else if (arg1 instanceof ParameterizedType && arg2 instanceof ParameterizedType){
-                if (!typeSystem().isSubtype(arg1, arg2)) return false;
+                    //if (arg1.equals(arg2)) return true;
+                    if (!typeSystem().isSubtype(arg1, arg2)) return false;
             }
             else {
-                //System.out.println("args equals: "+typeSystem().equals(arg1, arg2));
+                if (!typeSystem().equals(arg1, arg2)) return false;
+            }
+        }
+        return true;
+    }
+
+    private boolean argsEqual(ParameterizedType ancestor){
+        for (int i = 0; i < ancestor.typeArguments().size(); i++){
+            
+            Type arg1 = (Type)ancestor.typeArguments().get(i);
+            Type arg2 = (Type)typeArguments().get(i);
+            IntersectionType cap1 = (IntersectionType)ancestor.typeVariables().get(i);
+            IntersectionType cap2 = (IntersectionType)baseType().typeVariables().get(i);
+            
+            // if both are AnySubType then arg2 bound must be subtype 
+            // of arg1 bound
+            if (arg1 instanceof AnySubType){
+                if (arg2 instanceof AnySubType){
+                    if (!typeSystem().equals(((AnySubType)arg2).bound(), ((AnySubType)arg1).bound())) return false;
+                }
+                /*else if (arg2 instanceof AnySuperType || arg2 instanceof AnyType){
+                    if (!typeSystem().isSubtype(cap2, ((AnySubType)arg1).bound())) return false;
+                }*/
+                // if only ancestor(arg1) is AnySubType then arg2 is not
+                // wildcard must be subtype of bound of arg1
+                else {
+                    if (!typeSystem().equals(arg2, arg1)) return false;
+                }
+            }
+            // if both are AnySuperType then arg1 bound must be a subtype
+            // of arg2 bound
+            else if (arg1 instanceof AnySuperType){
+                if (arg2 instanceof AnySuperType){
+                    if (!typeSystem().equals(((AnySuperType)arg1).bound(), ((AnySuperType)arg2).bound())) return false;
+                }
+                // if only arg1 instanceof AnySuperType then arg1 bounds 
+                // must be a subtype of arg2
+                else {
+                    if (!typeSystem().equals(arg1, arg2)) return false;
+                }
+            }
+            else if (arg1 instanceof ParameterizedType && arg2 instanceof ParameterizedType){
+                    //if (arg1.equals(arg2)) return true;
+                    if (!typeSystem().equals(arg1, arg2)) return false;
+            }
+            else {
                 if (!typeSystem().equals(arg1, arg2)) return false;
             }
         }
@@ -203,7 +263,7 @@ public class ParameterizedType_c extends JL5ParsedClassType_c implements Paramet
 
     public boolean equalsImpl(TypeObject t){
         if (!(t instanceof ParameterizedType)) return super.equalsImpl(t);
-        return argsDescend((ParameterizedType)t);
+        return argsEqual((ParameterizedType)t);
     }
 
  
@@ -213,5 +273,33 @@ public class ParameterizedType_c extends JL5ParsedClassType_c implements Paramet
 
     public List typeVariables(){
         return baseType.typeVariables();
+    }
+
+    public boolean comprisedOfIntersectionType(IntersectionType iType){
+        for (Iterator it = typeArguments().iterator(); it.hasNext(); ){
+            Type next = (Type)it.next();
+            if (next instanceof IntersectionType && ts.equals(next, iType)) return true;
+            if (next instanceof ParameterizedType && ((ParameterizedType)next).comprisedOfIntersectionType(iType)) return true;
+        }
+        return false;
+    }
+    
+    public Type convertToInferred(List typeVars, List inferredTypes){
+        List newBounds = new ArrayList();
+        for (Iterator it = typeArguments().iterator(); it.hasNext(); ){
+            Type next = (Type) it.next();
+            if (next instanceof IntersectionType){
+                newBounds.add(inferredTypes.get(typeVars.indexOf(next)));
+            }
+            else if (next instanceof ParameterizedType){
+                newBounds.add(((ParameterizedType)next).convertToInferred(typeVars, inferredTypes));
+            }
+            else {
+                newBounds.add(next);
+            }
+        }
+        ParameterizedType converted = ((JL5TypeSystem)typeSystem()).parameterizedType(this.baseType());
+        converted.typeArguments(newBounds);
+        return converted;
     }
 }

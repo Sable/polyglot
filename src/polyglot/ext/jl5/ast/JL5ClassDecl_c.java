@@ -121,6 +121,12 @@ public class JL5ClassDecl_c extends ClassDecl_c implements JL5ClassDecl, Applica
         }
     }       
 
+    public Node disambiguate(AmbiguityRemover ar) throws SemanticException {
+        Node n = super.disambiguate(ar);
+        addTypeParameters();
+        return n;
+    }
+    
     public Node typeCheck(TypeChecker tc) throws SemanticException {
         if (JL5Flags.isEnumModifier(flags()) && flags().isAbstract()){
             throw new SemanticException("Enum types cannot have abstract modifier", this.position());
@@ -191,7 +197,7 @@ public class JL5ClassDecl_c extends ClassDecl_c implements JL5ClassDecl, Applica
         TypeSystem ts = tc.typeSystem();
         NodeFactory nf = tc.nodeFactory();
         addGenEnumMethods(ts, nf);
-        addTypeParameters();
+        //addTypeParameters();
         return super.addMembers(tc);
     }
 

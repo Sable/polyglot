@@ -385,6 +385,11 @@ public class JL5TypeSystem_c extends TypeSystem_c implements JL5TypeSystem {
         assert_(bounds);
         return new IntersectionType_c(this, pos, name, bounds);
     }
+
+    public SyntheticType syntheticType(List bounds){
+        assert_(bounds);
+        return new SyntheticType_c(this, bounds);
+    }
     
     public ParameterizedType parameterizedType(JL5ParsedClassType ct){
         
@@ -566,7 +571,6 @@ public class JL5TypeSystem_c extends TypeSystem_c implements JL5TypeSystem {
         for (int i = 0; i < typeVariables.size(); i++){
             IntersectionType iType = (IntersectionType)typeVariables.get(i);
             TypeNode restriction = (TypeNode)typeArguments.get(i);
-            System.out.println("rest type: "+restriction.type()+" iType: "+iType);
             if (!isSubtype(restriction.type(), iType)){
                 throw new SemanticException("Invalid type argument", restriction.position());
             }
@@ -581,6 +585,15 @@ public class JL5TypeSystem_c extends TypeSystem_c implements JL5TypeSystem {
             iType.popRestriction(restriction);
         }
     }*/
+   
+    /*public Type findRequiredType(Type original, Type target){
+        if (original instanceof IntersectionType && target instanceof ParameterizedType){
+            return findRequiredType((IntersectionType)original, (ParameterizedType)target);
+        }
+        if (original instanceof ParameterizedType && target instanceof ParameterizedType){
+            for (Iterator it = ((ParameterizedType)original
+        }
+    }*/
     
     public Type findRequiredType(IntersectionType iType, ParameterizedType pType){
         String id = iType.name();
@@ -591,7 +604,12 @@ public class JL5TypeSystem_c extends TypeSystem_c implements JL5TypeSystem {
         if (pType.isGeneric()){
             for (int i = 0; i < pType.typeVariables().size(); i++){
                if (((IntersectionType)pType.typeVariables().get(i)).name().equals(iType.name())){
-                    return (Type)pType.typeArguments().get(i);       
+                    Type required = (Type)pType.typeArguments().get(i);
+                    if (required instanceof AnyType){
+                        IntersectionType typeVar = (IntersectionType)pType.typeVariables().get(i);      
+                        return anySubType(typeVar.erasureType());
+                    }
+                    return required; 
                 }
             }
         }
@@ -603,7 +621,12 @@ public class JL5TypeSystem_c extends TypeSystem_c implements JL5TypeSystem {
                         if (pType.isGeneric()){
                             for (int j = 0; j < pType.typeVariables().size(); j++){
                                if (((IntersectionType)pType.typeVariables().get(j)).name().equals(((IntersectionType)result).name())){
-                                    return (Type)pType.typeArguments().get(j); 
+                                    Type required = (Type)pType.typeArguments().get(j);
+                                    if (required instanceof AnyType){
+                                        IntersectionType typeVar = (IntersectionType)pType.typeVariables().get(j);      
+                                        return anySubType(typeVar.erasureType());
+                                    }
+                                    return required; 
                                }
                             }
                         }
@@ -617,23 +640,18 @@ public class JL5TypeSystem_c extends TypeSystem_c implements JL5TypeSystem {
     }
 
     public boolean equals(TypeObject arg1, TypeObject arg2){
-        //System.out.println("ts: arg1: "+arg1.getClass());
         if (arg1 instanceof ParameterizedType) return ((ParameterizedType)arg1).equalsImpl(arg2);
         if (arg1 instanceof IntersectionType) return ((IntersectionType)arg1).equalsImpl(arg2);
-        /*System.out.println("arg1 class: "+arg1.getClass());
-        if (arg1 instanceof JL5ParsedClassType){
-            return arg1.equalsImpl(arg2);
-        }*/
         return super.equals(arg1, arg2);
     }
     
     public AnyType anyType(){
         return new AnyType_c(this);
     }
-    public AnyType anySuperType(Type t){
+    public AnySuperType anySuperType(Type t){
         return new AnySuperType_c(this, t);
     }
-    public AnyType anySubType(Type t){
+    public AnySubType anySubType(Type t){
         return new AnySubType_c(this, t);
     }
 
@@ -660,7 +678,6 @@ public class JL5TypeSystem_c extends TypeSystem_c implements JL5TypeSystem {
 
     public boolean isEquivalent(TypeObject arg1, TypeObject arg2){
         if (arg1 instanceof ArrayType && arg2 instanceof ArrayType){
-            //System.out.println("is equiv both arrays");
             return isEquivalent(((ArrayType)arg1).base(), ((ArrayType)arg2).base());
         }
         if (arg1 instanceof IntersectionType) {
@@ -670,5 +687,203 @@ public class JL5TypeSystem_c extends TypeSystem_c implements JL5TypeSystem {
             return ((IntersectionType)arg2).isEquivalent(arg1);
         }
         return this.equals(arg1, arg2);
+    }
+    
+    // inferred types
+    public MethodInstance findGenericMethod(ClassType container, String name, List argTypes, ClassType currClass, List inferredTypes) throws SemanticException {
+        assert_(container);
+        assert_(argTypes);
+        List acceptable = findAcceptableGenericMethods(container, name, argTypes, currClass, inferredTypes);
+
+        if (acceptable.size() == 0){
+            throw new NoMemberException(NoMemberException.METHOD,
+            "No valid method call found for " + name +
+            "(" + listToString(argTypes) + ")" +
+            " in " +
+            container + ".");
+        }
+
+        MethodInstance mi = (MethodInstance)findProcedure(acceptable, container, argTypes, currClass);
+
+        if (mi == null){
+            throw new SemanticException("Reference to " + name +
+            " is ambiguous, multiple methods match: "
+            + acceptable);
+        }
+        return mi;
+    }
+
+
+    protected List findAcceptableGenericMethods(ReferenceType container, String name, List argTypes, ClassType currClass, List inferredTypes) throws SemanticException {
+        assert_(container);
+        assert_(argTypes);
+        assert_(inferredTypes);
+        List acceptable = new ArrayList();
+
+        List unacceptable = new ArrayList();
+
+        Set visitedTypes = new HashSet();
+        LinkedList typeQueue = new LinkedList();
+        typeQueue.addLast(container);
+
+        while (!typeQueue.isEmpty()){
+            Type type = (Type) typeQueue.removeFirst();
+
+            if (visitedTypes.contains(type)) {
+                continue;
+            }
+
+            visitedTypes.add(type);
+
+            if (! type.isReference()) {
+                throw new SemanticException("Cannot call method in " +
+                " non-reference type " + type + ".");
+            }
+
+            for (Iterator i = type.toReference().methods().iterator(); i.hasNext(); ) {
+                MethodInstance mi = (MethodInstance) i.next();
+
+
+                if (genericMethodCallValid(mi, name, argTypes, inferredTypes)) {
+                    if (isAccessible(mi, currClass)) {
+
+                        acceptable.add(mi);
+                    }
+                    else {
+                        // method call is valid, but the method is
+                        // unacceptable.
+                        unacceptable.add(mi);
+                    }
+                }
+            }
+            if (type.toReference().superType() != null) {
+                typeQueue.addLast(type.toReference().superType());
+            }
+
+            typeQueue.addAll(type.toReference().interfaces());
+        }
+
+        // remove any method in acceptable that are overridden by an
+        // unacceptable
+        // method.
+        for (Iterator i = unacceptable.iterator(); i.hasNext();) {
+            MethodInstance mi = (MethodInstance)i.next();
+            acceptable.removeAll(mi.overrides());
+        }
+
+        return acceptable;
+ 
+    }
+
+    public boolean genericMethodCallValid(MethodInstance prototype, String name, List argTypes, List inferredTypes){
+        assert_(prototype);
+        assert_(argTypes);
+        assert_(inferredTypes);
+        return ((JL5MethodInstance)prototype).genericMethodCallValidImpl(name, argTypes, inferredTypes);
+    }
+
+    public boolean genericCallValid(ProcedureInstance prototype, List argTypes, List inferredTypes){
+        assert_(prototype);
+        assert_(argTypes);
+        assert_(inferredTypes);
+        if (prototype instanceof JL5MethodInstance){
+            return ((JL5MethodInstance)prototype).genericCallValidImpl(argTypes, inferredTypes);
+        }
+        /*else {
+            return ((JL5ConstructorInstance)prototype).genericCallValidImpl(argTypes, inferredTypes);
+        }*/
+        return prototype.callValidImpl(argTypes);
+    }
+    
+    public List allAncestorsOf(ReferenceType rt){
+        List ancestors = new ArrayList();
+        ReferenceType superT = (ReferenceType)rt.superType();
+        if (superT != null){
+            ancestors.addAll(allAncestorsOf(superT));
+        }
+        for (Iterator it = rt.interfaces().iterator(); it.hasNext(); ){
+            ancestors.addAll(allAncestorsOf((ReferenceType)it.next()));
+        }
+        return ancestors;
+    }
+    
+    public Type deduceInferredType(ParameterizedType ft, ParameterizedType actual, IntersectionType iType){
+        Iterator it = ft.typeArguments().iterator();
+        Iterator jt = actual.typeArguments().iterator();
+        while (it.hasNext() && jt.hasNext()){
+            Type iNext = (Type)it.next();
+            Type jNext = (Type)jt.next();
+            if (iNext instanceof IntersectionType && equals(iNext, iType)){
+                return jNext;
+            }
+            else if (iNext instanceof ParameterizedType && jNext instanceof ParameterizedType){
+                return deduceInferredType((ParameterizedType)iNext, (ParameterizedType)jNext, iType);
+            }
+        }
+        return Object();
+    }
+    
+    public void updateInferred(int pos, Type infType, List inferred) throws SemanticException {
+        ReferenceType refInf = (ReferenceType)infType;
+        if (pos < inferred.size()){
+            ReferenceType old = (ReferenceType)inferred.get(pos);
+            // make new synthetic type of common supertypes of old and infType
+            // or object if object only superType
+            Type newType = null;
+            if (isSubtype(old, refInf)) {
+                newType = refInf;
+            }
+            else if (isSubtype(refInf, old)){
+                newType = old;
+            }
+            else{
+                List common = new ArrayList();
+                List allAncestorsOld = allAncestorsOf(old);
+                List allAncestorsInf = allAncestorsOf(refInf);
+                for (Iterator it = allAncestorsOld.iterator(); it.hasNext(); ){
+                    Type t = (Type)it.next();
+                    if (allAncestorsInf.contains(t)){
+                        common.add(t);
+                    }
+                }
+                if (common.size() == 1){
+                    newType = (Type)common.get(0);
+                }
+                else {
+                    newType = syntheticType(common);
+                }
+            }
+            inferred.add(pos, newType);
+        }
+        else {
+            inferred.add(pos, infType);
+        }
+    }
+    
+    public List inferTypesFromArgs(List typeVariables, List formalTypes, List argTypes, List inferred) throws SemanticException{
+        for (int j = 0; j < typeVariables.size(); j++){
+            IntersectionType iType = (IntersectionType) typeVariables.get(j);
+            boolean found = false;
+            for (int i = 0; i < formalTypes.size(); i++){
+                Type ft = (Type)formalTypes.get(i);
+                if (ft instanceof IntersectionType){
+                    if (equals(ft, iType)){
+                        updateInferred(j, (Type)argTypes.get(i), inferred);
+                        found = true;
+                    }
+                }
+                else if (ft instanceof ParameterizedType && argTypes.get(i) instanceof ParameterizedType){
+                    if (((ParameterizedType)ft).comprisedOfIntersectionType(iType)){
+                        updateInferred(j, deduceInferredType((ParameterizedType)ft, (ParameterizedType)argTypes.get(i), iType), inferred);
+                        found = true;
+                    }
+                }
+            }
+            if (!found){
+                inferred.add(Object());
+            }
+        
+        }
+        return inferred;
     }
 }

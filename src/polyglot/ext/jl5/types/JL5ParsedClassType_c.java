@@ -130,7 +130,6 @@ public class JL5ParsedClassType_c extends ParsedClassType_c implements JL5Parsed
     }
 
     public boolean descendsFromImpl(Type ancestor){
-        //System.out.println("descends from: "+this+" ances: "+ancestor+getClass());
         if (ancestor instanceof IntersectionType){
             return isSubtypeOfAllBounds(((IntersectionType)ancestor).bounds());
         }

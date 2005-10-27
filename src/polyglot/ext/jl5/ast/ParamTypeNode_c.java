@@ -96,9 +96,10 @@ public class ParamTypeNode_c extends TypeNode_c implements ParamTypeNode{//, Typ
             typeList.add(((TypeNode)it.next()).type());
         }
 
-        IntersectionType iType = ts.intersectionType(position(), id, typeList);
+        //IntersectionType iType = ts.intersectionType(position(), id, typeList);
 
-        return type(iType);
+        ((IntersectionType)type()).bounds(typeList);
+        return type(type());
     }
 
    

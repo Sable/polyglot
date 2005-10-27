@@ -11,4 +11,7 @@ public interface ParameterizedType extends JL5ParsedClassType {
     JL5ParsedClassType baseType();
 
     boolean equalsImpl(TypeObject t);
+
+    boolean comprisedOfIntersectionType(IntersectionType iType);
+    Type convertToInferred(List typeVars, List inferredTypes);
 }

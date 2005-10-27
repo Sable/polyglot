@@ -16,4 +16,5 @@ public class AnyType_c extends Type_c implements AnyType{
     public String toString(){
         return "?";
     }
+
 }

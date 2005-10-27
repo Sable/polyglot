@@ -66,11 +66,8 @@ public class JL5Disamb_c extends Disamb_c implements JL5Disamb {
             if (n != null) return n;
         }
 
-        //System.out.println("try disamb: "+name);
-        //System.out.println("context: "+((JL5Context)c).inTypeVariable());
         //if (((JL5Context)c).inTypeVariable()){
         IntersectionType res = ((JL5Context)c).findTypeVariableInThisScope(name);
-        //System.out.println("res: "+res);
         if (res != null){
             return nf.CanonicalTypeNode(pos, res);
         }

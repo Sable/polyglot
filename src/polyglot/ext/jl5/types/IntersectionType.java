@@ -19,4 +19,6 @@ public interface IntersectionType extends ClassType {
     void popRestriction(TypeNode restriction);
     List restrictions();
     TypeNode restriction();*/
+
+    Type erasureType();
 }

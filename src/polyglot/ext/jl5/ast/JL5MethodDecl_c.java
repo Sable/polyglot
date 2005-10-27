@@ -104,7 +104,11 @@ public class JL5MethodDecl_c extends MethodDecl_c implements JL5MethodDecl, Appl
             TypeSystem ts = ar.typeSystem();
             ParsedClassType ct = c.currentClassScope();
             JL5MethodInstance mi = (JL5MethodInstance)makeMethodInstance(ct, ts);
-            mi.typeVariables(((JL5MethodInstance)methodInstance()).typeVariables());
+            List pTypes = new ArrayList();
+            for (Iterator it = paramTypes.iterator(); it.hasNext(); ){
+                pTypes.add(((ParamTypeNode)it.next()).type());
+            }
+            mi.typeVariables(pTypes);
             return flags(mi.flags()).methodInstance(mi);
          }
          return this;

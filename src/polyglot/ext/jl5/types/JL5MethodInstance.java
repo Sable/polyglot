@@ -18,4 +18,7 @@ public interface JL5MethodInstance extends MethodInstance{
     boolean isGeneric();
 
     boolean callValidImpl(List typeArgs);
+    
+    boolean genericMethodCallValidImpl(String name, List argTypes, List inferredTypes);
+    boolean genericCallValidImpl(List argTypes, List inferredTypes);
 }
