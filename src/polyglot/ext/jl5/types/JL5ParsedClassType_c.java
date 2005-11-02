@@ -141,13 +141,21 @@ public class JL5ParsedClassType_c extends ParsedClassType_c implements JL5Parsed
             // this doesn't work
             return typeSystem().isSubtype(this, ((ParameterizedType)ancestor).baseType());
         }
+        else if (ancestor instanceof AnySuperType){
+            return (typeSystem().isSubtype(((AnySuperType)ancestor).bound(), this) || typeSystem().isSubtype(this, ((AnySuperType)ancestor).bound())) && typeSystem().isSubtype(this, ((AnySuperType)ancestor).upperBound());
+        }
+        else if (ancestor instanceof AnySubType){
+            return typeSystem().isSubtype(this, ((AnySubType)ancestor).bound());
+        }
+        else if (ancestor instanceof AnyType){
+            return typeSystem().isSubtype(this, ((AnyType)ancestor).upperBound());
+        }
         else{
             return super.descendsFromImpl(ancestor);
         }
     }
 
     private boolean isSubtypeOfAllBounds(List bounds){
-        //System.out.println("bounds: "+bounds);
         if (bounds != null){
             for (Iterator it = bounds.iterator(); it.hasNext(); ){
                 Object next = it.next();

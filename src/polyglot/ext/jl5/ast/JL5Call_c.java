@@ -46,86 +46,6 @@ public class JL5Call_c extends Call_c implements JL5Call {
         return reconstruct(target, arguments, typeArgs);
     }
 
-    /*private Type deduceInferredType(ParameterizedType ft, ParameterizedType actual, IntersectionType iType, JL5TypeSystem ts){
-        Iterator it = ft.typeArguments().iterator();
-        Iterator jt = actual.typeArguments().iterator();
-        while (it.hasNext() && jt.hasNext()){
-            Type iNext = (Type)it.next();
-            Type jNext = (Type)jt.next();
-            if (iNext instanceof IntersectionType && ts.equals(iNext, iType)){
-                return jNext;
-            }
-            else if (iNext instanceof ParameterizedType && jNext instanceof ParameterizedType){
-                return deduceInferredType((ParameterizedType)iNext, (ParameterizedType)jNext, iType, ts);
-            }
-        }
-        return ts.Object();
-    }
-    
-    private void updateInferred(int pos, Type infType, List inferred, JL5TypeSystem ts) throws SemanticException {
-        ReferenceType refInf = (ReferenceType)infType;
-        if (inferred.size() >= pos){
-            ReferenceType old = (ReferenceType)inferred.get(pos);
-            // make new synthetic type of common supertypes of old and infType
-            // or object if object only superType
-            Type newType = null;
-            if (ts.isSubtype(old, refInf)) {
-                newType = refInf;
-            }
-            else if (ts.isSubtype(refInf, old)){
-                newType = old;
-            }
-            else{
-                List common = new ArrayList();
-                List allAncestorsOld = ts.allAncestorsOf(old);
-                List allAncestorsInf = ts.allAncestorsOf(refInf);
-                for (Iterator it = allAncestorsOld.iterator(); it.hasNext(); ){
-                    Type t = (Type)it.next();
-                    if (allAncestorsInf.contains(t)){
-                        common.add(t);
-                    }
-                }
-                if (common.size() == 1){
-                    newType = (Type)common.get(0);
-                }
-                else {
-                    newType = ts.syntheticType(common);
-                }
-            }
-            inferred.add(pos, newType);
-        }
-        else {
-            inferred.add(pos, infType);
-        }
-    }
-    
-    private List inferTypesFromArgs(JL5TypeSystem ts, List inferred) throws SemanticException{
-        for (int j = 0; j < ((JL5MethodInstance)methodInstance()).typeVariables().size(); j++){
-            IntersectionType iType = (IntersectionType) ((JL5MethodInstance)methodInstance()).typeVariables().get(j);
-            boolean found = false;
-            for (int i = 0; i < methodInstance().formalTypes().size(); i++){
-                Type ft = (Type)methodInstance().formalTypes().get(i);
-                if (ft instanceof IntersectionType){
-                    if (ts.equals(ft, iType)){
-                        updateInferred(j, ((Expr)arguments().get(i)).type(), inferred, ts);
-                        found = true;
-                    }
-                }
-                else if (ft instanceof ParameterizedType && ((Expr)arguments().get(i)).type() instanceof ParameterizedType){
-                    if (((ParameterizedType)ft).comprisedOfIntersectionType(iType)){
-                        updateInferred(j, deduceInferredType((ParameterizedType)ft, (ParameterizedType)((Expr)arguments().get(i)).type(), iType, ts), inferred, ts);
-                        found = true;
-                    }
-                }
-            }
-            if (!found){
-                inferred.add(ts.Object());
-            }
-        
-        }
-        return inferred;
-    }*/
- 
     public Node typeCheck(TypeChecker tc) throws SemanticException {
         JL5Call_c n = null;
         JL5TypeSystem ts = (JL5TypeSystem)tc.typeSystem();
@@ -137,7 +57,9 @@ public class JL5Call_c extends Call_c implements JL5Call {
         // else no context -> no inferring
         if (typeArguments() != null && !typeArguments.isEmpty()){// && ((JL5MethodInstance)methodInstance()).typeParamsInFormalsList()){
             List inferred = new ArrayList();
-            inferred = typeArguments();
+            for (Iterator it = typeArguments().iterator(); it.hasNext(); ){
+                inferred.add(((TypeNode)it.next()).type());
+            }
             List argTypes = new ArrayList(this.arguments().size());
             for (Iterator i = this.arguments().iterator(); i.hasNext(); ) {
                 Expr e = (Expr) i.next();
@@ -229,7 +151,6 @@ public class JL5Call_c extends Call_c implements JL5Call {
 
         // type check call arguments
         if (target() != null && target().type() instanceof ParameterizedType){
-            //System.out.println("target is param");
             for (int i = 0; i < mi.formalTypes().size(); i++){
                 Type t = (Type)mi.formalTypes().get(i);
                 if (t instanceof IntersectionType){
@@ -241,7 +162,6 @@ public class JL5Call_c extends Call_c implements JL5Call {
             }
         
 
-            //System.out.println("mi.return type is a: "+mi.returnType().getClass());
             // set return type
             if (mi.returnType() instanceof IntersectionType){
                 Type other = ts.findRequiredType((IntersectionType)mi.returnType(), (ParameterizedType)target().type());

@@ -57,8 +57,11 @@ public class JL5AmbTypeNode_c extends AmbTypeNode_c implements JL5AmbTypeNode {
             }
             pt.typeArguments(typeArgs);
             
-            CanonicalTypeNode an = ar.nodeFactory().CanonicalTypeNode(n.position(), pt);
+            CanonicalTypeNode an = ((JL5NodeFactory)ar.nodeFactory()).JL5CanonicalTypeNode(n.position(), pt);
             return an;
+        }
+        else if (n instanceof CanonicalTypeNode){
+            throw new SemanticException("Unexpected type: "+n+". Only class types can have type arguments.", n.position());
         }
         else if (n instanceof TypeNode){
             return n;

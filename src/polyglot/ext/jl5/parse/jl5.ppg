@@ -278,6 +278,23 @@ start with goal;
 drop{modifiers}
 drop{modifiers_opt}
 
+override simple_name ::=
+    IDENTIFIER:a
+        {: RESULT = new JL5Name(parser, parser.pos(a), a.getIdentifier()); :}
+;
+
+override qualified_name ::=
+    name:a DOT IDENTIFIER:b
+        {: RESULT = new JL5Name(parser, parser.pos(a, b), a, b.getIdentifier()); :}
+;
+
+override identifier_opt ::=
+    {: RESULT = null; :}
+    |
+    IDENTIFIER:a
+     {: RESULT = new JL5Name(parser, parser.pos(a), a.getIdentifier()); :}
+;
+                         
 type_variable ::=
 		IDENTIFIER:a
         {: RESULT = new Name(parser, parser.pos(a), a.getIdentifier()); :}
@@ -471,6 +488,16 @@ class_body_opt ::=
     class_body:a
         {: RESULT = a; :}
 ;   
+
+override class_body ::=
+    LBRACE:n class_body_declarations_opt:a RBRACE:b
+    {: RESULT = parser.nf.JL5ClassBody(parser.pos(n, b), a); :}
+;
+
+override interface_body ::=
+    LBRACE:n interface_member_declarations_opt:a RBRACE:d
+        {: RESULT = parser.nf.JL5ClassBody(parser.pos(n, d), a); :}
+;
 
 override class_member_declaration ::=
     field_declaration:a
@@ -809,7 +836,7 @@ override method_invocation ::=
         {: RESULT = parser.nf.JL5Call(parser.pos(a, g), a, d.getIdentifier(), f, c); :}
 	|	
     name:a DOT:b type_arguments:c IDENTIFIER:d LPAREN:e argument_list_opt:f RPAREN:g
-        {: RESULT = parser.nf.JL5Call(parser.pos(a, g), a.prefix == null ? null : a.prefix.toReceiver(), a.name, f, c); :}
+        {: RESULT = parser.nf.JL5Call(parser.pos(a, g), a.toReceiver(), d.getIdentifier(), f, c); :}
 	|
     SUPER:a DOT:b type_arguments:c IDENTIFIER:d LPAREN:e argument_list_opt:f RPAREN:g
         {: RESULT = parser.nf.JL5Call(parser.pos(a, g, d), parser.nf.Super(parser.pos(a)), d.getIdentifier(), f, c); :}

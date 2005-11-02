@@ -52,6 +52,77 @@ public class JL5New_c extends New_c implements JL5New {
         List typeArgs = visitList(this.typeArguments, v);
         return reconstruct(qualifier, tn, arguments, body, typeArgs);
     }
+    
+    public Node disambiguate(AmbiguityRemover ar) throws SemanticException {
+        if (ar.kind() != AmbiguityRemover.ALL) {
+            return this;
+        }
+
+        if (qualifier == null) {
+            ClassType ct = tn.type().toClass();
+
+            if (! ct.isMember() || ct.flags().isStatic()) {
+                return this;
+            }
+
+            // If we're instantiating a non-static member class, add a "this"
+            // qualifier.
+            NodeFactory nf = ar.nodeFactory();
+            TypeSystem ts = ar.typeSystem();
+            Context c = ar.context();
+
+            // Search for the outer class of the member.  The outer class is
+            // not just ct.outer(); it may be a subclass of ct.outer().
+            Type outer = null;
+
+            String name = ct.name();
+            ClassType t = c.currentClass();
+
+            // We're in one scope too many.
+            if (t == anonType) {
+                t = t.outer();
+            }
+
+            while (t != null) {
+                try {
+                    // HACK: PolyJ outer() doesn't work
+                    t = ts.staticTarget(t).toClass();
+                    ClassType mt = ts.findMemberClass(t, name, c.currentClass());
+                    
+                    if (ts.equals(mt, ct) || (ct instanceof ParameterizedType && ts.equals(mt, ((ParameterizedType)ct).baseType()))) {
+                        outer = t;
+                        break;
+                    }
+                }
+                catch (SemanticException e) {
+                }
+
+                t = t.outer();
+            }
+
+            if (outer == null) {
+                throw new SemanticException("Could not find non-static member class \"" +
+                                            name + "\".", position());
+            }
+
+            // Create the qualifier.
+            Expr q;
+
+            if (outer.equals(c.currentClass())) {
+                q = nf.This(position());
+            }
+            else {
+                q = nf.This(position(),
+                            nf.CanonicalTypeNode(position(),
+                                                 outer));
+            }
+
+            return qualifier(q);
+        }
+
+        return this;
+    }
+
 
     public Node typeCheck(TypeChecker tc) throws SemanticException {
         if (tn.type().isClass()){
@@ -99,10 +170,8 @@ public class JL5New_c extends New_c implements JL5New {
 
         String name = null;
 
-        //System.out.println("tn is a: "+tn.getClass());
         if (tn instanceof AmbTypeNode && ((AmbTypeNode) tn).qual() == null) {
             name = ((AmbTypeNode) tn).name();
-            //System.out.println("name: "+name);
         }
         else {
             throw new SemanticException(

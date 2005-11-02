@@ -55,8 +55,34 @@ public class JL5LocalDecl_c extends LocalDecl_c implements JL5LocalDecl, Applica
         if (!flags().clear(Flags.FINAL).equals(Flags.NONE)){
             throw new SemanticException("Modifier: "+flags().clearFinal()+" not allowed here.", position());
         }
+        if (type().type() instanceof IntersectionType && tc.context().inStaticContext()){
+            throw new SemanticException("Cannot access non-static type: "+((IntersectionType)type().type()).name()+" in a static context.", position());
+        }
         JL5TypeSystem ts = (JL5TypeSystem)tc.typeSystem();
         ts.checkDuplicateAnnotations(annotations);
+        if (init != null && init instanceof Call && ((JL5MethodInstance)((Call)init).methodInstance()).isGeneric() && type().type() instanceof ParameterizedType){
+            if (!ts.isImplicitCastValid(init.type(), type.type()) && 
+                !ts.equals(init.type(), type.type())){
+                // determine infered type of type vars in init type
+                // and update init type
+                List formalTypes = new ArrayList();
+                formalTypes.add(init.type());
+                List argTypes = new ArrayList();
+                argTypes.add(type.type());
+                List inferredTypes = ts.inferTypesFromArgs(((JL5MethodInstance)((Call)init).methodInstance()).typeVariables(), formalTypes, argTypes, new ArrayList());
+                Type inferred = init.type();
+                if (init.type() instanceof IntersectionType && ((JL5MethodInstance)((Call)init).methodInstance()).typeVariables().contains(init.type())){
+                    int pos = ((JL5MethodInstance)((Call)init).methodInstance()).typeVariables().indexOf(init.type());
+                    inferred = (Type)inferredTypes.get(pos);
+                }
+                else if (init.type() instanceof ParameterizedType){
+                    inferred = ((ParameterizedType)init.type()).convertToInferred(((JL5MethodInstance)((Call)init).methodInstance()).typeVariables(), inferredTypes);
+                }
+                if (inferred != init.type()){
+                    return init(((JL5Call)init).type(inferred)).typeCheck(tc);
+                }
+            }
+        }
         return super.typeCheck(tc);
     }
    

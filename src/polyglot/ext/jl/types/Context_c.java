@@ -80,8 +80,8 @@ public class Context_c implements Context
     protected ClassType type;
     protected ParsedClassType scope;
     protected CodeInstance code;
-    protected Map types;
-    protected Map vars;
+    public Map types;
+    public Map vars;
     protected boolean inCode;
 
     /**

@@ -564,36 +564,6 @@ public class JL5TypeSystem_c extends TypeSystem_c implements JL5TypeSystem {
         }
     }
     
-    /*public void handleTypeRestrictions(List typeVariables, List typeArguments) throws SemanticException{
-        if (typeVariables.size() != typeArguments.size()){
-            throw new SemanticException("Restrict all type variables or none.");
-        }
-        for (int i = 0; i < typeVariables.size(); i++){
-            IntersectionType iType = (IntersectionType)typeVariables.get(i);
-            TypeNode restriction = (TypeNode)typeArguments.get(i);
-            if (!isSubtype(restriction.type(), iType)){
-                throw new SemanticException("Invalid type argument", restriction.position());
-            }
-            iType.pushRestriction(restriction);
-        }
-    }
-    
-    public void resetTypeRestrictions(List typeVariables, List typeArguments) throws SemanticException{
-        for (int i = 0; i < typeVariables.size(); i++){
-            IntersectionType iType = (IntersectionType)typeVariables.get(i);
-            TypeNode restriction = (TypeNode)typeArguments.get(i);
-            iType.popRestriction(restriction);
-        }
-    }*/
-   
-    /*public Type findRequiredType(Type original, Type target){
-        if (original instanceof IntersectionType && target instanceof ParameterizedType){
-            return findRequiredType((IntersectionType)original, (ParameterizedType)target);
-        }
-        if (original instanceof ParameterizedType && target instanceof ParameterizedType){
-            for (Iterator it = ((ParameterizedType)original
-        }
-    }*/
     
     public Type findRequiredType(IntersectionType iType, ParameterizedType pType){
         String id = iType.name();
@@ -605,10 +575,16 @@ public class JL5TypeSystem_c extends TypeSystem_c implements JL5TypeSystem {
             for (int i = 0; i < pType.typeVariables().size(); i++){
                if (((IntersectionType)pType.typeVariables().get(i)).name().equals(iType.name())){
                     Type required = (Type)pType.typeArguments().get(i);
-                    if (required instanceof AnyType){
+                    if (required instanceof AnySuperType){
+                        ((AnySuperType)required).upperBound(iType.upperBound());
+                    }
+                    else if (required instanceof AnyType){           
+                        ((AnyType)required).upperBound(iType.upperBound());
+                    }
+                    /*if (required instanceof AnyType){
                         IntersectionType typeVar = (IntersectionType)pType.typeVariables().get(i);      
                         return anySubType(typeVar.erasureType());
-                    }
+                    }*/
                     return required; 
                 }
             }
@@ -622,10 +598,16 @@ public class JL5TypeSystem_c extends TypeSystem_c implements JL5TypeSystem {
                             for (int j = 0; j < pType.typeVariables().size(); j++){
                                if (((IntersectionType)pType.typeVariables().get(j)).name().equals(((IntersectionType)result).name())){
                                     Type required = (Type)pType.typeArguments().get(j);
-                                    if (required instanceof AnyType){
+                                    if (required instanceof AnySuperType){
+                                        ((AnySuperType)required).upperBound(iType.upperBound());
+                                    }
+                                    else if (required instanceof AnyType){           
+                                        ((AnyType)required).upperBound(iType.upperBound());
+                                    }
+                                    /*if (required instanceof AnyType){
                                         IntersectionType typeVar = (IntersectionType)pType.typeVariables().get(j);      
                                         return anySubType(typeVar.erasureType());
-                                    }
+                                    }*/
                                     return required; 
                                }
                             }
@@ -636,12 +618,14 @@ public class JL5TypeSystem_c extends TypeSystem_c implements JL5TypeSystem {
                     }
                 }
         }
-        return this.Object();
+        return iType.erasureType();
     }
 
     public boolean equals(TypeObject arg1, TypeObject arg2){
         if (arg1 instanceof ParameterizedType) return ((ParameterizedType)arg1).equalsImpl(arg2);
         if (arg1 instanceof IntersectionType) return ((IntersectionType)arg1).equalsImpl(arg2);
+        if (arg1 instanceof AnySubType) return ((AnySubType)arg1).equalsImpl(arg2);
+        if (arg1 instanceof AnySuperType) return ((AnySuperType)arg1).equalsImpl(arg2);
         return super.equals(arg1, arg2);
     }
     
@@ -660,6 +644,47 @@ public class JL5TypeSystem_c extends TypeSystem_c implements JL5TypeSystem {
             return super.findMemberClass(((ParameterizedType)container).baseType(), name, currClass);
         }
         return super.findMemberClass(container, name, currClass);
+    }
+
+    public Set findMemberClasses(ClassType container, String name) throws SemanticException {
+       ClassType mt = container.memberClassNamed(name);
+
+        if (mt != null) {
+            if (! mt.isMember()) {
+                throw new InternalCompilerError("Class " + mt +
+                        " is not a member class, " +
+                        " but is in " + container +
+                        "\'s list of members.");
+            }
+
+            if ((mt.outer() != container) && (mt.outer() instanceof IntersectionType && !((IntersectionType)mt.outer()).bounds().contains(container))) {
+                        
+                
+                throw new InternalCompilerError("Class " + mt +
+                        " has outer class " +
+                        mt.outer() +
+                        " but is a member of " +
+                        container);
+            }
+
+            return Collections.singleton(mt);
+        }
+        Set memberClasses = new HashSet();
+
+        if (container.superType() != null) {
+            Set s = findMemberClasses(container.superType().toClass(), name);
+            memberClasses.addAll(s);
+        }
+
+        for (Iterator i = container.interfaces().iterator(); i.hasNext(); ) {
+            Type it = (Type) i.next();
+
+            Set s =  findMemberClasses(it.toClass(), name);
+            memberClasses.addAll(s);
+        }
+
+        return memberClasses;
+
     }
 
     public ImportTable importTable(String sourceName, polyglot.types.Package pkg){
@@ -824,29 +849,39 @@ public class JL5TypeSystem_c extends TypeSystem_c implements JL5TypeSystem {
     }
     
     public void updateInferred(int pos, Type infType, List inferred) throws SemanticException {
-        ReferenceType refInf = (ReferenceType)infType;
+        //ReferenceType refInf = (ReferenceType)infType;
         if (pos < inferred.size()){
-            ReferenceType old = (ReferenceType)inferred.get(pos);
+            Type old = (Type)inferred.get(pos);
             // make new synthetic type of common supertypes of old and infType
             // or object if object only superType
             Type newType = null;
-            if (isSubtype(old, refInf)) {
-                newType = refInf;
+            if (isSubtype(old, infType)) {
+                newType = infType;
             }
-            else if (isSubtype(refInf, old)){
+            else if (isSubtype(infType, old)){
                 newType = old;
             }
             else{
                 List common = new ArrayList();
-                List allAncestorsOld = allAncestorsOf(old);
-                List allAncestorsInf = allAncestorsOf(refInf);
+                List allAncestorsOld = new ArrayList();
+                if (old instanceof ReferenceType){
+                    allAncestorsOld = allAncestorsOf((ReferenceType)old);
+                }
+                List allAncestorsInf = new ArrayList();
+                if (infType instanceof ReferenceType){
+                    allAncestorsInf = allAncestorsOf((ReferenceType)infType);
+                }
                 for (Iterator it = allAncestorsOld.iterator(); it.hasNext(); ){
                     Type t = (Type)it.next();
                     if (allAncestorsInf.contains(t)){
                         common.add(t);
                     }
                 }
-                if (common.size() == 1){
+                if (common.size() == 0){
+                    // this can happen when intersection with Null
+                    newType = Object();
+                }
+                else if (common.size() == 1){
                     newType = (Type)common.get(0);
                 }
                 else {

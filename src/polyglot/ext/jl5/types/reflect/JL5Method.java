@@ -64,7 +64,6 @@ public class JL5Method extends Method{
         JL5MethodInstance mi = (JL5MethodInstance)super.methodInstance(ts, ct);
         if (signature != null){
             try {
-                //System.out.println("for mi: "+mi.name()+" sig: "+signature);
                 signature.parseMethodSignature(ts, mi.position(), ct);
             }
             catch(IOException e){
@@ -73,9 +72,7 @@ public class JL5Method extends Method{
             }
 
             mi.typeVariables(signature.methodSignature.typeVars());
-            //System.out.println("return type is: "+signature.methodSignature.returnType().getClass()+" val: " +signature.methodSignature.returnType());
             mi = (JL5MethodInstance)mi.returnType(signature.methodSignature.returnType());
-            //System.out.println("return type is now: "+mi.returnType().getClass()+" val: " +mi.returnType());
             mi = (JL5MethodInstance)mi.formalTypes(signature.methodSignature.formalTypes());
             mi = (JL5MethodInstance)mi.throwTypes(signature.methodSignature.throwTypes());
         }

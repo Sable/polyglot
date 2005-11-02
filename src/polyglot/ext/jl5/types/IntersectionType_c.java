@@ -18,6 +18,7 @@ public class IntersectionType_c extends ClassType_c implements IntersectionType 
         super(ts, pos);
         this.name = id;
         this.bounds = bounds;
+        flags = Flags.NONE;
     }
 
     public List bounds(){
@@ -82,6 +83,15 @@ public class IntersectionType_c extends ClassType_c implements IntersectionType 
         }
         return l;
     }
+    
+    public List methods(String name, List args){
+        List l = new TypedList(new LinkedList(), MethodInstance.class, false);
+        for (Iterator it = bounds.iterator(); it.hasNext(); ){
+            ClassType ct = (ClassType)it.next();
+            l.addAll(ct.methods(name, args));
+        }
+        return l;
+    }
 
     public List fields(){
         List l = new TypedList(new LinkedList(), FieldInstance.class, false);
@@ -119,6 +129,12 @@ public class IntersectionType_c extends ClassType_c implements IntersectionType 
         return name;//+":"+bounds;
     }
 
+    public Type upperBound(){
+        if (bounds == null || bounds.isEmpty()) return typeSystem().Object();
+        if (bounds.size() == 1) return (Type)bounds.get(0);
+        return ((JL5TypeSystem)typeSystem()).syntheticType(bounds);
+    }
+
     public boolean isCastValidImpl(Type toType){
         return ts.isCastValid(superType(), toType);
     }
@@ -128,10 +144,21 @@ public class IntersectionType_c extends ClassType_c implements IntersectionType 
         if (ancestor instanceof ClassType || ancestor instanceof ParameterizedType){
             return isAnyBoundSubtype(ancestor);
         }
+        else if (ancestor instanceof AnySuperType){
+            return (typeSystem().isSubtype(((AnySuperType)ancestor).bound(), this) || typeSystem().isSubtype(this, ((AnySuperType)ancestor).bound())) && typeSystem().isSubtype(this, ((AnySuperType)ancestor).upperBound());
+        }
+        else if (ancestor instanceof AnySubType){
+            return typeSystem().isSubtype(this, ((AnySubType)ancestor).bound());
+        }
+        else if (ancestor instanceof AnyType){
+            return typeSystem().isSubtype(this, ((AnyType)ancestor).upperBound());
+        }
+        else { 
         /*else if (ancestor instanceof PrimitiveType){
             return isAnyBoundAutoUnboxingValid(ancestor);
         }*/
-        return super.descendsFromImpl(ancestor);
+            return super.descendsFromImpl(ancestor);
+        }
     }
 
     private boolean isAnyBoundSubtype(Type ancestor){
@@ -147,7 +174,7 @@ public class IntersectionType_c extends ClassType_c implements IntersectionType 
     public boolean equalsImpl(TypeObject other){
         if (!(other instanceof IntersectionType)) return super.equalsImpl(other);
         IntersectionType arg2 = (IntersectionType)other;
-        if (this.name.equals(arg2.name()) && allBoundsEqual(arg2)) return true;
+        if (this.name.equals(arg2.name())) return true;// && allBoundsEqual(arg2)) return true;
         return false;
     }
 
@@ -168,8 +195,14 @@ public class IntersectionType_c extends ClassType_c implements IntersectionType 
     
 
     public boolean isEquivalent(TypeObject arg2){
+        System.out.println("checking equilavlence");
         if (arg2 instanceof IntersectionType){
-            return typeSystem().equals(this.erasureType(), ((IntersectionType)arg2).erasureType());
+            if (this.erasureType() instanceof ParameterizedType && ((IntersectionType)arg2).erasureType() instanceof ParameterizedType){
+                return typeSystem().equals(((ParameterizedType)this.erasureType()).baseType(), ((ParameterizedType)((IntersectionType)arg2).erasureType()).baseType());
+            }
+            else {
+                return typeSystem().equals(this.erasureType(), ((IntersectionType)arg2).erasureType());
+            }
         }
         return false;
     }
@@ -177,5 +210,9 @@ public class IntersectionType_c extends ClassType_c implements IntersectionType 
     public Type erasureType(){
         if (bounds == null || bounds.isEmpty()) return typeSystem().Object();
         return (Type)bounds.get(0);
+    }
+
+    public ClassType toClass(){
+        return this;
     }
 }

@@ -472,12 +472,12 @@ name ::=
 
 simple_name ::=
     IDENTIFIER:a {:
-                 RESULT = new Name(parser, parser.pos(a), a.getIdentifier()); 
+                 RESULT = new JL5Name(parser, parser.pos(a), a.getIdentifier()); 
                  :};
 
 qualified_name ::=
     name:a DOT IDENTIFIER:b {:
-                            RESULT = new Name(parser, parser.pos(a, b), a, b.getIdentifier()); 
+                            RESULT = new JL5Name(parser, parser.pos(a, b), a, b.getIdentifier()); 
                             :};
 
 compilation_unit ::=
@@ -604,7 +604,7 @@ interface_type_list ::=
 
 class_body ::=
     LBRACE:n class_body_declarations_opt:a RBRACE:b {:
-                                                    RESULT = parser.nf.ClassBody(parser.pos(n, b), a); 
+                                                    RESULT = parser.nf.JL5ClassBody(parser.pos(n, b), a); 
                                                     :};
 
 class_body_declarations_opt ::=
@@ -896,7 +896,7 @@ extends_interfaces ::=
 
 interface_body ::=
     LBRACE:n interface_member_declarations_opt:a RBRACE:d {:
-                                                          RESULT = parser.nf.ClassBody(parser.pos(n, d), a); 
+                                                          RESULT = parser.nf.JL5ClassBody(parser.pos(n, d), a); 
                                                           :};
 
 interface_member_declarations_opt ::=
@@ -1215,8 +1215,7 @@ statement_expression_list ::=
 identifier_opt ::=
     {:  RESULT = null;  :}
  |  IDENTIFIER:a {:
-                 RESULT = new Name(parser, parser.pos(a), 
-                a.getIdentifier()); 
+                 RESULT = new JL5Name(parser, parser.pos(a), a.getIdentifier()); 
                  :};
 
 break_statement ::=
@@ -1436,7 +1435,7 @@ method_invocation ::=
                                                                                         RESULT = parser.nf.JL5Call(parser.pos(a, g), a, d.getIdentifier(), f, c); 
                                                                                         :}
  |  name:a DOT:b type_arguments:c IDENTIFIER:d LPAREN:e argument_list_opt:f RPAREN:g {:
-                                                                                     RESULT = parser.nf.JL5Call(parser.pos(a, g), a.prefix == null ? null : a.prefix.toReceiver(), a.name, f, c); 
+                                                                                     RESULT = parser.nf.JL5Call(parser.pos(a, g), a.toReceiver(), d.getIdentifier(), f, c); 
                                                                                      :}
  |  SUPER:a DOT:b type_arguments:c IDENTIFIER:d LPAREN:e argument_list_opt:f RPAREN:g {:
                                                                                       RESULT = parser.nf.JL5Call(parser.pos(a, g, d), parser.nf.Super(parser.pos(a)), d.getIdentifier(), f, c); 

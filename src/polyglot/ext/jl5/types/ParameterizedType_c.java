@@ -84,6 +84,10 @@ public class ParameterizedType_c extends JL5ParsedClassType_c implements Paramet
         return baseType.methods();
     }
 
+    public List methods(String name, List args){
+        return baseType.methods(name, args);
+    }
+
     public List fields(){
         return baseType.fields();
     }
@@ -169,6 +173,11 @@ public class ParameterizedType_c extends JL5ParsedClassType_c implements Paramet
                 else if (arg2 instanceof AnySuperType || arg2 instanceof AnyType){
                     if (!typeSystem().isSubtype(cap2, ((AnySubType)arg1).bound())) return false;
                 }
+                else if (arg2 instanceof IntersectionType){
+                    // need to break out here or will recurse for ever
+                    if (((IntersectionType)arg2).name().equals(((IntersectionType)((AnySubType)arg1).bound()).name())) return true;
+                    //if (typeSystem().equals(arg2, ((AnySubType)arg1).bound())) return true;
+                }
                 // if only ancestor(arg1) is AnySubType then arg2 is not
                 // wildcard must be subtype of bound of arg1
                 else {
@@ -222,16 +231,19 @@ public class ParameterizedType_c extends JL5ParsedClassType_c implements Paramet
             Type arg2 = (Type)typeArguments().get(i);
             IntersectionType cap1 = (IntersectionType)ancestor.typeVariables().get(i);
             IntersectionType cap2 = (IntersectionType)baseType().typeVariables().get(i);
-            
             // if both are AnySubType then arg2 bound must be subtype 
             // of arg1 bound
             if (arg1 instanceof AnySubType){
                 if (arg2 instanceof AnySubType){
                     if (!typeSystem().equals(((AnySubType)arg2).bound(), ((AnySubType)arg1).bound())) return false;
                 }
-                /*else if (arg2 instanceof AnySuperType || arg2 instanceof AnyType){
-                    if (!typeSystem().isSubtype(cap2, ((AnySubType)arg1).bound())) return false;
-                }*/
+                else if (arg2 instanceof AnySuperType){
+                    if (!typeSystem().equals(((AnySubType)arg1).bound(), ((AnySuperType)arg2).bound())) return false;
+                }
+                else if (arg2 instanceof IntersectionType){
+                    // need to break out here or will recurse for ever
+                    if (((IntersectionType)arg2).name().equals(((IntersectionType)((AnySubType)arg1).bound()).name())) return true;
+                }
                 // if only ancestor(arg1) is AnySubType then arg2 is not
                 // wildcard must be subtype of bound of arg1
                 else {
@@ -250,9 +262,20 @@ public class ParameterizedType_c extends JL5ParsedClassType_c implements Paramet
                     if (!typeSystem().equals(arg1, arg2)) return false;
                 }
             }
+            else if (arg1 instanceof AnyType){
+                if (arg2 instanceof AnyType){
+                    if (!typeSystem().equals(((AnyType)arg1).upperBound(), ((AnyType)arg2).upperBound())) return false;
+                }
+                else {
+                    if (!typeSystem().equals(arg1, arg2)) return false;
+                }
+            }
             else if (arg1 instanceof ParameterizedType && arg2 instanceof ParameterizedType){
                     //if (arg1.equals(arg2)) return true;
                     if (!typeSystem().equals(arg1, arg2)) return false;
+            }
+            else if (arg1 instanceof IntersectionType && arg2 instanceof IntersectionType){
+                if (!typeSystem().equals(arg1, arg2) && !((JL5TypeSystem)typeSystem()).isEquivalent(arg1, arg2)) return false;
             }
             else {
                 if (!typeSystem().equals(arg1, arg2)) return false;
@@ -294,6 +317,9 @@ public class ParameterizedType_c extends JL5ParsedClassType_c implements Paramet
             else if (next instanceof ParameterizedType){
                 newBounds.add(((ParameterizedType)next).convertToInferred(typeVars, inferredTypes));
             }
+            /*else if (next instanceof AnySubType){
+                newBounds.add(((AnySubType)next).convertToInferred(typeVars, inferredTypes));
+            }*/
             else {
                 newBounds.add(next);
             }

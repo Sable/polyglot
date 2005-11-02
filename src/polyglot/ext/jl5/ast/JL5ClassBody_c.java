@@ -21,7 +21,51 @@ public class JL5ClassBody_c extends ClassBody_c implements JL5ClassBody {
         checkAbsMembers(tc);
         checkGenMethConflicts(tc);
         duplicateAnnotationElemDeclCheck(tc);
+        duplicateErasureMethodCheck(tc);
         return super.typeCheck(tc);
+    }
+
+    private MethodInstance erasureMethod(TypeSystem ts, MethodInstance mi){
+        ArrayList miErasureFormals = new ArrayList(mi.formalTypes().size());
+        for (Iterator it = mi.formalTypes().iterator(); it.hasNext(); ){
+            Object next = it.next();
+            if (next instanceof IntersectionType){
+                miErasureFormals.add(((IntersectionType)next).erasureType());
+            }
+            else {
+                miErasureFormals.add(next);
+            }
+        }
+        ArrayList miErasureExcTypes = new ArrayList(mi.throwTypes().size());
+        for (Iterator it = mi.throwTypes().iterator(); it.hasNext(); ){
+            Object next = it.next();
+            if (next instanceof IntersectionType){
+                miErasureExcTypes.add(((IntersectionType)next).erasureType());
+            }
+            else {
+                miErasureExcTypes.add(next);
+            }
+        }
+        Type erasureRet = mi.returnType();
+        if (erasureRet instanceof IntersectionType){
+            erasureRet = ((IntersectionType)erasureRet).erasureType();
+        }
+        return ts.methodInstance(mi.position(), mi.container(), mi.flags(), erasureRet, mi.name(), miErasureFormals, miErasureExcTypes);
+    }
+
+    private void duplicateErasureMethodCheck(TypeChecker tc) throws SemanticException{
+        ArrayList l = new ArrayList(tc.context().currentClass().methods());
+        for (int i = 0; i < l.size(); i++){
+            MethodInstance mi = (MethodInstance)l.get(i);
+            MethodInstance emi = erasureMethod(tc.typeSystem(), mi);
+            for (int j = i+1; j < l.size(); j++){
+                MethodInstance mj = (MethodInstance)l.get(j);
+                MethodInstance emj = erasureMethod(tc.typeSystem(), mj);
+                if (isSameMethod(tc.typeSystem(), emi, emj)){
+                    throw new SemanticException("Method "+mi+" and "+mj+" have the same erasure.", mj.position());
+                }
+            }
+        }
     }
 
     protected void checkGenMethConflicts(TypeChecker tc) throws SemanticException{

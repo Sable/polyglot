@@ -14,11 +14,6 @@ public class JL5MethodInstance_c extends MethodInstance_c implements JL5MethodIn
         super(ts, pos, container, flags, returnType, name, formals, excTypes);
     }
 
-    /*public JL5MethodInstance_c(TypeSystem ts, Position pos, ReferenceType container, Flags flags, Type returnType, String name, List formals, List excTypes, List typeVariables){
-        super(ts, pos, container, flags, returnType, name, formals, excTypes);
-        this.typeVariables = typeVariables;
-    }*/
-    
     
     public boolean isCompilerGenerated(){
         return compilerGenerated;
@@ -129,7 +124,8 @@ public class JL5MethodInstance_c extends MethodInstance_c implements JL5MethodIn
 
 
         // changed to isSubtype may need to add bridge methods - even when no generics used - covariant return types 
-        if (! ts.isSubtype(mi.returnType(), mj.returnType())){// && !((JL5TypeSystem)ts).isEquivalent(mi.returnType(), mj.returnType())) {
+        // equals part handles two void return types
+        if (! ts.isImplicitCastValid(mi.returnType(), mj.returnType()) && !ts.equals(mi.returnType() , mj.returnType())){// && !((JL5TypeSystem)ts).isEquivalent(mi.returnType(), mj.returnType())) {
             if (quiet) return false;
             throw new SemanticException(mi.signature() + " in " + mi.container() +
                                         " cannot override " + 

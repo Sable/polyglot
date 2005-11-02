@@ -53,6 +53,9 @@ public class JL5FieldDecl_c extends FieldDecl_c implements JL5FieldDecl, Applica
     
     public Node typeCheck(TypeChecker tc) throws SemanticException {
         JL5TypeSystem ts = (JL5TypeSystem)tc.typeSystem();
+        if (type().type() instanceof IntersectionType && (tc.context().currentClass().flags().isStatic() || flags().isStatic())){
+            throw new SemanticException("Cannot access non-static type "+((IntersectionType)type().type()).name()+" in a static context.", position());
+        }
         ts.checkDuplicateAnnotations(annotations);
         return super.typeCheck(tc);
     }

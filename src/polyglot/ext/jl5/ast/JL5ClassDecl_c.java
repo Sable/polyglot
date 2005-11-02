@@ -123,7 +123,7 @@ public class JL5ClassDecl_c extends ClassDecl_c implements JL5ClassDecl, Applica
 
     public Node disambiguate(AmbiguityRemover ar) throws SemanticException {
         Node n = super.disambiguate(ar);
-        addTypeParameters();
+        //addTypeParameters();
         return n;
     }
     
@@ -141,12 +141,16 @@ public class JL5ClassDecl_c extends ClassDecl_c implements JL5ClassDecl, Applica
             throw new SemanticException("Annotation types cannot have explicit private modifier", this.position());
         }
 
-        if (JL5Flags.isEnumModifier(type().superType().toClass().flags())){
+        if (type().superType() != null && JL5Flags.isEnumModifier(type().superType().toClass().flags())){
             throw new SemanticException("Cannot extend enum type", position());
         }
 
         JL5TypeSystem ts = (JL5TypeSystem)tc.typeSystem();
         ts.checkDuplicateAnnotations(annotations);
+        
+        if (ts.equals(ts.Object(), type()) && !paramTypes.isEmpty()){
+            throw new SemanticException("Type: "+type()+" cannot declare type variables.", position());
+        }
         
         
         // set up ct with annots
@@ -162,9 +166,40 @@ public class JL5ClassDecl_c extends ClassDecl_c implements JL5ClassDecl, Applica
             }
         }
         
+        checkSuperTypeTypeArgs(tc); 
+        
         return super.typeCheck(tc);    
     }
   
+    private void checkSuperTypeTypeArgs(TypeChecker tc) throws SemanticException {
+        List allInterfaces = new ArrayList();
+        allInterfaces.addAll(type().interfaces());
+        if (((ParsedClassType)type()).superType() != null){
+            allInterfaces.addAll(((ParsedClassType)((ParsedClassType)type()).superType()).interfaces());
+        }
+    
+        for (int i = 0; i < allInterfaces.size(); i++){
+            Type next = (Type)allInterfaces.get(i);
+            for (int j = i+1; j < allInterfaces.size(); j++){
+                Type other = (Type)allInterfaces.get(j);
+                if (next instanceof ParameterizedType && other instanceof ParameterizedType){
+                    if (tc.typeSystem().equals(((ParameterizedType)next).baseType(), ((ParameterizedType)other).baseType()) && !tc.typeSystem().equals(next, other)){
+                        throw new SemanticException(((ParameterizedType)next).baseType()+" cannot be inherited with different type arguments.", position());
+                    }
+                }
+                else if (next instanceof ParameterizedType){
+                    if (tc.typeSystem().equals(((ParameterizedType)next).baseType(), other)){
+                        throw new SemanticException(((ParameterizedType)next).baseType()+" cannot be inherited with different type arguments.", position());
+                    }
+                }
+                else if (other instanceof ParameterizedType){
+                    if (tc.typeSystem().equals(((ParameterizedType)other).baseType(), next)){
+                        throw new SemanticException(((ParameterizedType)other).baseType()+" cannot be inherited with different type arguments.", position());
+                    }
+                }
+            }
+        }
+    }
     public Node applicationCheck(ApplicationChecker appCheck) throws SemanticException {
         
         // check proper used of predefined annotations
@@ -197,7 +232,7 @@ public class JL5ClassDecl_c extends ClassDecl_c implements JL5ClassDecl, Applica
         TypeSystem ts = tc.typeSystem();
         NodeFactory nf = tc.nodeFactory();
         addGenEnumMethods(ts, nf);
-        //addTypeParameters();
+        addTypeParameters();
         return super.addMembers(tc);
     }
 

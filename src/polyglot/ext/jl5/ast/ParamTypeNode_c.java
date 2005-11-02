@@ -57,15 +57,11 @@ public class ParamTypeNode_c extends TypeNode_c implements ParamTypeNode{//, Typ
     
     
     public Context enterScope(Context c){
-        //System.out.println("context just before push: "+c);
-        //Throwable tr = new Throwable();
-        //tr.printStackTrace();
         c = ((JL5Context)c).pushTypeVariable((IntersectionType)type());
         return super.enterScope(c);
     }
 
     public void addDecls(Context c){
-        //System.out.println("adding decls: "+c);
         ((JL5Context)c).addTypeVariable((IntersectionType)type());
     }
     // nothing needed for buildTypesEnter - not a code block like methods
@@ -85,7 +81,17 @@ public class ParamTypeNode_c extends TypeNode_c implements ParamTypeNode{//, Typ
         return type(iType);
         
     }
-   
+
+    public NodeVisitor disambiguateEnter(AmbiguityRemover ar) throws SemanticException{
+        if (ar.kind() == JL5AmbiguityRemover.TYPE_VARS){
+            return ar.bypass(bounds);
+        }
+        else {
+            return super.disambiguateEnter(ar);
+        }
+        
+    }
+    
     public Node disambiguate(AmbiguityRemover ar) throws SemanticException {
         // all of the children (bounds list) will have already been 
         // disambiguated and should there for be actual types
@@ -101,26 +107,7 @@ public class ParamTypeNode_c extends TypeNode_c implements ParamTypeNode{//, Typ
         ((IntersectionType)type()).bounds(typeList);
         return type(type());
     }
-
    
-    /*public NodeVisitor addTypeVars(AddTypeVarsVisitor am){
-        if (am.context().inCode()){
-            CodeInstance ci = am.context().currentCode();
-            if (ci instanceof JL5MethodInstance){
-                ((JL5MethodInstance)ci).addTypeVariable((IntersectionType)type());
-                System.out.println("add type var: "+type()+" to mi: "+ci);
-            }
-            else if (ci instanceof JL5ConstructorInstance){
-                ((JL5ConstructorInstance)ci).addTypeVariable((IntersectionType)type());
-            }
-        }
-        else {
-            JL5ParsedClassType ct = (JL5ParsedClassType)am.context().currentClassScope();
-            ct.addTypeVariable((IntersectionType)type());
-        }
-        return am.bypassChildren(this);
-    }*/
-    
     public void prettyPrint(CodeWriter w, PrettyPrinter tr){
         w.write(id);
         if (bounds() != null && !bounds().isEmpty()){

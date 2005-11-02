@@ -229,11 +229,7 @@ public class Signature extends Attribute {
         Result sres = classTypeSig(value, pos);
         List superInterfaces = new ArrayList();
         pos = sres.pos();
-        //pos++;
-        //System.out.println("pos: "+pos+" value.length: "+value.length());
-        //System.out.println("pos: "+(pos<value.length()));
         while (pos < value.length()){
-            //System.out.println("pos: "+pos+"value: "+value+"value.length(): "+value.length());
             Result ires = classTypeSig(value, pos);
             pos = ires.pos();
             superInterfaces.add(ires.result());
@@ -264,7 +260,6 @@ public class Signature extends Attribute {
             pos++;
             token = value.charAt(pos);
         }
-        //System.out.println("id: "+id);
         Result cres = classBound(value, pos);
         pos = cres.pos();
         Result ires = null;
@@ -290,7 +285,6 @@ public class Signature extends Attribute {
     public Result fieldTypeSig(String value, int pos){
         Result res = null;
         char token = value.charAt(pos);
-        //System.out.println("token start fieldTypeSig: "+token);
         switch(token){
             case L: { res = classTypeSig(value, pos); break; }
             case LEFT_SQUARE: { res = arrayTypeSig(value, pos); break; }
@@ -326,9 +320,7 @@ public class Signature extends Attribute {
                 case LEFT_ANGLE: { // id is a className
                                    Result tres = typeArgList(value, pos);
                                    pos = tres.pos();
-                                   //System.out.println("putting: "+id+"res: "+tres.result());
                                    classArgsMap.put(id, tres.result());
-                                   //System.out.println("after type arg: "+value.charAt(pos));
                                    token = value.charAt(pos);
                                    break;}          
                 default: { id += token; 
@@ -338,7 +330,6 @@ public class Signature extends Attribute {
             }
         }
         className += id;
-        //System.out.println("className: "+className);
         ClassType ct = null;
         try {
             ct = cls.typeForName(ts, className);
@@ -359,47 +350,11 @@ public class Signature extends Attribute {
             }
             if (current == current.outer()) break;
             current = current.outer();
-            //System.out.println("current: "+current.name());
         }
         pos++;
         return new Result(ct, pos);
     }
     
-    /*public Result packSpecList(String value, int pos){
-        Result res = null;
-        return res;    
-    }
-
-    public Result packSpec(String value, int pos){
-        Result res = null;
-        String id = "";
-        char token;
-        while ((token = value.charAt(pos++)) != SLASH){
-            id += token;
-        }
-        res = new Result(id, ++pos);
-        return res;
-    }
-    
-    public Result simpleClassTypeSig(String value, int pos){
-        String id = "";
-        char token;
-        while ((token = value.charAt(pos++)) != LEFT_ANGLE){
-            id += token;
-        }
-        return new Result(id, ++pos);
-    }
-    
-
-    public Result classTypeSigSuffix(String value, int pos){
-        Result res = null;
-        char token = value.charAt(pos);
-        switch(token){
-            case DOT: { res = simpleClassTypeSig(value, ++pos); }
-        }
-        return res;
-    }*/
-
     public Result typeVarSig(String value, int pos){
         Result res = null;
         char token = value.charAt(pos);
@@ -435,27 +390,12 @@ public class Signature extends Attribute {
     public Result typeArg(String value, int pos){
         Result res = null;
         char token = value.charAt(pos);
-        //System.out.println("token: "+token);
         switch(token){
             case PLUS: { Result fres = fieldTypeSig(value, ++pos);
-                         /*Type t = null;
-                         if (fres.result() instanceof String){
-                           t = findTypeArg((String)fres.result());
-                         }
-                         else {
-                            t = (Type)fres.result();
-                         }*/
                          res = new Result(ts.anySubType((Type)fres.result()), fres.pos());
                          break;
                        }
             case MINUS: { Result fres = fieldTypeSig(value, ++pos);
-                          /*Type t = null;
-                          if (fres.result() instanceof String){
-                            t = findTypeArg((String)fres.result());
-                          }
-                          else {
-                            t = (Type)fres.result();
-                          }*/
                           res = new Result(ts.anySuperType((Type)fres.result()), fres.pos());
                           break;
                    }
@@ -466,14 +406,6 @@ public class Signature extends Attribute {
             case L:
             case LEFT_SQUARE:
             case T: { res = fieldTypeSig(value, pos);  
-                      /*Type t = null;
-                      if (fres.result() instanceof String){
-                        t = findTypeArg((String)fres.result());
-                      }
-                      else {
-                        t = (Type)fres.result();
-                      }
-                      res = new Result(t, fres.pos());*/
                       break;}
         }
         return res;
@@ -482,12 +414,10 @@ public class Signature extends Attribute {
     public Result arrayTypeSig(String value, int pos){
         Result res = null;
         char token = value.charAt(pos);
-        //System.out.println("token start arrayTypeSig: "+token);
         switch(token){
             case LEFT_SQUARE : {pos++;
                                 Result tres = typeSig(value, pos);
                                 Type type = (Type)tres.result();
-                                //System.out.println("tres pos: "+tres.pos());
                                 res = new Result(ts.arrayOf(position, type, 1), tres.pos());
                                 break;
                                }
@@ -511,12 +441,10 @@ public class Signature extends Attribute {
     public Result typeSig(String value, int pos){
         Result res = null;
         char token = value.charAt(pos);
-        //System.out.println("token start typeSig: "+token);
         switch(token) {
             case L: 
             case LEFT_SQUARE:
             case T: { res = fieldTypeSig(value, pos);
-                      //System.out.println("res: "+res);
                       break;
                     }
             case B:
@@ -657,7 +585,6 @@ public class Signature extends Attribute {
         this.ts = (JL5TypeSystem)ts;
         this.position = pos;
         String sigValue = (String)cls.constants()[index].value();
-        //System.out.println("parsing class sig: "+sigValue);
         classSignature = (ClassSig)classSig(sigValue, 0).result();
     }
 
@@ -666,7 +593,6 @@ public class Signature extends Attribute {
         this.position = pos;
         this.curClass = ct;
         String sigValue = (String)cls.constants()[index].value();
-        //System.out.println("parsing method sig: "+sigValue);
         methodSignature = (MethodSig)methodTypeSig(sigValue, 0).result();
     }
 
@@ -677,121 +603,10 @@ public class Signature extends Attribute {
         fieldSignature = (FieldSig)fieldTypeSig(sigValue, 0).result();
     }
 
-
-
-    
-
-        
-    /* 
-    public void parseSignature(TypeSystem ts, Position pos) throws IOException, SemanticException{
-        Constant sigValue = cls.constants()[index];
-
-        int i = 0;
-        i = readTypeVars((String)sigValue.value(), i, ts, pos);
-       
-        i = readArgs((String)sigValue.value(), i, ts, pos);
-    }
-
-    public int readTypeVars(String sig, int i, TypeSystem ts, Position pos) throws SemanticException {
-        if (sig.charAt(i) != '<') return i;
-        int result = sig.indexOf(">",++i);
-       
-        typeVars = new ArrayList();
-        String vars = sig.substring(i, result);
-        result++;
-       
-        StringTokenizer varsTokens = new StringTokenizer(vars, ";");
-        while (varsTokens.hasMoreTokens()){
-            String nextVar = varsTokens.nextToken();
-       
-            StringTokenizer st = new StringTokenizer(nextVar, ":");
-            ArrayList bounds = new ArrayList();
-            
-            String id = st.nextToken();
-           
-            while (st.hasMoreTokens()){
-                // this is the next intersection bound
-                String next = st.nextToken();
-                next = next.substring(1);
-                next = next.replace('/', '.');
-                
-                ClassType type = cls.typeForName(ts, next);
-                bounds.add(type);
-                
-            }
-
-            IntersectionType t = ((JL5TypeSystem)ts).intersectionType(pos, id, bounds);
-            typeVars.add(t);
-        }
-        return result;
-    }
-
-    public int readArgs(String sig, int i, TypeSystem ts, Position pos) throws SemanticException {
-
-        interfaceTypes = new ArrayList();
-        
-        String value = sig.substring(i);
-       
-
-        int k = 0;
-        char j = 0;
-        int count = 0;
-      
-        while (k < value.length()){
-            String next = "";
-            String vars = "";
-            ArrayList args = new ArrayList();
-            while (j != ';'){
-                j = value.charAt(k);
-                // handle type args
-                if (j == '<'){
-                    k++;
-                    while (value.charAt(k) != '>'){
-                        j = value.charAt(k);
-                        vars += j;
-                        k++;
-                    }
-                    StringTokenizer st = new StringTokenizer(vars, ";");
-                    while (st.hasMoreTokens()){
-                        String nextArg = st.nextToken();
-                        Type argType;
-                        if (nextArg.charAt(0) == 'T'){
-                            argType = findTypeArg(nextArg, pos);
-                        }
-                        else {
-                            nextArg = nextArg.substring(1);
-                            nextArg = nextArg.replace('/', '.');
-                            argType = cls.typeForName(ts, nextArg);
-                        }
-                        args.add(argType);
-                    }
-                    k++;
-                }
-                next += j;
-                k++;
-                
-            }
-            next = next.substring(1, next.length()-1);
-            next = next.replace('/', '.');
-            if (count == 0){
-                if (!args.isEmpty()){
-                    superType = ((JL5TypeSystem)ts).parameterizedType(((JL5ParsedClassType)cls.typeForName(ts, next)));
-                    ((ParameterizedType)superType).typeArguments(args);
-                }
-                else {
-                    superType = (JL5ParsedClassType)cls.typeForName(ts, next);
-                }
-            }
-            j = 0;
-        }
-        return i;
-    }*/
-
     private Type findTypeArg(String next){
         if (typeVars != null){
             for (Iterator it = typeVars.iterator(); it.hasNext(); ){
                 IntersectionType iType = (IntersectionType)it.next();
-                //System.out.println("finding type arg: "+iType.name());
                 if (iType.name().equals(next)) return iType;
             }
         }

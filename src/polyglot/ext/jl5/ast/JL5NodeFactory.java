@@ -82,5 +82,7 @@ public interface JL5NodeFactory extends NodeFactory {
     public JL5Instanceof JL5Instanceof(Position pos, Expr expr, TypeNode tn);
 
     public JL5Import JL5Import(Position pos, Import.Kind kind, String name);
+
+    public JL5CanonicalTypeNode JL5CanonicalTypeNode(Position pos, Type t);
 }
 

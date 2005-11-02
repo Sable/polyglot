@@ -200,6 +200,10 @@ public class JL5NodeFactory_c extends NodeFactory_c implements JL5NodeFactory {
         JL5Import n = new JL5Import_c(pos, kind, name);
         return n;
     }
+    public JL5CanonicalTypeNode JL5CanonicalTypeNode(Position pos, Type t){
+        JL5CanonicalTypeNode n = new JL5CanonicalTypeNode_c(pos, t);
+        return n;
+    }
     // TODO:  Override factory methods for overriden AST nodes.
     // TODO:  Override factory methods for AST nodes with new extension nodes.
 }

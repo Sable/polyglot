@@ -4,7 +4,7 @@ import polyglot.ext.jl.types.*;
 import polyglot.types.*;
 import java.util.*;
 
-public class AnySubType_c extends Type_c implements AnySubType{
+public class AnySubType_c extends ReferenceType_c implements AnySubType{
 
     protected Type bound;
     
@@ -29,12 +29,8 @@ public class AnySubType_c extends Type_c implements AnySubType{
         return bound.toReference().hasMethodImpl(mi);
     }
 
-    public boolean hasMethod(MethodInstance mi){
-        return bound.toReference().hasMethod(mi);
-    }
-
     public List methods(String name, List args){
-        return bound.toReference().methods();
+        return bound.toReference().methods(name, args);
     }
 
     public List methodsNamed(String name){
@@ -69,4 +65,22 @@ public class AnySubType_c extends Type_c implements AnySubType{
         return true;
     }
 
+    public Type convertToInferred(List typeVars, List inferredTypes){
+        if (bound instanceof IntersectionType){
+            return ((JL5TypeSystem)typeSystem()).anySubType((Type)inferredTypes.get(typeVars.indexOf(bound)));
+        } 
+        else if (bound instanceof ParameterizedType){
+            return ((JL5TypeSystem)typeSystem()).anySubType(((ParameterizedType)bound).convertToInferred(typeVars, inferredTypes));
+        }
+        else {
+            return this;
+        }
+    }
+
+    public boolean equalsImpl(TypeObject ancestor){
+        if (ancestor instanceof AnySuperType){
+            return ts.equals(bound(), ((AnySuperType)ancestor).bound());
+        }
+        return super.equalsImpl(ancestor);
+    }
 }
