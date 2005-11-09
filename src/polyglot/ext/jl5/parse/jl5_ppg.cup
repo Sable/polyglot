@@ -801,22 +801,18 @@ constructor_declaration ::=
 constructor_body ::=
     LBRACE:n explicit_constructor_invocation:a block_statements:b RBRACE:d {:
                                                                            List l = new TypedList(new LinkedList(), Stmt.class, false);
-               l.add(a);
-               l.addAll(b);
-               RESULT = parser.nf.Block(parser.pos(n, d), l); 
+           l.add(a);
+           l.addAll(b);
+           RESULT = parser.nf.Block(parser.pos(n, d), l); 
                                                                            :}
  |  LBRACE:n explicit_constructor_invocation:a RBRACE:d {:
                                                         RESULT = parser.nf.Block(parser.pos(n, d), a); 
                                                         :}
  |  LBRACE:n block_statements:a RBRACE:d {:
-                                         a.add(0, parser.nf.SuperCall(parser.pos(n, d), 
-                Collections.EMPTY_LIST));
-               RESULT = parser.nf.Block(parser.pos(n, d), a); 
+                                         RESULT = parser.nf.Block(parser.pos(n, d), a); 
                                          :}
  |  LBRACE:n RBRACE:d {:
-                      RESULT = parser.nf.Block(parser.pos(n, d),
-                parser.nf.SuperCall(parser.pos(n, d),
-                Collections.EMPTY_LIST)); 
+                      RESULT = parser.nf.Block(parser.pos(n, d), new TypedList(new LinkedList(), Stmt.class, false)); 
                       :};
 
 explicit_constructor_invocation ::=
@@ -1276,7 +1272,7 @@ catches ::=
 
 catch_clause ::=
     CATCH:n LPAREN formal_parameter:a RPAREN block:b {:
-                                                     RESULT = parser.nf.Catch(parser.pos(n, b), a, b); 
+                                                     RESULT = parser.nf.JL5Catch(parser.pos(n, b), a, b); 
                                                      :};
 
 finally ::=
@@ -1355,20 +1351,18 @@ argument_list ::=
 
 array_creation_expression ::=
     NEW:n primitive_type:a dim_exprs:b dims_opt:c {:
-                                                  RESULT = parser.nf.NewArray(parser.pos(n, b), a, b,
-                c.intValue()); 
+                                                  RESULT = parser.nf.JL5NewArray(parser.pos(n, b), a, b,
+                c.intValue(), null); 
                                                   :}
  |  NEW:n class_or_interface_type:a dim_exprs:b dims_opt:c {:
-                                                           RESULT = parser.nf.NewArray(parser.pos(n, b), a, b, 
-                c.intValue()); 
+                                                           RESULT = parser.nf.JL5NewArray(parser.pos(n, b), a, b,
+                c.intValue(), null); 
                                                            :}
  |  NEW:n primitive_type:a dims:b array_initializer:c {:
-                                                      RESULT = parser.nf.NewArray(parser.pos(n, c), a,
-                b.intValue(), c); 
+                                                      RESULT = parser.nf.JL5NewArray(parser.pos(n, c), a, Collections.EMPTY_LIST, b.intValue(), c); 
                                                       :}
  |  NEW:n class_or_interface_type:a dims:b array_initializer:c {:
-                                                               RESULT = parser.nf.NewArray(parser.pos(n, c), a,
-                b.intValue(), c); 
+                                                               RESULT = parser.nf.JL5NewArray(parser.pos(n, c), a, Collections.EMPTY_LIST,  b.intValue(), c); 
                                                                :};
 
 dim_exprs ::=
@@ -1817,7 +1811,7 @@ class_body_opt ::=
 
 enum_declaration ::=
     modifiers_or_annotations_opt:a ENUM:b IDENTIFIER:c interfaces_opt:d enum_body:e {:
-                                                                                    RESULT = parser.nf.JL5ClassDecl(parser.pos(b, e), a, c.getIdentifier(), parser.nf.CanonicalTypeNode(parser.pos(b, e), parser.ts.Enum()), d, e, new TypedList(new LinkedList(), TypeNode.class, false)); 
+                                                                                    RESULT = parser.nf.JL5ClassDecl(parser.pos(b, e), a.classicFlags(JL5Flags.setEnumModifier(a.classicFlags())), c.getIdentifier(), parser.nf.CanonicalTypeNode(parser.pos(b, e), parser.ts.Enum()), d, e, new TypedList(new LinkedList(), TypeNode.class, false)); 
                                                                                     :};
 
 enum_body ::=
@@ -1893,12 +1887,11 @@ foreach_statement_no_short_if ::=
 
 array_creation_init ::=
     NEW:a primitive_type:b dims:c array_initializer:d {:
-                                                      RESULT = parser.nf.NewArray(parser.pos(a, d), b,
-                        c.intValue(), d); 
+                                                      RESULT = parser.nf.JL5NewArray(parser.pos(a, d), b, Collections.EMPTY_LIST, c.intValue(), d); 
                                                       :}
  |  NEW:a class_or_interface_type:b dims:c array_initializer:d {:
-                                                               RESULT = parser.nf.NewArray(parser.pos(a, d), b,
-                        c.intValue(), d); 
+                                                               RESULT = parser.nf.JL5NewArray(parser.pos(a, d), b,
+                Collections.EMPTY_LIST, c.intValue(), d); 
                                                                :};
 
 instanceof_expression ::=

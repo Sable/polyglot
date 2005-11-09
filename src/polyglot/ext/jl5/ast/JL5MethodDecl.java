@@ -11,4 +11,7 @@ public interface JL5MethodDecl extends MethodDecl {
     public List paramTypes();
     public JL5MethodDecl paramTypes(List paramTypes);
          
+    public List runtimeAnnotations();
+    public List classAnnotations();
+    public List sourceAnnotations();
 }

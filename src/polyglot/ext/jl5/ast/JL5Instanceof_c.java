@@ -14,8 +14,11 @@ public class JL5Instanceof_c extends Instanceof_c implements JL5Instanceof {
     }
 
     public Node typeCheck(TypeChecker tc) throws SemanticException {
-        if (compareType.type() instanceof ParameterizedType){
-            throw new SemanticException("Type arguments not allowed here.", position());
+        if (compareType().type() instanceof ParameterizedType){
+            throw new SemanticException("Type arguments not allowed here.", compareType().position());
+        }
+        if (compareType().type() instanceof IntersectionType){
+            throw new SemanticException("Type variable not allowed here.", compareType().position());
         }
         return super.typeCheck(tc);
     }

@@ -50,10 +50,16 @@ public class JL5AmbTypeNode_c extends AmbTypeNode_c implements JL5AmbTypeNode {
 
             ParameterizedType pt = new ParameterizedType_c((JL5ParsedClassType)((CanonicalTypeNode)n).type());
             ArrayList typeArgs = new ArrayList(typeArguments.size());
-            for (Iterator it = typeArguments.iterator(); it.hasNext(); ){
-                TypeNode tn = (TypeNode)it.next();
-                Type t = tn.type();
-                typeArgs.add(t);
+            for (int i = 0; i < typeArguments.size(); i++ ){
+                Type tn = ((TypeNode)typeArguments.get(i)).type();
+                IntersectionType iType = (IntersectionType)pt.typeVariables().get(i);
+                if (tn instanceof AnySuperType){
+                    ((AnySuperType)tn).upperBound(iType.upperBound());
+                }
+                else if (tn instanceof AnyType){
+                    ((AnyType)tn).upperBound(iType.upperBound());
+                }
+                typeArgs.add(tn);
             }
             pt.typeArguments(typeArgs);
             

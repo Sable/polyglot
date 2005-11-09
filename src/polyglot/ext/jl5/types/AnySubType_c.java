@@ -78,9 +78,28 @@ public class AnySubType_c extends ReferenceType_c implements AnySubType{
     }
 
     public boolean equalsImpl(TypeObject ancestor){
-        if (ancestor instanceof AnySuperType){
-            return ts.equals(bound(), ((AnySuperType)ancestor).bound());
+        if (ancestor instanceof AnySubType){
+            return ts.equals(bound(), ((AnySubType)ancestor).bound());
         }
-        return super.equalsImpl(ancestor);
+        return false;
+    }
+
+    public boolean descendsFromImpl(Type ancestor){
+        if (ancestor instanceof JL5ParsedClassType || ancestor instanceof ParameterizedType){
+            return ts.isSubtype(bound(), ancestor);
+        }
+        else if (ancestor instanceof AnySuperType){
+            return ts.isSubtype(bound(), ((AnySuperType)ancestor).bound());
+        }
+        else if (ancestor instanceof AnySubType){
+            return ts.isSubtype(bound(), ((AnySubType)ancestor).bound());
+        }
+        else if (ancestor instanceof AnyType){
+            return ts.isSubtype(bound(), ((AnyType)ancestor).upperBound());
+        }
+        else if (ancestor instanceof IntersectionType){
+            return ts.isSubtype(bound(), ancestor);
+        }
+        return false;
     }
 }

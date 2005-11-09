@@ -195,7 +195,6 @@ public class IntersectionType_c extends ClassType_c implements IntersectionType 
     
 
     public boolean isEquivalent(TypeObject arg2){
-        System.out.println("checking equilavlence");
         if (arg2 instanceof IntersectionType){
             if (this.erasureType() instanceof ParameterizedType && ((IntersectionType)arg2).erasureType() instanceof ParameterizedType){
                 return typeSystem().equals(((ParameterizedType)this.erasureType()).baseType(), ((ParameterizedType)((IntersectionType)arg2).erasureType()).baseType());

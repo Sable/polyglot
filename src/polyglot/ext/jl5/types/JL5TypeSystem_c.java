@@ -575,12 +575,12 @@ public class JL5TypeSystem_c extends TypeSystem_c implements JL5TypeSystem {
             for (int i = 0; i < pType.typeVariables().size(); i++){
                if (((IntersectionType)pType.typeVariables().get(i)).name().equals(iType.name())){
                     Type required = (Type)pType.typeArguments().get(i);
-                    if (required instanceof AnySuperType){
+                    /*if (required instanceof AnySuperType){
                         ((AnySuperType)required).upperBound(iType.upperBound());
                     }
                     else if (required instanceof AnyType){           
                         ((AnyType)required).upperBound(iType.upperBound());
-                    }
+                    }*/
                     /*if (required instanceof AnyType){
                         IntersectionType typeVar = (IntersectionType)pType.typeVariables().get(i);      
                         return anySubType(typeVar.erasureType());
@@ -598,12 +598,12 @@ public class JL5TypeSystem_c extends TypeSystem_c implements JL5TypeSystem {
                             for (int j = 0; j < pType.typeVariables().size(); j++){
                                if (((IntersectionType)pType.typeVariables().get(j)).name().equals(((IntersectionType)result).name())){
                                     Type required = (Type)pType.typeArguments().get(j);
-                                    if (required instanceof AnySuperType){
+                                    /*if (required instanceof AnySuperType){
                                         ((AnySuperType)required).upperBound(iType.upperBound());
                                     }
                                     else if (required instanceof AnyType){           
                                         ((AnyType)required).upperBound(iType.upperBound());
-                                    }
+                                    }*/
                                     /*if (required instanceof AnyType){
                                         IntersectionType typeVar = (IntersectionType)pType.typeVariables().get(j);      
                                         return anySubType(typeVar.erasureType());
@@ -921,4 +921,43 @@ public class JL5TypeSystem_c extends TypeSystem_c implements JL5TypeSystem {
         }
         return inferred;
     }
+   
+    public void sortAnnotations(List annotations, List runtimeAnnotations, List classAnnotations, List sourceAnnotations){
+        for (Iterator it = annotations.iterator(); it.hasNext(); ){
+            AnnotationElem annot = (AnnotationElem)it.next();
+            boolean sorted = false;
+            List appliedAnnots = ((JL5ParsedClassType)annot.typeName().type()).annotations();
+            if (appliedAnnots != null){
+                for (Iterator jt = appliedAnnots.iterator(); jt.hasNext(); ){
+                    AnnotationElem next = (AnnotationElem)jt.next();
+                    if (((ClassType)next.typeName().type()).fullName().equals("java.lang.annotation.Retention")){
+                        for (Iterator elems = ((NormalAnnotationElem)next).elements().iterator(); elems.hasNext(); ){
+                            ElementValuePair elem = (ElementValuePair)elems.next();
+                            if (elem.name().equals("value")){
+                                if (elem.value() instanceof JL5Field){
+                                    String val = ((JL5Field)elem.value()).name();
+                                    if (val.equals("RUNTIME")){
+                                        runtimeAnnotations.add(annot);
+                                        sorted = true;
+                                    }
+                                    else if (val.equals("SOURCE")){
+                                        sourceAnnotations.add(annot);
+                                        sorted = true;
+                                    }
+                                    else{
+                                        classAnnotations.add(annot);
+                                        sorted = true;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            if (!sorted){
+                classAnnotations.add(annot);
+            }
+        }
+    }
+
 }

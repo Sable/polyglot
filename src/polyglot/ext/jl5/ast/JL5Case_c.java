@@ -32,7 +32,4 @@ public class JL5Case_c extends Case_c implements JL5Case  {
     public Case_c reconstruct(Expr expr){
         return (JL5Case_c)super.reconstruct(expr);
     }
-    /*public Node typeCheck(TypeChecker tc) throws SemanticException {
-        
-    }*/
 }

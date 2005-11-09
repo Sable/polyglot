@@ -55,7 +55,7 @@ public class JL5Call_c extends Call_c implements JL5Call {
         // infered from call args
         // infered from lhs of assign (matters later only)
         // else no context -> no inferring
-        if (typeArguments() != null && !typeArguments.isEmpty()){// && ((JL5MethodInstance)methodInstance()).typeParamsInFormalsList()){
+        if (typeArguments() != null && !typeArguments.isEmpty()){
             List inferred = new ArrayList();
             for (Iterator it = typeArguments().iterator(); it.hasNext(); ){
                 inferred.add(((TypeNode)it.next()).type());
@@ -138,6 +138,10 @@ public class JL5Call_c extends Call_c implements JL5Call {
             throw new SemanticException("Cannot call method: "+n.methodInstance().name()+" with type arguments", position());
         }
         
+        if (!typeArguments().isEmpty() && typeArguments.size() != ((JL5MethodInstance)n.methodInstance()).typeVariables().size()){
+            throw new SemanticException("Cannot call "+n.name()+" with wrong number of type arguments", position());
+        }
+        
         JL5MethodInstance mi = (JL5MethodInstance)n.methodInstance();
         JL5TypeSystem ts = (JL5TypeSystem)tc.typeSystem();
         
@@ -145,7 +149,7 @@ public class JL5Call_c extends Call_c implements JL5Call {
         for (int i = 0; i < typeArguments.size(); i++) {
             TypeNode correspondingArg = (TypeNode)typeArguments.get(i);
             if (correspondingArg instanceof BoundedTypeNode){
-                throw new SemanticException("Wilcard argument not allowed here", correspondingArg.position());
+                throw new SemanticException("Wildcard argument not allowed here", correspondingArg.position());
             }
         }
 
@@ -173,14 +177,6 @@ public class JL5Call_c extends Call_c implements JL5Call {
                 }
             }
 
-            // this has to be done recursively on IntersectionType args
-            // of parameterized types
-            /*else if (mi.returnType() instanceof ParameterizedType){
-                for (Iterator it = ((ParameterizedType)mi.returnType()).typeArguments(); it.hasNext()){
-                    Type next = (Type)it.next();
-                    if (next instanceof IntersectionType
-                }
-            }*/
         }
         return n.type(mi.returnType());
         

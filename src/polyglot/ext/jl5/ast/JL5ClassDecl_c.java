@@ -19,8 +19,11 @@ import polyglot.ext.jl.ast.*;
  * or interface. It may be a public or other top-level class, or an inner
  * named class, or an anonymous class.
  */
-public class JL5ClassDecl_c extends ClassDecl_c implements JL5ClassDecl, ApplicationCheck {
+public class JL5ClassDecl_c extends ClassDecl_c implements JL5ClassDecl, ApplicationCheck, SimplifyVisit {
     protected List annotations;
+    protected List runtimeAnnotations;
+    protected List classAnnotations;
+    protected List sourceAnnotations;
     protected List paramTypes;
 
     public JL5ClassDecl_c(Position pos, FlagAnnotations flags, String name, TypeNode superClass, List interfaces, ClassBody body) {
@@ -92,10 +95,6 @@ public class JL5ClassDecl_c extends ClassDecl_c implements JL5ClassDecl, Applica
     }
 
     public Context enterScope(Node child, Context c){
-        //if (child != this.paramTypes) {
-        //TypeSystem ts = c.typeSystem();
-        //c = c.pushClass(type, ts.staticTarget(type).toClass());
-        //}
         return super.enterScope(child, c);
     }
     
@@ -152,6 +151,22 @@ public class JL5ClassDecl_c extends ClassDecl_c implements JL5ClassDecl, Applica
             throw new SemanticException("Type: "+type()+" cannot declare type variables.", position());
         }
         
+        // check not extending java.lang.Throwable (or any of its subclasses)
+        // with a generic class
+        if (type().superType() != null && ts.isSubtype(type().superType(), ts.Throwable()) && !paramTypes.isEmpty()){
+            throw new SemanticException("Cannot subclass java.lang.Throwable or any of its subtypes with a generic class", superClass().position());
+        }
+       
+        // check duplicate type variable decls
+        for (int i = 0; i < paramTypes.size(); i++){
+            TypeNode ti = (TypeNode)paramTypes.get(i);
+            for (int j = i+1; j <paramTypes.size(); j++){
+                TypeNode tj = (TypeNode)paramTypes.get(j);
+                if (ts.equals(ti.type(), tj.type())){
+                    throw new SemanticException("Duplicate type variable declaration.", tj.position());
+                }
+            }
+        }
         
         // set up ct with annots
         JL5ParsedClassType ct = (JL5ParsedClassType)type();
@@ -231,24 +246,31 @@ public class JL5ClassDecl_c extends ClassDecl_c implements JL5ClassDecl, Applica
     public Node addMembers(AddMemberVisitor tc) throws SemanticException {
         TypeSystem ts = tc.typeSystem();
         NodeFactory nf = tc.nodeFactory();
-        addGenEnumMethods(ts, nf);
+        JL5ClassDecl n = (JL5ClassDecl)addGenEnumMethods(ts, nf);
         addTypeParameters();
-        return super.addMembers(tc);
+        return n.addDefaultConstructorIfNeeded(ts, nf);
     }
 
+    public Node addDefaultConstructorIfNeeded(TypeSystem ts, NodeFactory nf){
+        return super.addDefaultConstructorIfNeeded(ts, nf);
+    }
+    
     protected void addTypeParameters(){
         for (Iterator it = paramTypes.iterator(); it.hasNext(); ){
             ((JL5ParsedClassType)this.type()).addTypeVariable((IntersectionType)((ParamTypeNode)it.next()).type());
         }
     }
     
-    protected void addGenEnumMethods(TypeSystem ts, NodeFactory nf){
+    protected Node addGenEnumMethods(TypeSystem ts, NodeFactory nf){
         if (JL5Flags.isEnumModifier(type.flags())){
             
+            JL5ClassBody newBody = (JL5ClassBody)body();
             // add values method
             FlagAnnotations vmFlags = new FlagAnnotations();
             vmFlags.classicFlags(Flags.PUBLIC.set(Flags.STATIC.set(Flags.FINAL)));
-            JL5MethodDecl valuesMeth = ((JL5NodeFactory)nf).JL5MethodDecl(position(), vmFlags, nf.CanonicalTypeNode(position(), ts.arrayOf(this.type())), "values", Collections.EMPTY_LIST, Collections.EMPTY_LIST,nf.Block(position()), null);
+            Block valuesB = nf.Block(position());
+            valuesB = valuesB.append(nf.Return(position(), nf.NullLit(position())));
+            JL5MethodDecl valuesMeth = ((JL5NodeFactory)nf).JL5MethodDecl(position(), vmFlags, nf.CanonicalTypeNode(position(), ts.arrayOf(this.type())), "values", Collections.EMPTY_LIST, Collections.EMPTY_LIST, valuesB, null);
             
             valuesMeth = valuesMeth.setCompilerGenerated(true);
             
@@ -257,17 +279,24 @@ public class JL5ClassDecl_c extends ClassDecl_c implements JL5ClassDecl, Applica
             mi = mi.setCompilerGenerated(true);
             this.type.addMethod(mi);
             valuesMeth = (JL5MethodDecl)valuesMeth.methodInstance(mi);
-            body(body.addMember(valuesMeth));
+            newBody = (JL5ClassBody)newBody.addMember(valuesMeth);
 
             // add valueOf method
             ArrayList formals = new ArrayList();
-            Formal f1 = nf.Formal(position(), JL5Flags.NONE, nf.CanonicalTypeNode(position(), ts.String()), "arg1");
+            FlagAnnotations fl = new FlagAnnotations();
+            fl.classicFlags(JL5Flags.NONE);
+            fl.annotations(new ArrayList());
+            JL5Formal f1 = ((JL5NodeFactory)nf).JL5Formal(position(), fl, nf.CanonicalTypeNode(position(), ts.String()), "arg1");
+            f1 = (JL5Formal)f1.localInstance(ts.localInstance(position(), JL5Flags.NONE, ts.String(), "arg1"));
             formals.add(f1);
             
             FlagAnnotations voFlags = new FlagAnnotations();
             voFlags.classicFlags(Flags.PUBLIC.set(Flags.STATIC));
             
-            JL5MethodDecl valueOfMeth = ((JL5NodeFactory)nf).JL5MethodDecl(position(), voFlags, nf.CanonicalTypeNode(position(), this.type()), "valueOf", formals, Collections.EMPTY_LIST,nf.Block(position()), null);
+            Block valueOfB = nf.Block(position());
+            valueOfB = valueOfB.append(nf.Return(position(), nf.NullLit(position())));
+            
+            JL5MethodDecl valueOfMeth = ((JL5NodeFactory)nf).JL5MethodDecl(position(), voFlags, nf.CanonicalTypeNode(position(), this.type()), "valueOf", formals, Collections.EMPTY_LIST, valueOfB, null);
             
             valueOfMeth = valueOfMeth.setCompilerGenerated(true);
             
@@ -279,10 +308,11 @@ public class JL5ClassDecl_c extends ClassDecl_c implements JL5ClassDecl, Applica
             mi2 = mi2.setCompilerGenerated(true);
             this.type.addMethod(mi2);
             valueOfMeth = (JL5MethodDecl)valueOfMeth.methodInstance(mi2);
-            body(body.addMember(valueOfMeth));
+            newBody = (JL5ClassBody)newBody.addMember(valueOfMeth);
 
-            
+            return body(newBody);
         }
+        return this;
     }
     
     protected Node addDefaultConstructor(TypeSystem ts, NodeFactory nf) {
@@ -302,22 +332,36 @@ public class JL5ClassDecl_c extends ClassDecl_c implements JL5ClassDecl, Applica
         }
         
         ConstructorDecl cd;
+        FlagAnnotations fl = new FlagAnnotations();
+        fl.annotations(new ArrayList());
         if (!JL5Flags.isEnumModifier(flags())){
-            cd = nf.ConstructorDecl(position(), JL5Flags.PUBLIC,
+            fl.classicFlags(Flags.PUBLIC);
+            cd = ((JL5NodeFactory)nf).JL5ConstructorDecl(position(), fl,
                                                 name, Collections.EMPTY_LIST,
                                                 Collections.EMPTY_LIST,
-                                                block);
+                                                block, new ArrayList());
         }
         else {
-            cd = nf.ConstructorDecl(position(), JL5Flags.PRIVATE,
+            fl.classicFlags(Flags.PRIVATE);
+            /*ArrayList formalTypes = new ArrayList();
+            FlagAnnotations fa = new FlagAnnotations();
+            fa.classicFlags(Flags.NONE);
+            fa.annotations(new ArrayList());
+            formalTypes.add(((JL5NodeFactory)nf).JL5Formal(position(), fa, nf.CanonicalTypeNode(position(), ts.String()), "arg0"));
+            formalTypes.add(((JL5NodeFactory)nf).JL5Formal(position(), fa, nf.CanonicalTypeNode(position(), ts.Int()), "arg1"));*/
+            cd = ((JL5NodeFactory)nf).JL5ConstructorDecl(position(), fl,
                                                 name, Collections.EMPTY_LIST,
                                                 Collections.EMPTY_LIST,
-                                                block);
+                                                block, new ArrayList());
         }
         cd = (ConstructorDecl) cd.constructorInstance(ci);
         return body(body.addMember(cd));
     }
 
+    /*protected boolean defaultConstructorNeeded(){
+        if (JL5Flags.isEnumModifier(flags())) return false;
+        return super.defaultConstructorNeeded();
+    }*/
 
     public void prettyPrintModifiers(CodeWriter w, PrettyPrinter tr){
         for (Iterator it = annotations.iterator(); it.hasNext(); ){
@@ -396,4 +440,188 @@ public class JL5ClassDecl_c extends ClassDecl_c implements JL5ClassDecl, Applica
 
     }
 
+    public Node simplify(SimplifyVisitor sv) throws SemanticException {
+        runtimeAnnotations = new ArrayList();
+        classAnnotations = new ArrayList();
+        sourceAnnotations = new ArrayList();
+        ((JL5TypeSystem)sv.typeSystem()).sortAnnotations(annotations, runtimeAnnotations, classAnnotations, sourceAnnotations);
+        if (JL5Flags.isEnumModifier(flags())){
+            return simplifyEnumType(sv);
+        }
+        return this;
+    }
+
+    public Node simplifyEnumType(SimplifyVisitor sv) throws SemanticException{
+        JL5TypeSystem ts = (JL5TypeSystem)sv.typeSystem();
+        JL5NodeFactory nf = (JL5NodeFactory)sv.nodeFactory();
+       
+        int count = 0;
+      
+        
+        // create $VALUES field
+        FlagAnnotations fl = new FlagAnnotations();
+        fl.classicFlags(Flags.PRIVATE.Static().Final());
+        fl.annotations(new ArrayList());
+        JL5FieldDecl fd = nf.JL5FieldDecl(position(), fl, nf.CanonicalTypeNode(position(), ts.arrayOf(this.type())), "$VALUES", null);
+        fd = fd.setCompilerGenerated(true);
+        FieldInstance fi = ts.fieldInstance(position(), this.type(), fl.classicFlags(), ts.arrayOf(this.type()), "$VALUES");
+        fd = (JL5FieldDecl)fd.fieldInstance(fi);
+        fd = (JL5FieldDecl)fd.simplify(sv);
+        ArrayList valuesInit = new ArrayList();
+        //body(body().addMember(fd));
+        
+        // fill in gen methods
+        ArrayList newMembers = new ArrayList();
+        ArrayList enumConstants = new ArrayList();
+        for (Iterator it = body().members().iterator(); it.hasNext(); ){
+            ClassMember next = (ClassMember)it.next();
+            if (next instanceof MethodDecl && ((MethodDecl)next).name().equals("values")){
+                System.out.println("found values meth");
+                Block block = nf.Block(position());
+                JL5Field field = nf.JL5Field(position(), nf.CanonicalTypeNode(position(), this.type()), "$VALUES");
+                field = (JL5Field)field.type(ts.arrayOf(this.type()));
+                field = (JL5Field)field.fieldInstance(fi);
+                JL5Call call = (JL5Call)nf.JL5Call(position(), field, "clone", Collections.EMPTY_LIST, Collections.EMPTY_LIST);
+                call = (JL5Call)call.methodInstance(ts.findMethod(ts.Object(), "clone", Collections.EMPTY_LIST, this.type()));
+                call = (JL5Call)call.type(ts.Object());
+                Cast cast = nf.Cast(position(), nf.CanonicalTypeNode(position(), ts.arrayOf(this.type())), call);
+                cast = (Cast)cast.type(ts.arrayOf(this.type));
+                Return ret = nf.Return(position(), cast);
+                block = block.append(ret);
+                MethodDecl md = (MethodDecl)((MethodDecl)next).body(block);
+                newMembers.add(md);
+            }
+            else if (next instanceof MethodDecl && ((MethodDecl)next).name().equals("valueOf")){
+                System.out.println("found valueOf meth");
+                Block block = nf.Block(position());
+                ArrayList args = new ArrayList();
+                ArrayList argTypes = new ArrayList();
+                ClassLit cl = nf.ClassLit(position(), nf.CanonicalTypeNode(position(), this.type()));
+                args.add(cl);
+                argTypes.add(ts.Class());
+                Formal formal = (Formal)((MethodDecl)next).formals().get(0);
+                Local local = nf.Local(formal.position(), formal.name());
+                local = local.localInstance(formal.localInstance());
+                args.add(local);
+                argTypes.add(ts.String());
+                JL5Call call = (JL5Call)nf.JL5Call(position(), nf.CanonicalTypeNode(position(), ts.Enum()), "valueOf", args, Collections.EMPTY_LIST);
+                MethodInstance genMi = ts.findMethod(ts.Enum(), "valueOf", argTypes, this.type());
+                genMi = ts.methodInstance(genMi.position(), genMi.container(), genMi.flags(), this.type(), genMi.name(), genMi.formalTypes(), genMi.throwTypes());
+                call = (JL5Call)call.methodInstance(genMi);
+                call = (JL5Call)call.type(this.type());
+                Cast cast = nf.Cast(position(), nf.CanonicalTypeNode(position(), this.type()), call);
+                cast = (Cast)cast.type(this.type());
+                Return ret = nf.Return(position(), cast);
+                block = block.append(ret);
+                newMembers.add(((MethodDecl)next).body(block));
+            }
+            // fix up constructor
+            else if (next instanceof JL5ConstructorDecl){
+                JL5ConstructorDecl old = (JL5ConstructorDecl)next;
+                List formals = new ArrayList();
+                formals.addAll(old.formals());
+                FlagAnnotations fa = new FlagAnnotations();
+                fa.classicFlags(Flags.NONE);
+                fa.annotations(new ArrayList());
+                Formal arg1 = nf.JL5Formal(position(), fa, nf.CanonicalTypeNode(position(), ts.String()), "arg1");
+                arg1 = arg1.localInstance(ts.localInstance(position(), fa.classicFlags(), ts.String(), "arg1"));
+                Formal arg2 = nf.JL5Formal(position(), fa, nf.CanonicalTypeNode(position(), ts.Int()), "arg2");
+                arg2 = arg2.localInstance(ts.localInstance(position(), fa.classicFlags(), ts.Int(), "arg2"));
+                formals.add(0, arg2);
+                formals.add(0, arg1);
+                FlagAnnotations fo = new FlagAnnotations();
+                fo.classicFlags(old.flags());
+                fo.annotations(old.annotations());
+
+                // add super call
+                ArrayList superList = new ArrayList();
+                Local l1 = nf.Local(arg1.position(), arg1.name());
+                l1 = l1.localInstance(arg1.localInstance());
+                superList.add(l1);
+                Local l2 = nf.Local(arg2.position(), arg2.name());
+                l2 = l2.localInstance(arg2.localInstance());
+                superList.add(l2);
+                
+                ConstructorCall cc = nf.SuperCall(position(), superList);
+                ArrayList argTypes = new ArrayList();
+                argTypes.add(ts.String());
+                argTypes.add(ts.Int());
+                cc = cc.constructorInstance(ts.findConstructor(ts.Enum(), argTypes, this.type()));
+
+                Block newBody = old.body().prepend(cc);
+                
+                JL5ConstructorDecl cd = nf.JL5ConstructorDecl(old.position(), fo, old.name(), formals, old.throwTypes(), newBody, old.paramTypes());
+                cd = cd.setCompilerGenerated(true);
+
+                
+                List formalTypes = new ArrayList();
+                formalTypes.addAll(old.constructorInstance().formalTypes());
+                formalTypes.add(0, ts.Int());
+                formalTypes.add(0, ts.String());
+                JL5ConstructorInstance ci = (JL5ConstructorInstance)ts.constructorInstance(old.constructorInstance().position(), this.type(), old.constructorInstance().flags(), formalTypes, old.constructorInstance().throwTypes());
+                this.type.addConstructor(ci);
+                
+                cd = (JL5ConstructorDecl)cd.constructorInstance(ci);
+                cd = (JL5ConstructorDecl)cd.simplify(sv);
+                newMembers.add(cd);
+            }
+            else if (next instanceof EnumConstantDecl){
+                enumConstants.add(next);
+            }
+            else {
+                newMembers.add(next);
+            }
+        }
+       
+        for (Iterator it = enumConstants.iterator(); it.hasNext(); ){
+            ClassMember next = (ClassMember)it.next();
+            if (next instanceof EnumConstantDecl){    
+                EnumConstantDecl ecd = (EnumConstantDecl)next;
+                FlagAnnotations fn = new FlagAnnotations();
+                fn.classicFlags(JL5Flags.setEnumModifier(JL5Flags.NONE).Public().Static().Final());
+                fn.annotations(ecd.annotations());
+
+                ArrayList initArgs = new ArrayList();
+                ArrayList initArgTypes = new ArrayList();
+                
+                initArgs.add(nf.StringLit(position(), ecd.name()));
+                initArgTypes.add(ts.String());
+                initArgs.add(nf.IntLit(position(), IntLit.INT, count++));
+                initArgTypes.add(ts.Int());
+                for (Iterator at = ecd.args().iterator(); at.hasNext(); ){
+                    Expr n = (Expr)at.next();
+                    initArgTypes.add(n.type());
+                    initArgs.add(n);
+                }
+                //initArgs.addAll(ecd.args());
+                JL5New initNew = (JL5New)nf.JL5New(position(), nf.CanonicalTypeNode(position(), this.type()), initArgs, ecd.body(), null);
+                initNew = (JL5New)initNew.constructorInstance(ts.findConstructor(this.type(), initArgTypes, this.type()));
+                JL5FieldDecl newField = nf.JL5FieldDecl(ecd.position(), fn, nf.CanonicalTypeNode(position(), this.type()), ecd.name(), initNew);
+                FieldInstance newFi = ts.fieldInstance(position(), this.type(), fn.classicFlags(), this.type(), ecd.name());
+                newField = (JL5FieldDecl)newField.fieldInstance(newFi);
+                newField = (JL5FieldDecl)newField.simplify(sv);
+                newMembers.add(newField);
+
+                // create field to init $VALUES array
+                JL5Field field = nf.JL5Field(position(), nf.CanonicalTypeNode(position(), this.type()), ecd.name());
+                field = (JL5Field)field.type(this.type());
+                field = (JL5Field)field.fieldInstance(newFi);
+                valuesInit.add(field);
+            }
+        }
+        
+        fd = (JL5FieldDecl)fd.init(nf.ArrayInit(position(), valuesInit));
+        newMembers.add(fd);
+        return body(body.members(newMembers)).flags(this.flags().Final());      
+    }
+
+    public List runtimeAnnotations(){
+        return runtimeAnnotations;
+    }
+    public List classAnnotations(){
+        return classAnnotations;
+    }
+    public List sourceAnnotations(){
+        return sourceAnnotations;
+    }
 }

@@ -9,10 +9,13 @@ import polyglot.visit.*;
 import polyglot.ext.jl5.types.*;
 import polyglot.ext.jl5.visit.*;
 
-public class JL5MethodDecl_c extends MethodDecl_c implements JL5MethodDecl, ApplicationCheck {
+public class JL5MethodDecl_c extends MethodDecl_c implements JL5MethodDecl, ApplicationCheck, SimplifyVisit {
 
     protected boolean compilerGenerated;
     protected List annotations;
+    protected List runtimeAnnotations;
+    protected List classAnnotations;
+    protected List sourceAnnotations;
     protected List paramTypes;
     
     public JL5MethodDecl_c(Position pos, FlagAnnotations flags, TypeNode returnType, String name, List formals, List throwTypes, Block body){
@@ -118,7 +121,16 @@ public class JL5MethodDecl_c extends MethodDecl_c implements JL5MethodDecl, Appl
         // check no duplicate annotations used
         JL5TypeSystem ts = (JL5TypeSystem)tc.typeSystem();
         ts.checkDuplicateAnnotations(annotations);
-    
+   
+        // check throws clauses are not parameterized
+        for (Iterator it = throwTypes.iterator(); it.hasNext(); ){
+            TypeNode tn = (TypeNode)it.next();
+            Type next = tn.type();
+            if (next instanceof ParameterizedType){
+                throw new SemanticException("Cannot use parameterized type "+next+" in a throws clause", tn.position());
+            }
+        }
+        
         // check at most last formal is variable
         for (int i = 0; i < formals.size(); i++){
             JL5Formal f = (JL5Formal)formals.get(i);
@@ -210,4 +222,21 @@ public class JL5MethodDecl_c extends MethodDecl_c implements JL5MethodDecl, Appl
     }
 
 
+    public Node simplify(SimplifyVisitor sv) throws SemanticException {
+        runtimeAnnotations = new ArrayList();
+        classAnnotations = new ArrayList();
+        sourceAnnotations = new ArrayList();
+        ((JL5TypeSystem)sv.typeSystem()).sortAnnotations(annotations, runtimeAnnotations, classAnnotations, sourceAnnotations);
+        return this;
+    }
+
+    public List runtimeAnnotations(){
+        return runtimeAnnotations;
+    }
+    public List classAnnotations(){
+        return classAnnotations;
+    }
+    public List sourceAnnotations(){
+        return sourceAnnotations;
+    }
 }

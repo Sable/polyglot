@@ -9,9 +9,12 @@ import polyglot.util.*;
 import polyglot.visit.*;
 import polyglot.types.*;
 
-public class JL5Formal_c extends Formal_c implements JL5Formal, ApplicationCheck {
+public class JL5Formal_c extends Formal_c implements JL5Formal, ApplicationCheck, SimplifyVisit {
 
     protected List annotations;
+    protected List runtimeAnnotations;
+    protected List classAnnotations;
+    protected List sourceAnnotations;
     protected boolean variable = false;
     
     public JL5Formal_c(Position pos, FlagAnnotations flags, TypeNode type, String name){
@@ -111,5 +114,23 @@ public class JL5Formal_c extends Formal_c implements JL5Formal, ApplicationCheck
         w.write(" ");
         w.write(name);
         
+    }
+    
+    public Node simplify(SimplifyVisitor sv) throws SemanticException {
+        runtimeAnnotations = new ArrayList();
+        classAnnotations = new ArrayList();
+        sourceAnnotations = new ArrayList();
+        ((JL5TypeSystem)sv.typeSystem()).sortAnnotations(annotations, runtimeAnnotations, classAnnotations, sourceAnnotations);
+        return this;
+    }
+
+    public List runtimeAnnotations(){
+        return runtimeAnnotations;
+    }
+    public List classAnnotations(){
+        return classAnnotations;
+    }
+    public List sourceAnnotations(){
+        return sourceAnnotations;
     }
 }

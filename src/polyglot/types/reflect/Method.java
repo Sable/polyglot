@@ -115,7 +115,7 @@ public class Method
                              argTypes, excTypes);
   }
 
-  ConstructorInstance constructorInstance(TypeSystem ts, ClassType ct,
+  public ConstructorInstance constructorInstance(TypeSystem ts, ClassType ct,
                                           Field[] fields) {
     // Get a method instance for the <init> method.
     MethodInstance mi = methodInstance(ts, ct);

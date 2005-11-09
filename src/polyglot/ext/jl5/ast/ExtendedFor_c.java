@@ -17,54 +17,16 @@ import polyglot.ext.jl5.types.*;
 public class ExtendedFor_c extends Loop_c implements ExtendedFor
 {
     protected List varDecls;
-    /*protected Flags flags;
-    protected TypeNode type;
-    protected String name;*/
     protected Expr expr;
     protected Stmt body;
 
     public ExtendedFor_c(Position pos, List varDecls, Expr expr, Stmt body) {
 	    super(pos);
-	    /*this.flags = flags;
-	    this.type = type;
-	    this.name = name;*/
         this.varDecls = varDecls;
         this.expr = expr;
 	    this.body = body;
     }
 
-    /*public ExtendedFor flags(Flags flags){
-        ExtendedFor_c n = (ExtendedFor_c) copy();
-        n.flags = flags;
-        return n;
-    }
-
-    public Flags flags(){
-        return flags;
-    }
-
-    public ExtendedFor type(TypeNode type){
-        if (type == this.type) return this;
-        ExtendedFor_c n = (ExtendedFor_c) copy();
-        n.type = type;
-        return n;
-    }
-    
-    public TypeNode type(){
-        return type;
-    }
-
-    public ExtendedFor name(String name){
-        if (name.equals(this.name)) return this;
-        ExtendedFor_c n = (ExtendedFor_c) copy();
-        n.name = name;
-        return n;
-    }
-   
-    public String name(){
-        return name;
-    }*/
-    
     /** Loop body */
     public Stmt body() {
 	    return this.body;
@@ -78,12 +40,9 @@ public class ExtendedFor_c extends Loop_c implements ExtendedFor
     }
 
     /** Reconstruct the statement. */
-    protected ExtendedFor_c reconstruct(List varDecls /*Flags flags, TypeNode type, String name*/, Expr expr, Stmt body) {
-	    if (! CollectionUtil.equals(varDecls, this.varDecls) /*flags != this.flags || type != this.type || !(name.equals(this.name))*/ || expr != this.expr || body != this.body) {
+    protected ExtendedFor_c reconstruct(List varDecls, Expr expr, Stmt body) {
+	    if (! CollectionUtil.equals(varDecls, this.varDecls) || expr != this.expr || body != this.body) {
 	        ExtendedFor_c n = (ExtendedFor_c) copy();
-            /*n.flags = flags;
-            n.type = type;
-            n.name = name;*/
             n.varDecls = varDecls;
             n.expr = expr;
 	        n.body = body;
@@ -93,22 +52,8 @@ public class ExtendedFor_c extends Loop_c implements ExtendedFor
 	    return this;
     }
 
-    /** Reconstruct the statement. */
-    /*protected ExtendedFor_c reconstruct(List varDecls, Expr expr, Stmt body) {
-	    if (!CollectionUtil.equals(varDecl, this.VarDecl) || expr != this.expr || body != this.body) {
-	        ExtendedFor_c n = (ExtendedFor_c) copy();
-            n.varDecls = varDecls;
-            n.expr = expr;
-	        n.body = body;
-	        return n;
-	    }
-
-	    return this;
-    }*/
-
     /** Visit the children of the statement. */
     public Node visitChildren(NodeVisitor v) {
-        //TypeNode type = (TypeNode) visitChild(this.type, v);
         List varDecls = visitList(this.varDecls, v);
         Expr expr = (Expr) visitChild(this.expr, v);
 	    Stmt body = (Stmt) visitChild(this.body, v);
@@ -128,9 +73,6 @@ public class ExtendedFor_c extends Loop_c implements ExtendedFor
         if (t.isArray()){
             ArrayType aType = (ArrayType)t;
             t = aType.base();
-            /*if (!aType.base().isImplicitCastValid(type.type())){
-                throw new SemanticException("Type mismatch in EnhancedFor, array or collection of "+type.type()+" expected.", expr.position());
-            }*/
         }
         else if (ts.isSubtype(t, ts.Iterable())){
             if (t instanceof ParameterizedType){
@@ -185,10 +127,6 @@ public class ExtendedFor_c extends Loop_c implements ExtendedFor
         for (Iterator it = varDecls.iterator(); it.hasNext();){
             printVarDecl(it.next(), w, tr);
         }
-        /*w.write(flags.translate());
-        print(type, w, tr);
-        w.write(" ");
-        w.write(name);*/
         w.write(" : ");
         print(expr, w, tr);
         w.write(")");

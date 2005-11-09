@@ -9,9 +9,13 @@ import polyglot.visit.*;
 import polyglot.ext.jl5.types.*;
 import polyglot.ext.jl5.visit.*;
 
-public class JL5ConstructorDecl_c extends ConstructorDecl_c implements JL5ConstructorDecl, ApplicationCheck{
+public class JL5ConstructorDecl_c extends ConstructorDecl_c implements JL5ConstructorDecl, ApplicationCheck, SimplifyVisit{
 
+    protected boolean compilerGenerated;
     protected List annotations;
+    protected List runtimeAnnotations;
+    protected List classAnnotations;
+    protected List sourceAnnotations;
     protected List paramTypes;
     
     public JL5ConstructorDecl_c(Position pos, FlagAnnotations flags, String name, List formals, List throwTypes, Block body) {
@@ -86,7 +90,12 @@ public class JL5ConstructorDecl_c extends ConstructorDecl_c implements JL5Constr
             ParsedClassType ct = c.currentClassScope();
 
             JL5ConstructorInstance ci = (JL5ConstructorInstance)makeConstructorInstance(ct, ts);
-            ci.typeVariables(paramTypes);
+            List pTypes = new ArrayList();
+            for (Iterator it = paramTypes.iterator(); it.hasNext(); ){
+                pTypes.add(((ParamTypeNode)it.next()).type());
+            }
+                        
+            ci.typeVariables(pTypes);
             return constructorInstance(ci);
         }
 
@@ -155,6 +164,16 @@ public class JL5ConstructorDecl_c extends ConstructorDecl_c implements JL5Constr
     }
    
     public Node typeCheck(TypeChecker tc) throws SemanticException {
+        
+        // check throws clauses are not parameterized
+        for (Iterator it = throwTypes.iterator(); it.hasNext(); ){
+            TypeNode tn = (TypeNode)it.next();
+            Type next = tn.type();
+            if (next instanceof ParameterizedType){
+                throw new SemanticException("Cannot use parameterized type "+next+" in a throws clause", tn.position());
+            }
+        }
+        
     
         // check at most last formal is variable
         for (int i = 0; i < formals.size(); i++){
@@ -204,11 +223,41 @@ public class JL5ConstructorDecl_c extends ConstructorDecl_c implements JL5Constr
     }
 
     public void prettyPrint(CodeWriter w, PrettyPrinter tr){
-    
+   
+        if (isCompilerGenerated()) return;
+
         for (Iterator it = annotations.iterator(); it.hasNext(); ){
             print((AnnotationElem)it.next(), w, tr);
         }
         
         super.prettyPrint(w, tr);
+    }
+    
+    public Node simplify(SimplifyVisitor sv) throws SemanticException {
+        runtimeAnnotations = new ArrayList();
+        classAnnotations = new ArrayList();
+        sourceAnnotations = new ArrayList();
+        ((JL5TypeSystem)sv.typeSystem()).sortAnnotations(annotations, runtimeAnnotations, classAnnotations, sourceAnnotations);
+        return this;
+    }
+
+    public List runtimeAnnotations(){
+        return runtimeAnnotations;
+    }
+    public List classAnnotations(){
+        return classAnnotations;
+    }
+    public List sourceAnnotations(){
+        return sourceAnnotations;
+    }
+    
+    public boolean isCompilerGenerated(){
+        return compilerGenerated;
+    }
+
+    public JL5ConstructorDecl setCompilerGenerated(boolean val){
+        JL5ConstructorDecl_c n = (JL5ConstructorDecl_c)copy();
+        n.compilerGenerated = val;
+        return n;
     }
 }

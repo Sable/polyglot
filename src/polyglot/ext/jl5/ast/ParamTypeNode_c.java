@@ -9,7 +9,7 @@ import polyglot.types.*;
 import polyglot.ext.jl5.types.*;
 import polyglot.ext.jl5.visit.*;
 
-public class ParamTypeNode_c extends TypeNode_c implements ParamTypeNode{//, TypeVarsAdder {
+public class ParamTypeNode_c extends TypeNode_c implements ParamTypeNode {
     
     protected String id;
     protected List bounds;
@@ -102,12 +102,40 @@ public class ParamTypeNode_c extends TypeNode_c implements ParamTypeNode{//, Typ
             typeList.add(((TypeNode)it.next()).type());
         }
 
-        //IntersectionType iType = ts.intersectionType(position(), id, typeList);
-
         ((IntersectionType)type()).bounds(typeList);
         return type(type());
     }
-   
+  
+    public Node typeCheck(TypeChecker tc) throws SemanticException{
+        //check no duplicate in extends list
+        for (int i = 0; i < bounds.size(); i++){
+            TypeNode ti = (TypeNode)bounds.get(i);
+            for (int j = i+1; j < bounds.size(); j++){
+                TypeNode tj = (TypeNode)bounds.get(j);
+                if (tc.typeSystem().equals(ti.type(), tj.type())){
+                    throw new SemanticException("Duplicate bound in type variable declaration", tj.position());
+                }
+            }
+        }
+        // check no prim arrays in bounds list
+        for (int i = 0; i < bounds.size(); i++){
+            TypeNode ti = (TypeNode)bounds.get(i);
+            if (ti.type() instanceof ArrayType && ((ArrayType)ti.type()).base().isPrimitive()){
+                throw new SemanticException("Unexpected type bound in type variable declaration", ti.position());
+            
+            }
+        }
+
+        // only first bound can be a class otherwise must be interfaces
+        for (int i = 0; i < bounds.size(); i++){
+            TypeNode tn = (TypeNode)bounds.get(i);
+            if (i > 0 && !((ClassType)tn.type()).flags().isInterface()){
+                throw new SemanticException("Interface expected here.", tn.position());
+            }
+        }
+        
+        return super.typeCheck(tc);
+    }
     public void prettyPrint(CodeWriter w, PrettyPrinter tr){
         w.write(id);
         if (bounds() != null && !bounds().isEmpty()){

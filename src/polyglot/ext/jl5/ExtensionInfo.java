@@ -33,8 +33,10 @@ public class ExtensionInfo extends polyglot.ext.jl.ExtensionInfo {
     public static final polyglot.frontend.Pass.ID APPLICATION_CHECK = new polyglot.frontend.Pass.ID("application-check");
     public static final polyglot.frontend.Pass.ID GENERIC_TYPE_HANDLER = new polyglot.frontend.Pass.ID("generic-type-handler");
     public static final polyglot.frontend.Pass.ID ADD_TYPE_VARS = new polyglot.frontend.Pass.ID("add-type-vars");
+    public static final polyglot.frontend.Pass.ID SIMPLIFY = new polyglot.frontend.Pass.ID("simplify");
     //public static final polyglot.frontend.Pass.ID GENERIC_ARGS = new polyglot.frontend.Pass.ID("generic-args");
     //public static final polyglot.frontend.Pass.ID GENERIC_RESET = new polyglot.frontend.Pass.ID("generic-reset");
+   
     
     public String defaultFileExtension() {
         return "java";
@@ -75,6 +77,7 @@ public class ExtensionInfo extends polyglot.ext.jl.ExtensionInfo {
         afterPass(passes, Pass.TYPE_CHECK, new BarrierPass(TYPE_CHECK_ALL, job));
         beforePass(passes, Pass.REACH_CHECK, new VisitorPass(APPLICATION_CHECK, job, new ApplicationChecker(job, ts, nf)));
 
+        beforePass(passes, Pass.PRE_OUTPUT_ALL, new VisitorPass(SIMPLIFY, job, new SimplifyVisitor(job, ts, nf)));
         return passes;
     }
     

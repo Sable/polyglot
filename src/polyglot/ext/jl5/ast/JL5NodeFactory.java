@@ -84,5 +84,9 @@ public interface JL5NodeFactory extends NodeFactory {
     public JL5Import JL5Import(Position pos, Import.Kind kind, String name);
 
     public JL5CanonicalTypeNode JL5CanonicalTypeNode(Position pos, Type t);
+
+    public JL5Catch JL5Catch(Position pos, Formal formal, Block body);
+
+    public JL5NewArray JL5NewArray(Position pos, TypeNode baseType, List dims, int addDims, ArrayInit init);
 }
 

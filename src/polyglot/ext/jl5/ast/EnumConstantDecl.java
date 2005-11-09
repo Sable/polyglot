@@ -33,5 +33,6 @@ public interface EnumConstantDecl extends ClassMember
     EnumInstance enumInstance();
 
     EnumConstantDecl enumInstance(EnumInstance ei);
-        
+
+    List annotations();
 }

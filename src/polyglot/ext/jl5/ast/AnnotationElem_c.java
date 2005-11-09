@@ -46,6 +46,7 @@ public class AnnotationElem_c extends Expr_c implements AnnotationElem {
 
     public Node typeCheck(TypeChecker tc) throws SemanticException {
         JL5TypeSystem ts = (JL5TypeSystem)tc.typeSystem();
+        // only make annotation elements out of annotation types
         if (!typeName.type().isClass() || !JL5Flags.isAnnotationModifier(((JL5ParsedClassType)typeName.type()).flags())){
             throw new SemanticException("Annotation: "+typeName+" must be an annotation type, ", position());
                     

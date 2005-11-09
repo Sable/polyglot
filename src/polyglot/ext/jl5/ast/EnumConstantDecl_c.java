@@ -7,11 +7,7 @@ import polyglot.ext.jl.ast.*;
 import polyglot.visit.*;
 import polyglot.util.*;
 import polyglot.ext.jl5.types.*;
-/**
- * An immutable representation of a Java language extended <code>for</code>
- * statement.  Contains a statement to be executed and an expression
- * to be tested indicating whether to reexecute the statement.
- */
+
 public class EnumConstantDecl_c extends Term_c implements EnumConstantDecl
 {   
     protected List args;
@@ -27,18 +23,17 @@ public class EnumConstantDecl_c extends Term_c implements EnumConstantDecl
         this.args = args;
         this.body = body;
         this.flags = flags.classicFlags();
-        if (flags.annotations() != null){
-            this.annotations = flags.annotations();
-        }
-        else {
-            this.annotations = new TypedList(new LinkedList(), AnnotationElem.class, true);
-        }
+        this.annotations = flags.annotations();
     }
         
     
     /** get args */
     public List args(){
         return args;
+    }
+
+    public List annotations(){
+        return annotations;
     }
 
     /** set args */
@@ -141,8 +136,6 @@ public class EnumConstantDecl_c extends Term_c implements EnumConstantDecl
             JL5TypeSystem ts = (JL5TypeSystem)ar.typeSystem();
 
             ParsedClassType ct = c.currentClassScope();
-
-            //Flags f = flags;
             
             EnumInstance ei = ts.enumInstance(position(), ct, JL5Flags.NONE, name);
             return enumInstance(ei);

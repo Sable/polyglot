@@ -204,6 +204,14 @@ public class JL5NodeFactory_c extends NodeFactory_c implements JL5NodeFactory {
         JL5CanonicalTypeNode n = new JL5CanonicalTypeNode_c(pos, t);
         return n;
     }
+    public JL5Catch JL5Catch(Position pos, Formal formal, Block body){
+        JL5Catch n = new JL5Catch_c(pos, formal, body);
+        return n;
+    }
+    public JL5NewArray JL5NewArray(Position pos, TypeNode baseType, List dims, int addDims, ArrayInit init){
+        JL5NewArray n = new JL5NewArray_c(pos, baseType, dims, addDims, init);
+        return n;
+    }
     // TODO:  Override factory methods for overriden AST nodes.
     // TODO:  Override factory methods for AST nodes with new extension nodes.
 }

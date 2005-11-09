@@ -24,7 +24,7 @@ import polyglot.util.InternalCompilerError;
  */
 public class Context_c implements Context
 {
-    protected Context outer;
+    public Context outer;
     protected TypeSystem ts;
 
     public static class Kind extends Enum {

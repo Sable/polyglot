@@ -529,7 +529,7 @@ override class_member_declaration ::=
 // JSR-201) Enum Declaration
 enum_declaration ::=
 		modifiers_or_annotations_opt:a ENUM:b IDENTIFIER:c interfaces_opt:d enum_body:e
-        {: RESULT = parser.nf.JL5ClassDecl(parser.pos(b, e), a, c.getIdentifier(), parser.nf.CanonicalTypeNode(parser.pos(b, e), parser.ts.Enum()), d, e, new TypedList(new LinkedList(), TypeNode.class, false)); :}
+        {: RESULT = parser.nf.JL5ClassDecl(parser.pos(b, e), a.classicFlags(JL5Flags.setEnumModifier(a.classicFlags())), c.getIdentifier(), parser.nf.CanonicalTypeNode(parser.pos(b, e), parser.ts.Enum()), d, e, new TypedList(new LinkedList(), TypeNode.class, false)); :}
 	;
 enum_body ::=
 		LBRACE:n enum_constants_opt:a enum_body_declarations_opt:b RBRACE:c
@@ -640,6 +640,24 @@ constructor_declarator ::=
 		simple_name:a LPAREN:b formal_parameter_list_opt:c RPAREN:d
         {: RESULT = new ConstructorDeclarator(parser.pos(a, d), a.toString(), c); :}
 	;
+    
+override constructor_body ::=
+    LBRACE:n explicit_constructor_invocation:a block_statements:b RBRACE:d
+        {: List l = new TypedList(new LinkedList(), Stmt.class, false);
+           l.add(a);
+           l.addAll(b);
+           RESULT = parser.nf.Block(parser.pos(n, d), l); :}
+    |   
+    LBRACE:n explicit_constructor_invocation:a RBRACE:d
+        {: RESULT = parser.nf.Block(parser.pos(n, d), a); :}
+    |   
+    LBRACE:n block_statements:a RBRACE:d
+        {: RESULT = parser.nf.Block(parser.pos(n, d), a); :}
+    |   
+    LBRACE:n RBRACE:d
+        {: RESULT = parser.nf.Block(parser.pos(n, d), new TypedList(new LinkedList(), Stmt.class, false)); :}
+;
+
 override explicit_constructor_invocation ::=
 		THIS:a LPAREN:b argument_list_opt:c RPAREN:d SEMICOLON:e
         {: RESULT = parser.nf.ThisCall(parser.pos(a, e), c); :}
@@ -787,12 +805,27 @@ override class_instance_creation_expression ::=
 ;
 array_creation_init ::=
 		NEW:a primitive_type:b dims:c array_initializer:d
-        {: RESULT = parser.nf.NewArray(parser.pos(a, d), b,
-                        c.intValue(), d); :}
+        {: RESULT = parser.nf.JL5NewArray(parser.pos(a, d), b, Collections.EMPTY_LIST, c.intValue(), d); :}
 	|	NEW:a class_or_interface_type:b dims:c array_initializer:d
-        {: RESULT = parser.nf.NewArray(parser.pos(a, d), b,
-                        c.intValue(), d); :}
+        {: RESULT = parser.nf.JL5NewArray(parser.pos(a, d), b,
+                Collections.EMPTY_LIST, c.intValue(), d); :}
 	;
+
+override array_creation_expression ::=
+                    // NewArray
+        NEW:n primitive_type:a dim_exprs:b dims_opt:c
+            {: RESULT = parser.nf.JL5NewArray(parser.pos(n, b), a, b,
+                c.intValue(), null); :}
+    |   NEW:n class_or_interface_type:a dim_exprs:b dims_opt:c
+            {: RESULT = parser.nf.JL5NewArray(parser.pos(n, b), a, b,
+                c.intValue(), null); :}
+    |   NEW:n primitive_type:a dims:b array_initializer:c
+            {: RESULT = parser.nf.JL5NewArray(parser.pos(n, c), a, Collections.EMPTY_LIST, b.intValue(), c); :}
+    |   NEW:n class_or_interface_type:a dims:b array_initializer:c
+            {: RESULT = parser.nf.JL5NewArray(parser.pos(n, c), a, Collections.EMPTY_LIST,  b.intValue(), c); :}
+    ;
+ 
+    
 override field_access ::=
     primary:a DOT IDENTIFIER:b
         {: RESULT = parser.nf.JL5Field(parser.pos(a, b, b), a,
@@ -1383,4 +1416,8 @@ default_value_opt ::=
     DEFAULT element_value:a
         {: RESULT = a; :}
 ;
- 
+
+override catch_clause ::=
+    CATCH:n LPAREN formal_parameter:a RPAREN block:b
+        {: RESULT = parser.nf.JL5Catch(parser.pos(n, b), a, b); :}
+;        

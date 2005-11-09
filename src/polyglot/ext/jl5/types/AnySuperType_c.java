@@ -80,15 +80,28 @@ public class AnySuperType_c extends ReferenceType_c implements AnySuperType{
     }
     
     public boolean equalsImpl(TypeObject ancestor){
-        if (ancestor instanceof AnySubType){
-            return ts.equals(bound(), ((AnySubType)ancestor).bound());
+        if (ancestor instanceof AnySuperType){
+            return ts.equals(bound(), ((AnySuperType)ancestor).bound());
         }
-        return super.equalsImpl(ancestor);
+        return false;
     }
 
     public boolean descendsFromImpl(Type ancestor){
-        if (ancestor instanceof IntersectionType){
-            if (typeSystem().equals(bound(), ancestor)) return true;
+        if (ancestor instanceof JL5ParsedClassType || ancestor instanceof ParameterizedType){
+            return typeSystem().isSubtype(upperBound(), ancestor);
+        }
+        else if (ancestor instanceof AnySuperType){
+            return typeSystem().isSubtype(((AnySuperType)ancestor).bound(), bound());
+        }
+        else if (ancestor instanceof AnySubType){
+            return typeSystem().isSubtype(upperBound(), ((AnySubType)ancestor).bound());
+        }
+        else if (ancestor instanceof AnyType){
+            // this one will be true if base types have subtype relation ??
+            return typeSystem().isSubtype(upperBound(), ((AnyType)ancestor).upperBound());
+        }
+        else if (ancestor instanceof IntersectionType){
+            return typeSystem().isSubtype(bound(), ancestor);
         }
         return false;
     }

@@ -11,23 +11,6 @@ public class EnumConstant_c extends Field_c implements EnumConstant{
         super(pos, target, name);
     }
     
-    /*protected Receiver
-    EnumInstance enumInstance();
-
-    EnumConstant enumConstant(EnumInstance ei);
-
-    Receiver target();
-
-    EnumConstant target(Receiver target);
-
-    boolean isTargetImplicit();
-
-    EnumConstant targetImplicit(boolean implicit);
-
-    String name();
-
-    EnumConstant name(String name);*/
-
     public boolean isConstant(){
         return true;
     }

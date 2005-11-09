@@ -9,9 +9,13 @@ import polyglot.types.*;
 import java.util.*;
 import polyglot.visit.*;
 
-public class JL5FieldDecl_c extends FieldDecl_c implements JL5FieldDecl, ApplicationCheck {
+public class JL5FieldDecl_c extends FieldDecl_c implements JL5FieldDecl, ApplicationCheck, SimplifyVisit {
 
+    protected boolean compilerGenerated;
     protected List annotations;
+    protected List runtimeAnnotations;
+    protected List classAnnotations;
+    protected List sourceAnnotations;
     
     public JL5FieldDecl_c(Position pos, FlagAnnotations flags, TypeNode type, String name, Expr init){
         super(pos, flags.classicFlags(), type, name, init);
@@ -71,10 +75,40 @@ public class JL5FieldDecl_c extends FieldDecl_c implements JL5FieldDecl, Applica
     
 
     public void prettyPrint(CodeWriter w, PrettyPrinter tr){
+        if (isCompilerGenerated()) return;
+
         for (Iterator it = annotations.iterator(); it.hasNext(); ){
             print((AnnotationElem)it.next(), w, tr);
         }
         super.prettyPrint(w, tr);
     }
+
+    public Node simplify(SimplifyVisitor sv) throws SemanticException {
+        runtimeAnnotations = new ArrayList();
+        classAnnotations = new ArrayList();
+        sourceAnnotations = new ArrayList();
+        ((JL5TypeSystem)sv.typeSystem()).sortAnnotations(annotations, runtimeAnnotations, classAnnotations, sourceAnnotations);
+        return this;
+    }
+
+    public List runtimeAnnotations(){
+        return runtimeAnnotations;
+    }
+    public List classAnnotations(){
+        return classAnnotations;
+    }
+    public List sourceAnnotations(){
+        return sourceAnnotations;
+    }
     
+    public boolean isCompilerGenerated(){
+        return compilerGenerated;
+    }
+    
+    public JL5FieldDecl setCompilerGenerated(boolean val){
+        JL5FieldDecl_c n = (JL5FieldDecl_c) copy();
+        n.compilerGenerated = val;
+        return n;
+    }
+
 }

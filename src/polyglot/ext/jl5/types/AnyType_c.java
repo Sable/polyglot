@@ -46,7 +46,6 @@ public class AnyType_c extends ReferenceType_c implements AnyType{
     }
 
     public List methods(){
-        System.out.println("upper bound: "+upperBound());
         return upperBound().toReference().methods();
     }
 
@@ -68,5 +67,10 @@ public class AnyType_c extends ReferenceType_c implements AnyType{
     
     public boolean isReference(){
         return true;
+    }
+
+    public boolean descendsFromImpl(Type ancestor){
+        // fix this
+       return super.descendsFromImpl(ancestor); 
     }
 }

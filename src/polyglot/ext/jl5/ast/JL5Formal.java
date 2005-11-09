@@ -9,4 +9,8 @@ public interface JL5Formal extends Formal {
     JL5Formal annotations(List annotations);
 
     boolean isVariable();
+    
+    public List runtimeAnnotations();
+    public List classAnnotations();
+    public List sourceAnnotations();
 }

@@ -83,6 +83,6 @@ public interface JL5TypeSystem extends TypeSystem {
     public Type deduceInferredType(ParameterizedType ft, ParameterizedType actual, IntersectionType iType);
     public void updateInferred(int pos, Type infType, List inferred) throws SemanticException;
     public List inferTypesFromArgs(List typeVariables, List formals, List args, List inferred) throws SemanticException;
-    
-    
+
+    void sortAnnotations(List annots, List runtimeAnnots, List classAnnots, List sourceAnnots);
 }
