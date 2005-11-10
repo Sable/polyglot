@@ -19,6 +19,7 @@ public class JL5TypeSystem_c extends TypeSystem_c implements JL5TypeSystem {
     
     // this is for extended for
     protected ClassType ITERABLE_;
+    protected ClassType ITERATOR_;
     
     public ClassType Enum() { 
         if (ENUM_ != null) {
@@ -44,6 +45,15 @@ public class JL5TypeSystem_c extends TypeSystem_c implements JL5TypeSystem {
         }
         else {
             return ITERABLE_ = load("java.lang.Iterable");
+        }
+    }
+  
+    public ClassType Iterator() { 
+        if (ITERATOR_ != null) {
+            return ITERATOR_;
+        }
+        else {
+            return ITERATOR_ = load("java.util.Iterator");
         }
     }
   

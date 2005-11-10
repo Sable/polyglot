@@ -9,7 +9,7 @@ import polyglot.util.*;
 import polyglot.visit.*;
 import polyglot.types.*;
 
-public class JL5LocalDecl_c extends LocalDecl_c implements JL5LocalDecl, ApplicationCheck{
+public class JL5LocalDecl_c extends LocalDecl_c implements JL5LocalDecl, ApplicationCheck, SimplifyVisit {
 
     protected List annotations;
     
@@ -102,5 +102,15 @@ public class JL5LocalDecl_c extends LocalDecl_c implements JL5LocalDecl, Applica
             }
         }
         super.prettyPrint(w, tr);
+    }
+
+    public Node simplify(SimplifyVisitor sv) throws SemanticException{
+        /*if (init() != null){
+            if (this.type().isPrimitive() && init().type().isClass()){
+                
+            }
+        
+        }*/
+        return this;
     }
 }

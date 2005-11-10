@@ -17,6 +17,7 @@ public interface JL5TypeSystem extends TypeSystem {
     
     ClassType Annotation();
     ClassType Iterable();
+    ClassType Iterator();
 
     ClassType IntegerWrapper();
     ClassType ByteWrapper();
