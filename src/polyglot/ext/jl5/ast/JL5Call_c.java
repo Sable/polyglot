@@ -9,7 +9,7 @@ import polyglot.visit.*;
 import polyglot.ext.jl5.types.*;
 import polyglot.ext.jl5.visit.*;
 
-public class JL5Call_c extends Call_c implements JL5Call {
+public class JL5Call_c extends Call_c implements JL5Call, SimplifyVisit {
 
     protected List typeArguments;
 
@@ -219,5 +219,39 @@ public class JL5Call_c extends Call_c implements JL5Call {
         w.end();
         w.write(")");
                         
+    }
+
+    public Node simplify(SimplifyVisitor sv) throws SemanticException {
+        JL5TypeSystem ts = (JL5TypeSystem)sv.typeSystem();
+        JL5NodeFactory nf = (JL5NodeFactory)sv.nodeFactory();
+        List newArgs = new ArrayList();
+        for (int i = 0; i < methodInstance().formalTypes().size(); i++){
+            Type t = (Type)methodInstance().formalTypes().get(i);
+            if (t instanceof JL5ArrayType && ((JL5ArrayType)t).isVariable()){
+                if (arguments().size() == 1  && arguments().get(0) instanceof NullLit){
+                    newArgs.add(arguments().get(0));
+                }
+                else if (arguments().size() == 1 && arguments().get(0) instanceof NewArray){
+                    newArgs.add(arguments().get(0));
+                }
+                else {
+                    List elements = new ArrayList();
+                    for (int j = i; j < arguments().size(); j++){
+                        elements.add(arguments().get(j));
+                    }
+                    ArrayInit ai = nf.ArrayInit(position(), elements);
+                    ai = (ArrayInit)ai.type(((JL5ArrayType)t).base());
+                    /*List dims = new ArrayList();
+                    dims.add(nf.IntLit(position(), IntLit.INT, elements.size()));*/
+                    NewArray na = nf.NewArray(position(), nf.CanonicalTypeNode(position(), ((JL5ArrayType)t).base()), Collections.EMPTY_LIST, 1, ai); 
+                    na = (NewArray)na.type(t);
+                    newArgs.add(na);
+                }
+            }
+            else {
+                newArgs.add(arguments().get(i));
+            }
+        }
+        return arguments(newArgs);
     }
 }

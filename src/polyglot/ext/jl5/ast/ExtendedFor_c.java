@@ -118,8 +118,8 @@ public class ExtendedFor_c extends Loop_c implements ExtendedFor, SimplifyVisit
             FlagAnnotations fl = new FlagAnnotations();
             fl.classicFlags(origLd.flags());
             fl.annotations(origLd.annotations());
-            JL5LocalDecl ld = nf.JL5LocalDecl(position(), fl, nf.CanonicalTypeNode(position(), t.toArray().base()), "$arg0", nf.IntLit(position(), polyglot.ast.IntLit.INT, 0));
-            LocalInstance li = ts.localInstance(position(), Flags.NONE, t.toArray().base(), "$arg0");
+            JL5LocalDecl ld = nf.JL5LocalDecl(position(), fl, nf.CanonicalTypeNode(position(), ts.Int()), "$arg0", nf.IntLit(position(), polyglot.ast.IntLit.INT, 0));
+            LocalInstance li = ts.localInstance(position(), Flags.NONE, ts.Int(), "$arg0");
             ld = (JL5LocalDecl)ld.localInstance(li);
             Local local = nf.Local(position(), "$arg0");
             local = local.localInstance(li);

@@ -208,7 +208,7 @@ public class JL5ConstructorDecl_c extends ConstructorDecl_c implements JL5Constr
         ConstructorInstance sci = ts.defaultConstructor(position(), (ClassType) this.constructorInstance().container().superType());
         ConstructorCall cc = nf.SuperCall(position(), Collections.EMPTY_LIST);
         cc = cc.constructorInstance(sci); 
-        body.statements().add(0, cc);
+        body = body.prepend(cc);
         return reconstruct(formals, throwTypes, body);
         
     }
