@@ -245,13 +245,93 @@ public class JL5TypeSystem_c extends TypeSystem_c implements JL5TypeSystem {
     }
     
     public void checkClassConformance(ClassType ct) throws SemanticException {
-   
+  
         if (JL5Flags.isEnumModifier(ct.flags())){
             // check enums elsewhere - have to do something special with
             // abstract methods and anon enum element bodies
             //return;
+            JL5ParsedClassType pct = (JL5ParsedClassType)ct;
+            List enumConsts = pct.enumConstants();
+            boolean allAnonNull = true;
+            for (Iterator it = enumConsts.iterator(); it.hasNext(); ){
+                EnumInstance ei = (EnumInstance)it.next();
+                if (ei.anonType() != null){
+                    allAnonNull = false;
+                    break;
+                }
+            }
+
+            if (allAnonNull){
+                super.checkClassConformance(ct);
+            }
+            else {
+                // if enum type declares abstract method ensure
+                // !!every!! enum constant decl declares anon body
+                // and !!every!! body implements this abstract
+                // method
+                for (Iterator it = ct.methods().iterator(); it.hasNext(); ){
+                    MethodInstance mi = (MethodInstance)it.next();
+                    if (!mi.flags().isAbstract()) continue;
+                    for (Iterator jt = enumConsts.iterator(); jt.hasNext(); ){
+                        EnumInstance ei = (EnumInstance)jt.next();
+                        if (ei.anonType() == null){
+                            throw new SemanticException("Enum constant decl: "+ei.name()+" must delclare an anonymous subclass of: "+ct+" and implement the abstract method: "+mi, ei.position());
+                        }
+                        else {
+                            boolean implFound = false;
+                            for (Iterator kt = ei.anonType().methods().iterator(); kt.hasNext(); ){
+                                MethodInstance mj = (MethodInstance)kt.next();
+                                if (canOverride(mj, mi)){
+                                    implFound = true;
+                                }
+                            }
+                            if (!implFound){
+                                throw new SemanticException("Enum constant decl anonymous subclass must implement method: "+mi, ei.position());
+                            }
+                        }
+                    }
+                }
+
+                // still need to check superInterfaces to ensure this 
+                // class implements the methods except they can be 
+                // abstract (previous checks ensure okay)
+                List superInterfaces = abstractSuperInterfaces(ct);
+                for (Iterator it = superInterfaces.iterator(); it.hasNext(); ){
+                    ReferenceType rt = (ReferenceType)it.next();
+                    if (equals(rt, ct)) continue;
+                    for (Iterator jt = rt.methods().iterator(); jt.hasNext();){
+                        MethodInstance mi = (MethodInstance)jt.next();
+                        if (!mi.flags().isAbstract()) continue;
+                        
+                        boolean implFound = false;
+                        // don't need to look in super classes as the only
+                        // one is java.lang.Enum so just look here and 
+                        // there
+                        for (Iterator kt = ct.methods().iterator(); kt.hasNext(); ){
+                            MethodInstance mj = (MethodInstance)kt.next();
+                            if ((canOverride(mj, mi))){
+                                implFound = true;
+                                break;
+                            }
+                        }
+                        for (Iterator kt = ct.superType().toReference().methods().iterator(); kt.hasNext(); ){
+                            MethodInstance mj = (MethodInstance)kt.next();
+                            if ((canOverride(mj, mi))){
+                                implFound = true;
+                                break;
+                            }
+                        }
+
+                        if (!implFound){
+                            throw new SemanticException(ct.fullName()+" should be declared abstract: it does not define: "+mi.signature()+", which is declared in "+rt.toClass().fullName(), ct.position());
+                        }
+                    }
+                }
+            }
         }
-        super.checkClassConformance(ct); 
+        else {
+            super.checkClassConformance(ct); 
+        }
     }
 
     public EnumInstance findEnumConstant(ReferenceType container, String name, Context c) throws SemanticException {
@@ -279,6 +359,7 @@ public class JL5TypeSystem_c extends TypeSystem_c implements JL5TypeSystem {
         if (currClass != null && !isAccessible(ei, currClass)){
             throw new SemanticException("Cannot access "+ei+".");
         }
+
         return ei;
     }
     
@@ -346,9 +427,9 @@ public class JL5TypeSystem_c extends TypeSystem_c implements JL5TypeSystem {
         return annotations;
     }
     
-    public EnumInstance enumInstance(Position pos, ClassType ct, Flags f, String name){
+    public EnumInstance enumInstance(Position pos, ClassType ct, Flags f, String name, ParsedClassType anonType){
         assert_(ct);
-        return new EnumInstance_c(this, pos, ct, f, name);
+        return new EnumInstance_c(this, pos, ct, f, name, anonType);
     }
 
     public AnnotationElemInstance annotationElemInstance(Position pos, ClassType ct, Flags f, Type type,  String name, boolean hasDefault){
@@ -631,12 +712,22 @@ public class JL5TypeSystem_c extends TypeSystem_c implements JL5TypeSystem {
         return iType.erasureType();
     }
 
-    public boolean equals(TypeObject arg1, TypeObject arg2){
+    /*public boolean equals(TypeObject arg1, TypeObject arg2){
         if (arg1 instanceof ParameterizedType) return ((ParameterizedType)arg1).equalsImpl(arg2);
         if (arg1 instanceof IntersectionType) return ((IntersectionType)arg1).equalsImpl(arg2);
         if (arg1 instanceof AnySubType) return ((AnySubType)arg1).equalsImpl(arg2);
         if (arg1 instanceof AnySuperType) return ((AnySuperType)arg1).equalsImpl(arg2);
         return super.equals(arg1, arg2);
+    }*/
+    
+    public boolean equivalent(TypeObject arg1, TypeObject arg2){
+        if (arg1 instanceof ParameterizedType) return ((ParameterizedType)arg1).equivalentImpl(arg2);
+        if (arg1 instanceof IntersectionType) return ((IntersectionType)arg1).equivalentImpl(arg2);
+        if (arg1 instanceof AnySubType) return ((AnySubType)arg1).equivalentImpl(arg2);
+        if (arg1 instanceof AnySuperType) return ((AnySuperType)arg1).equivalentImpl(arg2);
+        if (arg1 instanceof JL5PrimitiveType) return ((JL5PrimitiveType)arg1).equivalentImpl(arg2);
+        if (arg1 instanceof JL5ParsedClassType) return ((JL5ParsedClassType)arg1).equivalentImpl(arg2);
+        return false;
     }
     
     public AnyType anyType(){
@@ -707,7 +798,7 @@ public class JL5TypeSystem_c extends TypeSystem_c implements JL5TypeSystem {
         return new JL5ImportTable(this, systemResolver, pkg);
     }
 
-    protected ArrayType arrayType(Position pos, Type type){
+    public ArrayType arrayType(Position pos, Type type){
         return new JL5ArrayType_c(this, pos, type);
     }
 
@@ -970,4 +1061,13 @@ public class JL5TypeSystem_c extends TypeSystem_c implements JL5TypeSystem {
         }
     }
 
+    public boolean needsUnboxing(Type to, Type from){
+        if (to.isPrimitive() && from.isClass()) return true;
+        return false;
+    }
+
+    public boolean needsBoxing(Type to, Type from){
+        if (to.isClass() && from.isPrimitive()) return true;
+        return false;
+    }
 }

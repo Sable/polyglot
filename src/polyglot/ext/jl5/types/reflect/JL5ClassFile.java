@@ -21,7 +21,7 @@ public class JL5ClassFile extends ClassFile implements JL5LazyClassInitializer {
         for (int i = 0; i < fields.length; i++){
             if ((fields[i].modifiers() & JL5Flags.ENUM_MOD) != 0) {
                 FieldInstance fi = fields[i].fieldInstance(ts, ct);
-                ct.addEnumConstant(ts.enumInstance(ct.position(), ct, fi.flags(), fi.name()));
+                ct.addEnumConstant(ts.enumInstance(ct.position(), ct, fi.flags(), fi.name(), ct));
             }
         }
     }

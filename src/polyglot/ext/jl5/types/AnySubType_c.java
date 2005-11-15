@@ -77,7 +77,7 @@ public class AnySubType_c extends ReferenceType_c implements AnySubType{
         }
     }
 
-    public boolean equalsImpl(TypeObject ancestor){
+    public boolean equivalentImpl(TypeObject ancestor){
         if (ancestor instanceof AnySubType){
             return ts.equals(bound(), ((AnySubType)ancestor).bound());
         }

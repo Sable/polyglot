@@ -4,19 +4,19 @@ import polyglot.types.reflect.*;
 import java.io.*;
 import polyglot.ext.jl5.types.*;
 import polyglot.types.*;
-
+import java.util.*;
 public class JL5Method extends Method{
 
     protected boolean defaultVal;
     protected Signature signature;
-
+    
     public JL5Method(DataInputStream in, ClassFile clazz) {
         super(in, clazz);
     }
 
     public void initialize() throws IOException {
         modifiers = in.readUnsignedShort();
-         
+
         name = in.readUnsignedShort();
         type = in.readUnsignedShort();
                 
@@ -76,6 +76,21 @@ public class JL5Method extends Method{
             mi = (JL5MethodInstance)mi.formalTypes(signature.methodSignature.formalTypes());
             mi = (JL5MethodInstance)mi.throwTypes(signature.methodSignature.throwTypes());
         }
+        if (mi.flags().isTransient()){
+            ArrayList newFormals = new ArrayList();
+            for (Iterator it = mi.formalTypes().iterator(); it.hasNext(); ){
+                Type t = (Type)it.next();
+                if (!it.hasNext()){
+                    ArrayType at = ((JL5TypeSystem)ts).arrayType(t.position(), ((ArrayType)t).base());
+                    ((JL5ArrayType)at).setVariable();
+                    newFormals.add(at);
+                } 
+                else{
+                    newFormals.add(t);
+                }
+            }
+            mi = (JL5MethodInstance)mi.formalTypes(newFormals);
+        }
         return mi;
     }
 
@@ -94,6 +109,21 @@ public class JL5Method extends Method{
             ci = (JL5ConstructorInstance)ci.formalTypes(signature.methodSignature.formalTypes());
             ci = (JL5ConstructorInstance)ci.throwTypes(signature.methodSignature.throwTypes());
     
+        }
+        if (ci.flags().isTransient()){
+            ArrayList newFormals = new ArrayList();
+            for (Iterator it = ci.formalTypes().iterator(); it.hasNext(); ){
+                Type t = (Type)it.next();
+                if (!it.hasNext()){
+                    ArrayType at = ((JL5TypeSystem)ts).arrayType(t.position(), ((ArrayType)t).base());
+                    ((JL5ArrayType)at).setVariable();
+                    newFormals.add(at);
+                } 
+                else{
+                    newFormals.add(t);
+                }
+            }
+            ci = (JL5ConstructorInstance)ci.formalTypes(newFormals);
         }
         return ci;
     }

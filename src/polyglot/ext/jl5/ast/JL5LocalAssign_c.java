@@ -6,15 +6,17 @@ import polyglot.util.*;
 import polyglot.types.*;
 import polyglot.visit.*;
 import polyglot.ext.jl5.types.*;
+import polyglot.ext.jl5.visit.*;
 import java.util.*;
 
-public class JL5LocalAssign_c extends LocalAssign_c implements JL5LocalAssign {
+public class JL5LocalAssign_c extends LocalAssign_c implements JL5LocalAssign, BoxingVisit, UnboxingVisit {
 
     public JL5LocalAssign_c(Position pos, Local left, Operator op, Expr right){
         super(pos, left, op, right);
     }
 
     public Node typeCheck(TypeChecker tc) throws SemanticException {
+        System.out.println("type check local assign" );
         JL5TypeSystem ts = (JL5TypeSystem)tc.typeSystem();
         if (right() instanceof Call && ((JL5MethodInstance)((Call)right()).methodInstance()).isGeneric()){
             if (!ts.isImplicitCastValid(right.type(), left.type()) && 
@@ -41,6 +43,40 @@ public class JL5LocalAssign_c extends LocalAssign_c implements JL5LocalAssign {
         }
     
         return super.typeCheck(tc);
+    }
+    
+    public Node boxing(BoxingVisitor sv) throws SemanticException {
+        JL5TypeSystem ts = (JL5TypeSystem)sv.typeSystem();
+        JL5NodeFactory nf = (JL5NodeFactory)sv.nodeFactory();
+
+        JL5LocalAssign node = this;
+        /*if (ts.needsBoxing(node.type(), node.left().type())){
+            node = (JL5LocalAssign)node.left(nf.createBoxed(node.left().position(), node.left(), ts, sv.context()));
+        }*/
+        if (ts.needsBoxing(node.type(), node.right().type())){
+            node = (JL5LocalAssign)node.right(nf.createBoxed(node.right().position(), node.right(), ts, sv.context()));
+        }
+        
+        return node;
+                
+    }
+    
+    public Node unboxing(UnboxingVisitor sv) throws SemanticException {
+        JL5TypeSystem ts = (JL5TypeSystem)sv.typeSystem();
+        JL5NodeFactory nf = (JL5NodeFactory)sv.nodeFactory();
+
+        JL5LocalAssign node = this;
+        System.out.println("node type: "+node.type());
+        System.out.println("left type: "+node.left().type());
+        System.out.println("right type: "+node.right().type());
+        /*if (ts.needsUnboxing(node.type(), node.left().type())){
+            node = (JL5LocalAssign)node.left(nf.createUnboxed(node.left().position(), node.left(), ts, sv.context()));
+        }*/
+        if (ts.needsUnboxing(node.type(), node.right().type())){
+            node = (JL5LocalAssign)node.right(nf.createUnboxed(node.right().position(), node.right(), ts, sv.context()));
+        }
+        return node;
+                
     }
     
 }

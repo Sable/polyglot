@@ -118,17 +118,25 @@ public class ExtendedFor_c extends Loop_c implements ExtendedFor, SimplifyVisit
             FlagAnnotations fl = new FlagAnnotations();
             fl.classicFlags(origLd.flags());
             fl.annotations(origLd.annotations());
-            JL5LocalDecl ld = nf.JL5LocalDecl(position(), fl, nf.CanonicalTypeNode(position(), ts.Int()), "$arg0", nf.IntLit(position(), polyglot.ast.IntLit.INT, 0));
+            IntLit il = nf.IntLit(position(), polyglot.ast.IntLit.INT, 0);
+            il = (IntLit)il.type(ts.Int());
+            JL5LocalDecl ld = nf.JL5LocalDecl(position(), fl, nf.CanonicalTypeNode(position(), ts.Int()), "$arg0", il);
             LocalInstance li = ts.localInstance(position(), Flags.NONE, ts.Int(), "$arg0");
             ld = (JL5LocalDecl)ld.localInstance(li);
             Local local = nf.Local(position(), "$arg0");
             local = local.localInstance(li);
+            local = (Local)local.type(ts.Int());
+            
             JL5Field field = nf.JL5Field(position(), expr, "length");
             FieldInstance fi = ts.fieldInstance(position(), t.toReference(), Flags.NONE, ts.Int(), "length");
             field = (JL5Field)field.fieldInstance(fi);
+            field = (JL5Field)field.type(ts.Int());
+
             Binary cond = nf.Binary(position(), local, polyglot.ast.Binary.LT, field);
             cond = (Binary)cond.type(ts.Boolean());
             Unary iter = nf.Unary(position(), polyglot.ast.Unary.POST_INC, local);
+            iter = (Unary)iter.type(ts.Int());
+            
             List iters = new ArrayList();
             iters.add(nf.Eval(position(), iter));
             
@@ -136,6 +144,7 @@ public class ExtendedFor_c extends Loop_c implements ExtendedFor, SimplifyVisit
             aa = (ArrayAccess)aa.type(expr.type());
             Local orig = nf.Local(position(), origLd.name());
             orig = orig.localInstance(origLd.localInstance());
+            orig = (Local)orig.type(origLd.type().type());
             
             LocalAssign la = nf.LocalAssign(position(), orig, Assign.ASSIGN, aa);
             Block b = null;
@@ -164,6 +173,7 @@ public class ExtendedFor_c extends Loop_c implements ExtendedFor, SimplifyVisit
             ld = (JL5LocalDecl)ld.localInstance(li);
             Local local = nf.Local(position(), "$arg0");
             local = local.localInstance(li);
+            local = (Local)local.type(ts.Iterator());
             
             JL5Call condCall = (JL5Call)nf.JL5Call(position(), local, "hasNext", new ArrayList(), new ArrayList());
             condCall = (JL5Call)condCall.type(ts.Boolean());
@@ -177,6 +187,7 @@ public class ExtendedFor_c extends Loop_c implements ExtendedFor, SimplifyVisit
             
             Local orig = nf.Local(position(), origLd.name());
             orig = orig.localInstance(origLd.localInstance());
+            orig = (Local)orig.type(origLd.type().type());
             
             if (!ts.equals(orig.localInstance().type(), ts.Object())){
                 Cast cast = nf.Cast(position(), nf.CanonicalTypeNode(position(), orig.localInstance().type()), resultCall);

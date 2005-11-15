@@ -9,6 +9,7 @@ import polyglot.types.Qualifier;
 import polyglot.util.*;
 import java.util.*;
 import polyglot.ext.jl5.types.*;
+import polyglot.types.*;
 
 /**
  * NodeFactory for jl5 extension.
@@ -176,18 +177,18 @@ public class JL5NodeFactory_c extends NodeFactory_c implements JL5NodeFactory {
         return n;
     }
 
-    public Call JL5Call(Position pos, Receiver target, String name, List args, List typeArgs){
-        Call n = new JL5Call_c(pos, target, name, args, typeArgs);
+    public JL5Call JL5Call(Position pos, Receiver target, String name, List args, List typeArgs){
+        JL5Call n = new JL5Call_c(pos, target, name, args, typeArgs);
         return n;
     }
 
-    public New JL5New(Position pos, Expr qualifier, TypeNode tn, List arguments, ClassBody body, List typeArgs){
-        New n = new JL5New_c(pos, qualifier, tn, arguments, body, typeArgs);
+    public JL5New JL5New(Position pos, Expr qualifier, TypeNode tn, List arguments, ClassBody body, List typeArgs){
+        JL5New n = new JL5New_c(pos, qualifier, tn, arguments, body, typeArgs);
         return n;
     }
     
-    public New JL5New(Position pos, TypeNode tn, List arguments, ClassBody body, List typeArgs){
-        New n = new JL5New_c(pos, null, tn, arguments, body, typeArgs);
+    public JL5New JL5New(Position pos, TypeNode tn, List arguments, ClassBody body, List typeArgs){
+        JL5New n = new JL5New_c(pos, null, tn, arguments, body, typeArgs);
         return n;
     }
 
@@ -212,6 +213,157 @@ public class JL5NodeFactory_c extends NodeFactory_c implements JL5NodeFactory {
         JL5NewArray n = new JL5NewArray_c(pos, baseType, dims, addDims, init);
         return n;
     }
+    public JL5Switch JL5Switch(Position pos, Expr expr, List elements){
+        JL5Switch n = new JL5Switch_c(pos, expr, elements);
+        return n;
+    }
+    public JL5If JL5If(Position pos, Expr cond, Stmt conseq, Stmt altern){
+        JL5If n = new JL5If_c(pos, cond, conseq, altern);
+        return n;
+    }
+    public JL5Conditional JL5Conditional(Position pos, Expr cond, Expr conseq, Expr altern){
+        JL5Conditional n = new JL5Conditional_c(pos, cond, conseq, altern);
+        return n;
+    }
+    
+    public JL5Assert JL5Assert(Position pos, Expr cond, Expr errorMsg){
+        JL5Assert n = new JL5Assert_c(pos, cond, errorMsg);
+        return n;
+    }
+    public JL5Cast JL5Cast(Position pos, TypeNode castType, Expr expr){
+        JL5Cast n = new JL5Cast_c(pos, castType, expr);
+        return n;
+    }
+    public JL5Binary JL5Binary(Position pos, Expr left, Binary.Operator op, Expr right){
+        JL5Binary n = new JL5Binary_c(pos, left, op, right);
+        return n;
+    }
+    public JL5Unary JL5Unary(Position pos, Unary.Operator op, Expr expr){
+        JL5Unary n = new JL5Unary_c(pos, op, expr);
+        return n;
+    }   
+    public Assign JL5Assign(Position pos, Expr left, Assign.Operator op, Expr right){
+        System.out.println("jl5 assign: left is: "+left.getClass());
+        if (left instanceof Local){
+            return JL5LocalAssign(pos, left, op, right);
+        }
+        else if (left instanceof Field){
+            return JL5FieldAssign(pos, left, op, right);
+        }
+        else if (left instanceof ArrayAccess){
+            return JL5ArrayAccessAssign(pos, left, op, right);
+        }
+        else {
+            return JL5AmbAssign(pos, left, op, right);
+        }
+    }
+    public JL5LocalAssign JL5LocalAssign(Position pos, Expr left, Assign.Operator op, Expr right){
+        System.out.println("making local assign");
+        JL5LocalAssign n = new JL5LocalAssign_c(pos, (Local)left, op, right);
+        return n;
+    }
+    public JL5FieldAssign JL5FieldAssign(Position pos, Expr left, Assign.Operator op, Expr right){
+        JL5FieldAssign n = new JL5FieldAssign_c(pos, (Field)left, op, right);
+        return n;
+    }
+    public JL5ArrayAccessAssign JL5ArrayAccessAssign(Position pos, Expr left, Assign.Operator op, Expr right){
+        JL5ArrayAccessAssign n = new JL5ArrayAccessAssign_c(pos, (ArrayAccess)left, op, right);
+        return n;
+    }
+    public JL5AmbAssign JL5AmbAssign(Position pos, Expr left, Assign.Operator op, Expr right){
+        JL5AmbAssign n = new JL5AmbAssign_c(pos, left, op, right);
+        return n;
+    }
+    
+
+    public Expr createUnboxed(Position pos, Expr orig, TypeSystem typeSystem, Context context) throws SemanticException {
+        JL5TypeSystem ts = (JL5TypeSystem)typeSystem;
+        String mName = null;
+        Type type = null;
+        if (ts.equals(orig.type(), ts.IntegerWrapper())){
+            mName = "intValue";
+            type = ts.Int();
+        }
+        else if (ts.equals(orig.type(), ts.ShortWrapper())){
+            mName = "shortValue";
+            type = ts.Short();
+        }
+        else if (ts.equals(orig.type(), ts.ByteWrapper())){
+            mName = "byteValue";
+            type =ts.Byte();
+        }
+        else if (ts.equals(orig.type(), ts.CharacterWrapper())){
+            mName = "charValue";
+            type = ts.Char();
+        }
+        else if (ts.equals(orig.type(), ts.BooleanWrapper())){
+            mName = "booleanValue";
+            type = ts.Boolean();
+        }
+        else if (ts.equals(orig.type(), ts.LongWrapper())){
+            mName = "longValue";
+            type = ts.Long();
+        }
+        else if (ts.equals(orig.type(), ts.FloatWrapper())){
+            mName = "floatValue";
+            type = ts.Float();
+        }
+        else if (ts.equals(orig.type(), ts.DoubleWrapper())){
+            mName = "doubleValue";
+            type = ts.Double();
+        }
+        else {
+            return orig;
+        }
+        JL5Call node = JL5Call(pos, orig, mName, new ArrayList(), new ArrayList());
+        node = (JL5Call)node.type(type);
+        System.out.println("unboxing expr type: "+node.type());
+        return node.methodInstance(ts.findMethod(orig.type().toReference(), mName, new ArrayList(), context.currentClass()));
+    }
+
+    public Expr createBoxed(Position pos, Expr orig, TypeSystem typeSystem, Context context) throws SemanticException {
+
+        JL5TypeSystem ts = (JL5TypeSystem)typeSystem;
+        ClassType container = null;
+        
+        if (ts.equals(orig.type(), ts.Int())){
+            container = ts.IntegerWrapper();
+        }
+        else if (ts.equals(orig.type(), ts.Short())){
+            container = ts.ShortWrapper();
+        }
+        else if (ts.equals(orig.type(), ts.Byte())){
+            container = ts.ByteWrapper();
+        }
+        else if (ts.equals(orig.type(), ts.Char())){
+            container = ts.CharacterWrapper();
+        }
+        else if (ts.equals(orig.type(), ts.Boolean())){
+            container = ts.BooleanWrapper();
+        }
+        else if (ts.equals(orig.type(), ts.Long())){
+            container = ts.LongWrapper();
+        }
+        else if (ts.equals(orig.type(), ts.Float())){
+            container = ts.FloatWrapper();
+        }
+        else if (ts.equals(orig.type(), ts.Double())){
+            container = ts.DoubleWrapper();
+        }
+        else {
+            return orig;
+        }
+        
+        ArrayList args = new ArrayList();
+        ArrayList argTypes = new ArrayList();
+        args.add(orig);
+        argTypes.add(orig.type());
+        
+        JL5New node = JL5New(pos, null, CanonicalTypeNode(pos, container), args, null, new ArrayList());
+        return node.constructorInstance(ts.findConstructor(container, argTypes, context.currentClass())).type(container);
+    }
+
+    
     // TODO:  Override factory methods for overriden AST nodes.
     // TODO:  Override factory methods for AST nodes with new extension nodes.
 }

@@ -79,7 +79,7 @@ public class AnySuperType_c extends ReferenceType_c implements AnySuperType{
         return true;
     }
     
-    public boolean equalsImpl(TypeObject ancestor){
+    public boolean equivalentImpl(TypeObject ancestor){
         if (ancestor instanceof AnySuperType){
             return ts.equals(bound(), ((AnySuperType)ancestor).bound());
         }

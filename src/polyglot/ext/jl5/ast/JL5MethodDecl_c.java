@@ -138,7 +138,60 @@ public class JL5MethodDecl_c extends MethodDecl_c implements JL5MethodDecl, Appl
                 throw new SemanticException("Only last formal can be variable in method declaration.", f.position());
             }
         }
-        return super.typeCheck(tc);
+
+        // repeat super class type checking so it can be specialized
+        // to handle inner enum classes which indeed do have
+        // static methods
+        if (tc.context().currentClass().flags().isInterface()) {
+            if (flags().isProtected() || flags().isPrivate()) {
+                throw new SemanticException("Interface methods must be public.",
+                                            position());
+            }
+        }
+
+        try {
+            ts.checkMethodFlags(flags());
+        }
+        catch (SemanticException e) {
+            throw new SemanticException(e.getMessage(), position());
+        }
+
+	    if (body == null && ! (flags().isAbstract() || flags().isNative())) {
+	        throw new SemanticException("Missing method body.", position());
+	    }
+
+	    if (body != null && flags().isAbstract()) {
+	        throw new SemanticException(
+		    "An abstract method cannot have a body.", position());
+	    }
+
+	    if (body != null && flags().isNative()) {
+	        throw new SemanticException(
+		    "A native method cannot have a body.", position());
+	    }
+
+        for (Iterator i = throwTypes().iterator(); i.hasNext(); ) {
+            TypeNode tn = (TypeNode) i.next();
+            Type t = tn.type();
+            if (! t.isThrowable()) {
+                throw new SemanticException("Type \"" + t +
+                    "\" is not a subclass of \"" + ts.Throwable() + "\".",
+                    tn.position());
+            }
+        }
+
+        // check that inner classes do not declare static methods
+        // unless class is enum
+        if (flags().isStatic() && !JL5Flags.isEnumModifier(methodInstance().container().toClass().flags()) && 
+              methodInstance().container().toClass().isInnerClass()) {
+            // it's a static method in an inner class.
+            throw new SemanticException("Inner classes cannot declare " + 
+                    "static methods.", this.position());             
+        }
+
+        overrideMethodCheck(tc);
+
+        return this;
     }
 
     public Node applicationCheck(ApplicationChecker appCheck) throws SemanticException {

@@ -9,7 +9,7 @@ import polyglot.visit.*;
 import polyglot.ext.jl5.types.*;
 import polyglot.ext.jl5.visit.*;
 
-public class JL5Call_c extends Call_c implements JL5Call, SimplifyVisit {
+public class JL5Call_c extends Call_c implements JL5Call, SimplifyVisit, BoxingVisit, UnboxingVisit {
 
     protected List typeArguments;
 
@@ -221,18 +221,54 @@ public class JL5Call_c extends Call_c implements JL5Call, SimplifyVisit {
                         
     }
 
+    public Node boxing(BoxingVisitor bv) throws SemanticException {
+        JL5TypeSystem ts = (JL5TypeSystem)bv.typeSystem();
+        JL5NodeFactory nf = (JL5NodeFactory)bv.nodeFactory();
+        ArrayList newArgs = new ArrayList();
+        for (int i = 0; i < methodInstance().formalTypes().size(); i++){
+            Type t1 = (Type)methodInstance().formalTypes().get(i);
+            Expr ex = (Expr)arguments().get(i);    
+            if (ts.needsBoxing(t1, ex.type())){
+                newArgs.add(nf.createBoxed(ex.position(), ex, ts, bv.context()));
+            }
+            else {
+                newArgs.add(ex);
+            }
+        }
+        return arguments(newArgs);
+    }
+    
+    public Node unboxing(UnboxingVisitor bv) throws SemanticException {
+        JL5TypeSystem ts = (JL5TypeSystem)bv.typeSystem();
+        JL5NodeFactory nf = (JL5NodeFactory)bv.nodeFactory();
+        ArrayList newArgs = new ArrayList();
+        for (int i = 0; i < methodInstance().formalTypes().size(); i++){
+            Type t1 = (Type)methodInstance().formalTypes().get(i);
+            Expr ex = (Expr)arguments().get(i);    
+            if (ts.needsUnboxing(t1, ex.type())){
+                newArgs.add(nf.createUnboxed(ex.position(), ex, ts, bv.context()));
+            }
+            else {
+                newArgs.add(ex);
+            }
+        }
+        return arguments(newArgs);
+    
+    }
+    
     public Node simplify(SimplifyVisitor sv) throws SemanticException {
         JL5TypeSystem ts = (JL5TypeSystem)sv.typeSystem();
         JL5NodeFactory nf = (JL5NodeFactory)sv.nodeFactory();
+      
         List newArgs = new ArrayList();
         for (int i = 0; i < methodInstance().formalTypes().size(); i++){
             Type t = (Type)methodInstance().formalTypes().get(i);
             if (t instanceof JL5ArrayType && ((JL5ArrayType)t).isVariable()){
-                if (arguments().size() == 1  && arguments().get(0) instanceof NullLit){
-                    newArgs.add(arguments().get(0));
+                if (arguments().size() == i+1  && arguments().get(i) instanceof NullLit){
+                    newArgs.add(arguments().get(i));
                 }
-                else if (arguments().size() == 1 && arguments().get(0) instanceof NewArray){
-                    newArgs.add(arguments().get(0));
+                else if (arguments().size() == i+1 && arguments().get(i) instanceof NewArray){
+                    newArgs.add(arguments().get(i));
                 }
                 else {
                     List elements = new ArrayList();

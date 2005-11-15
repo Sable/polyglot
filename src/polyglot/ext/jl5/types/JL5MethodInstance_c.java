@@ -78,40 +78,35 @@ public class JL5MethodInstance_c extends MethodInstance_c implements JL5MethodIn
         List l1 = this.formalTypes();
         List l2 = argTypes;
 
-        for (int i = 0; i < l1.size(); i++){
+        int i = 0; 
+        for (i = 0; i < l1.size(); i++){
             Type t1 = (Type)l1.get(i);
-            if (l2.size() > i){
-                Type t2 = (Type)l2.get(i);
-           
 
-                if (t1 instanceof JL5ArrayType && ((JL5ArrayType)t1).isVariable()){
-                    if (ts.isImplicitCastValid(t2, t1)){
-                        return true;
-                    }
-                    for (int j = i; j < l2.size(); j++){
-                        Type tv = (Type)l2.get(j);
-                        if (!ts.isImplicitCastValid(tv, ((ArrayType)t1).base())){
-                            return false;
-                        }
-                    }
-                }
-                else {
-                    if (!ts.isImplicitCastValid(t2, t1)) {
+            if (t1 instanceof JL5ArrayType && ((JL5ArrayType)t1).isVariable()){
+                // go through rest of args
+                for (int j = i; j < l2.size(); j++){
+                    Type t2 = (Type)l2.get(j);
+                    if (!ts.isImplicitCastValid(t2, t1) && !ts.isImplicitCastValid(t2, ((ArrayType)t1).base())){
                         return false;
                     }
                 }
+                return true;
             }
             else {
-                if (t1 instanceof JL5ArrayType && ((JL5ArrayType)t1).isVariable()){
-                    return true;
-                }
-                else {
+                if (l2.size() <= i) return false;
+                Type t2 = (Type)l2.get(i);
+                if (!ts.isImplicitCastValid(t2, t1)){
                     return false;
                 }
             }
         }
+        if (i < l2.size()){
+            return false;
+        }
+        else {
+            return true;
+        }
 
-        return true; 
     }
 
     public boolean canOverrideImpl(MethodInstance mj, boolean quiet) throws SemanticException{
@@ -254,4 +249,16 @@ public class JL5MethodInstance_c extends MethodInstance_c implements JL5MethodIn
         return true; 
     }
 
+    public boolean moreSpecificImpl(ProcedureInstance p){
+        if (!super.moreSpecificImpl(p)){
+            for (Iterator it = p.formalTypes().iterator(); it.hasNext(); ){
+                Type t = (Type)it.next();
+                if (t instanceof JL5ArrayType && ((JL5ArrayType)t).isVariable()){
+                    return true;
+                }
+            }
+            return false;
+        }
+        return true;
+    }
 }

@@ -12,5 +12,6 @@ public interface EnumInstance extends FieldInstance, MemberInstance {
 
     EnumInstance container(ReferenceType container);*/
 
+    ParsedClassType anonType();
 }
 

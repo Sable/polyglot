@@ -6,6 +6,7 @@ import polyglot.ext.jl.ast.*;
 import polyglot.types.Flags;
 import polyglot.types.Package;
 import polyglot.types.Type;
+import polyglot.types.*;
 import polyglot.types.Qualifier;
 import polyglot.util.*;
 import polyglot.ext.jl5.types.*;
@@ -72,11 +73,11 @@ public interface JL5NodeFactory extends NodeFactory {
 
     public ConstructorCall JL5SuperCall(Position pos, Expr outer, List args, List typeArgs);
 
-    public Call JL5Call(Position pos, Receiver target, String name, List args, List typeArgs);
+    public JL5Call JL5Call(Position pos, Receiver target, String name, List args, List typeArgs);
 
-    public New JL5New(Position pos, Expr qualifier, TypeNode tn, List arguments, ClassBody body, List typeArgs);
+    public JL5New JL5New(Position pos, Expr qualifier, TypeNode tn, List arguments, ClassBody body, List typeArgs);
     
-    public New JL5New(Position pos, TypeNode tn, List arguments, ClassBody body, List typeArgs);
+    public JL5New JL5New(Position pos, TypeNode tn, List arguments, ClassBody body, List typeArgs);
 
 
     public JL5Instanceof JL5Instanceof(Position pos, Expr expr, TypeNode tn);
@@ -88,5 +89,23 @@ public interface JL5NodeFactory extends NodeFactory {
     public JL5Catch JL5Catch(Position pos, Formal formal, Block body);
 
     public JL5NewArray JL5NewArray(Position pos, TypeNode baseType, List dims, int addDims, ArrayInit init);
+
+    public JL5Switch JL5Switch(Position pos, Expr expr, List elements);
+
+    public JL5If JL5If(Position pos, Expr cond, Stmt conseq, Stmt altern);
+    public JL5Conditional JL5Conditional(Position pos, Expr cond, Expr conseq, Expr altern);
+    public JL5Assert JL5Assert(Position pos, Expr cond, Expr errorMsg);
+    public JL5Cast JL5Cast(Position pos, TypeNode castType, Expr expr);
+    public JL5Binary JL5Binary(Position pos, Expr left, Binary.Operator op, Expr right);
+    public JL5Unary JL5Unary(Position pos, Unary.Operator op, Expr expr);
+    public Assign JL5Assign(Position pos, Expr left, Assign.Operator op, Expr right);
+    public JL5LocalAssign JL5LocalAssign(Position pos, Expr left, Assign.Operator op, Expr right);
+    public JL5FieldAssign JL5FieldAssign(Position pos, Expr left, Assign.Operator op, Expr right);
+    public JL5ArrayAccessAssign JL5ArrayAccessAssign(Position pos, Expr left, Assign.Operator op, Expr right);
+    public JL5AmbAssign JL5AmbAssign(Position pos, Expr left, Assign.Operator op, Expr right);
+    
+    // for rewriting:
+    public Expr createUnboxed(Position pos, Expr orig, TypeSystem ts, Context context) throws SemanticException;
+    public Expr createBoxed(Position pos, Expr orig, TypeSystem ts, Context context) throws SemanticException;
 }
 

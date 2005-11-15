@@ -224,7 +224,7 @@ public class ParameterizedType_c extends JL5ParsedClassType_c implements Paramet
         return true;
     }
 
-    private boolean argsEqual(ParameterizedType ancestor){
+    private boolean argsEquivalent(ParameterizedType ancestor){
         for (int i = 0; i < ancestor.typeArguments().size(); i++){
             
             Type arg1 = (Type)ancestor.typeArguments().get(i);
@@ -284,9 +284,14 @@ public class ParameterizedType_c extends JL5ParsedClassType_c implements Paramet
         return true;
     }
 
-    public boolean equalsImpl(TypeObject t){
+    /*public boolean equalsImpl(TypeObject t){
         if (!(t instanceof ParameterizedType)) return super.equalsImpl(t);
         return argsEqual((ParameterizedType)t);
+    }*/
+
+    public boolean equivalentImpl(TypeObject t){
+        //if (!(t instanceof ParameterizedType)) return super.equalsImpl(t);
+        return argsEquivalent((ParameterizedType)t);
     }
 
  

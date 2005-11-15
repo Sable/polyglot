@@ -85,6 +85,7 @@ public abstract class Assign_c extends Expr_c implements Assign
 
   /** Type check the expression. */
   public Node typeCheck(TypeChecker tc) throws SemanticException {
+      System.out.println("type check assign");
     Type t = left.type();
     Type s = right.type();
 

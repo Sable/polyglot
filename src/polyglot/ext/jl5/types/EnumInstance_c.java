@@ -11,10 +11,17 @@ public class EnumInstance_c extends FieldInstance_c implements EnumInstance {
     protected EnumInstance_c(){
     }*/
 
-    public EnumInstance_c(TypeSystem ts, Position pos, ReferenceType container,  Flags f, String name){
+    protected ParsedClassType anonType;
+
+    public EnumInstance_c(TypeSystem ts, Position pos, ReferenceType container,  Flags f, String name, ParsedClassType anonType){
         super(ts, pos, container, f.set(JL5Flags.STATIC), container, name);
+        this.anonType = anonType;
     }
     
+    public ParsedClassType anonType(){
+        return anonType;
+    }
+   
     /*public ReferenceType container(){
         return container;
     }

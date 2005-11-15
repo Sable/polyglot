@@ -4,6 +4,7 @@ import java.util.*;
 import polyglot.ast.*;
 import polyglot.types.*;
 import polyglot.ext.jl5.types.*;
+import polyglot.visit.*;
 
 /**
  * An immutable representation of a Java language extended <code>for</code>
@@ -30,9 +31,18 @@ public interface EnumConstantDecl extends ClassMember
     /** get body */
     ClassBody body();
 
+    ParsedClassType anonType();
+    EnumConstantDecl anonType(ParsedClassType pct);
+
+    ConstructorInstance constructorInstance();
+    EnumConstantDecl constructorInstance(ConstructorInstance ci);
+    
     EnumInstance enumInstance();
 
     EnumConstantDecl enumInstance(EnumInstance ei);
 
     List annotations();
+
+    Flags flags();
+
 }

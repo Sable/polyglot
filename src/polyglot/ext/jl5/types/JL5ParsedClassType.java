@@ -28,6 +28,7 @@ public interface JL5ParsedClassType extends ParsedClassType{
 
     LazyClassInitializer init();
 
+    boolean equivalentImpl(TypeObject arg2);
     /*List typeArguments();
     void typeArguments(List args);
 

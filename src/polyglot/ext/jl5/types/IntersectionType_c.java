@@ -171,12 +171,20 @@ public class IntersectionType_c extends ClassType_c implements IntersectionType 
         return false;
     }
 
-    public boolean equalsImpl(TypeObject other){
+    /*public boolean equalsImpl(TypeObject other){
+        if (!(other instanceof IntersectionType)) return super.equalsImpl(other);
+        IntersectionType arg2 = (IntersectionType)other;
+        if (this.name.equals(arg2.name())) return true;// && allBoundsEqual(arg2)) return true;
+        return false;
+    }*/
+    
+    public boolean equivalentImpl(TypeObject other){
         if (!(other instanceof IntersectionType)) return super.equalsImpl(other);
         IntersectionType arg2 = (IntersectionType)other;
         if (this.name.equals(arg2.name())) return true;// && allBoundsEqual(arg2)) return true;
         return false;
     }
+
 
     private boolean allBoundsEqual(IntersectionType arg2){
         if ((bounds == null || bounds.isEmpty()) && (arg2.bounds() == null || arg2.bounds().isEmpty()) ) return true;

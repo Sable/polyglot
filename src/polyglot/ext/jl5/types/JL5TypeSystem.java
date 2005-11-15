@@ -28,11 +28,12 @@ public interface JL5TypeSystem extends TypeSystem {
     ClassType DoubleWrapper();
     ClassType FloatWrapper();
 
+    boolean equivalent(TypeObject t1, TypeObject t2);
     boolean isAutoEquivalent(Type t1, Type t2);
     public boolean isNumericWrapper(Type t);
     public boolean isIntOrLessWrapper(Type t1);
 
-    EnumInstance enumInstance(Position pos, ClassType ct, Flags f,  String name);
+    EnumInstance enumInstance(Position pos, ClassType ct, Flags f,  String name, ParsedClassType anonType);
     AnnotationElemInstance annotationElemInstance(Position pos, ClassType ct, Flags f, Type type,  String name, boolean hasDefault);
 
     Context createContext();
@@ -61,7 +62,8 @@ public interface JL5TypeSystem extends TypeSystem {
    
     public IntersectionType intersectionType(Position pos, String name, List bounds);
     public ParameterizedType parameterizedType(JL5ParsedClassType type);
-    
+
+    public ArrayType arrayType(Position pos, Type base);
     /*public void handleTypeRestrictions(List typeVariables, List typeArguments) throws SemanticException;
     public void resetTypeRestrictions(List typeVariables, List typeArguments) throws SemanticException;*/
 
@@ -86,4 +88,6 @@ public interface JL5TypeSystem extends TypeSystem {
     public List inferTypesFromArgs(List typeVariables, List formals, List args, List inferred) throws SemanticException;
 
     void sortAnnotations(List annots, List runtimeAnnots, List classAnnots, List sourceAnnots);
+    public boolean needsUnboxing(Type to, Type from);
+    public boolean needsBoxing(Type to, Type from);
 }

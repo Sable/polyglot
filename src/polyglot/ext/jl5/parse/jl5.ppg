@@ -891,33 +891,33 @@ extend array_access ::=
 //     cast_expression ::= LPAREN type RPAREN unary_expression_not_plus_minus
 override cast_expression ::=
 		LPAREN:a primitive_type:b dims_opt:c RPAREN:d unary_expression:e
-        {: RESULT = parser.nf.Cast(parser.pos(a, e, b), parser.array(b, c.intValue()), e); :}
+        {: RESULT = parser.nf.JL5Cast(parser.pos(a, e, b), parser.array(b, c.intValue()), e); :}
 	|	LPAREN:a name:b RPAREN:c unary_expression_not_plus_minus:d
-        {: RESULT = parser.nf.Cast(parser.pos(a, d, b), parser.exprToType(b.toExpr()), d); :}
+        {: RESULT = parser.nf.JL5Cast(parser.pos(a, d, b), parser.exprToType(b.toExpr()), d); :}
 	|	LPAREN:a name:b dims:c RPAREN:d unary_expression_not_plus_minus:e
-        {: RESULT = parser.nf.Cast(parser.pos(a, e, b), parser.array(b.toType(), c.intValue()), e); :}
+        {: RESULT = parser.nf.JL5Cast(parser.pos(a, e, b), parser.array(b.toType(), c.intValue()), e); :}
 	|	LPAREN:a name:b LT:c type_argument_list_1:d dims_opt:e RPAREN:f
 			unary_expression_not_plus_minus:g
         {: AmbTypeNode aa = (AmbTypeNode)b.toType();
-           RESULT = parser.nf.Cast(parser.pos(a, g, b), parser.array(parser.nf.JL5AmbTypeNode(parser.pos(b, d), aa.qual(), aa.name(), d), e.intValue()), g); :}
+           RESULT = parser.nf.JL5Cast(parser.pos(a, g, b), parser.array(parser.nf.JL5AmbTypeNode(parser.pos(b, d), aa.qual(), aa.name(), d), e.intValue()), g); :}
 	|	LPAREN:a name:b LT:c type_argument_list_1:d DOT:e
 			class_or_interface_type:f dims_opt:g RPAREN:h
 			unary_expression_not_plus_minus:i
         {: AmbTypeNode aa = (AmbTypeNode)b.toType();
            AmbTypeNode bb = (AmbTypeNode)f;
-           RESULT = parser.nf.Cast(parser.pos(a, i, b), parser.array(parser.nf.AmbTypeNode(parser.pos(b, f), parser.nf.JL5AmbQualifierNode(parser.pos(b, d), aa.qual(), aa.name(), d), bb.name()), g.intValue()), i); :}
+           RESULT = parser.nf.JL5Cast(parser.pos(a, i, b), parser.array(parser.nf.AmbTypeNode(parser.pos(b, f), parser.nf.JL5AmbQualifierNode(parser.pos(b, d), aa.qual(), aa.name(), d), bb.name()), g.intValue()), i); :}
 	;
 override relational_expression ::=
 		shift_expression:a
         {: RESULT = a; :}
 	|	relational_expression:a LT:b shift_expression:c
-        {: RESULT = parser.nf.Binary(parser.pos(a, c), a, Binary.LT, c); :}
+        {: RESULT = parser.nf.JL5Binary(parser.pos(a, c), a, Binary.LT, c); :}
 	|	relational_expression:a GT:b shift_expression:c
-        {: RESULT = parser.nf.Binary(parser.pos(a, c), a, Binary.GT, c); :}
+        {: RESULT = parser.nf.JL5Binary(parser.pos(a, c), a, Binary.GT, c); :}
 	|	relational_expression:a LTEQ:b shift_expression:c
-        {: RESULT = parser.nf.Binary(parser.pos(a, c), a, Binary.LE, c); :}
+        {: RESULT = parser.nf.JL5Binary(parser.pos(a, c), a, Binary.LE, c); :}
 	|	relational_expression:a GTEQ:b shift_expression:c
-        {: RESULT = parser.nf.Binary(parser.pos(a, c), a, Binary.GE, c); :}
+        {: RESULT = parser.nf.JL5Binary(parser.pos(a, c), a, Binary.GE, c); :}
 	;
 // we lower the precendence of instanceof to resolve a grammar ambiguity.
 // semantics are unchanged, since relational expressions do not operate
@@ -934,9 +934,9 @@ override equality_expression ::=
 		instanceof_expression:a
         {: RESULT = a; :}
 	|	equality_expression:a EQEQ:b instanceof_expression:c
-        {: RESULT = parser.nf.Binary(parser.pos(a, c), a, Binary.EQ, c); :}
+        {: RESULT = parser.nf.JL5Binary(parser.pos(a, c), a, Binary.EQ, c); :}
 	|	equality_expression:a NOTEQ:b instanceof_expression:c
-        {: RESULT = parser.nf.Binary(parser.pos(a, c), a, Binary.NE, c); :}
+        {: RESULT = parser.nf.JL5Binary(parser.pos(a, c), a, Binary.NE, c); :}
 	;
 
 // JLS-14 productions.
@@ -1063,11 +1063,11 @@ unary_expression_nn ::=
 	|	predecrement_expression:a
         {: RESULT = a; :}
 	|	PLUS:a unary_expression:b
-        {: RESULT = parser.nf.Unary(parser.pos(a, b, b), Unary.POS, b); :}
+        {: RESULT = parser.nf.JL5Unary(parser.pos(a, b, b), Unary.POS, b); :}
 	|	MINUS:a unary_expression:b
-        {: RESULT = parser.nf.Unary(parser.pos(a, b, b), Unary.NEG, b); :}
+        {: RESULT = parser.nf.JL5Unary(parser.pos(a, b, b), Unary.NEG, b); :}
 	|	MINUS:a boundary_literal:b
-        {: RESULT = parser.nf.Unary(parser.pos(a, b, b), Unary.NEG, b); :}
+        {: RESULT = parser.nf.JL5Unary(parser.pos(a, b, b), Unary.NEG, b); :}
 	|	unary_expression_not_plus_minus_nn:a
         {: RESULT = a; :}
 	;
@@ -1075,9 +1075,9 @@ unary_expression_not_plus_minus_nn ::=
 		postfix_expression_nn:a
         {: RESULT = a; :}
 	|	COMP:a unary_expression:b
-        {: RESULT = parser.nf.Unary(parser.pos(a,b,b), Unary.BIT_NOT, b); :}
+        {: RESULT = parser.nf.JL5Unary(parser.pos(a,b,b), Unary.BIT_NOT, b); :}
 	|	NOT:a unary_expression:b
-        {: RESULT = parser.nf.Unary(parser.pos(a,b,b), Unary.NOT, b); :}
+        {: RESULT = parser.nf.JL5Unary(parser.pos(a,b,b), Unary.NOT, b); :}
 	|	cast_expression:a
         {: RESULT = a; :}
 	;
@@ -1085,45 +1085,45 @@ multiplicative_expression_nn ::=
 		unary_expression_nn:a
         {: RESULT = a; :}
 	|	name:a MULT:b unary_expression:c
-        {: RESULT = parser.nf.Binary(parser.pos(a, c), a.toExpr(), Binary.MUL, c); :}
+        {: RESULT = parser.nf.JL5Binary(parser.pos(a, c), a.toExpr(), Binary.MUL, c); :}
 	|	multiplicative_expression_nn:a MULT:b unary_expression:c
-        {: RESULT = parser.nf.Binary(parser.pos(a, c), a, Binary.MUL, c); :}
+        {: RESULT = parser.nf.JL5Binary(parser.pos(a, c), a, Binary.MUL, c); :}
 	|	name:a DIV:b unary_expression:c
-        {: RESULT = parser.nf.Binary(parser.pos(a, c), a.toExpr(), Binary.DIV, c); :}
+        {: RESULT = parser.nf.JL5Binary(parser.pos(a, c), a.toExpr(), Binary.DIV, c); :}
 	|	multiplicative_expression_nn:a DIV:b unary_expression:c
-        {: RESULT = parser.nf.Binary(parser.pos(a, c), a, Binary.DIV, c); :}
+        {: RESULT = parser.nf.JL5Binary(parser.pos(a, c), a, Binary.DIV, c); :}
 	|	name:a MOD:b unary_expression:c
-        {: RESULT = parser.nf.Binary(parser.pos(a, c), a.toExpr(), Binary.MOD, c); :}
+        {: RESULT = parser.nf.JL5Binary(parser.pos(a, c), a.toExpr(), Binary.MOD, c); :}
 	|	multiplicative_expression_nn:a MOD:b unary_expression:c
-        {: RESULT = parser.nf.Binary(parser.pos(a, c), a, Binary.MOD, c); :}
+        {: RESULT = parser.nf.JL5Binary(parser.pos(a, c), a, Binary.MOD, c); :}
 	;
 additive_expression_nn ::=
 		multiplicative_expression_nn:a
         {: RESULT = a; :}
 	|	name:a PLUS:b multiplicative_expression:c
-        {: RESULT = parser.nf.Binary(parser.pos(a, c), a.toExpr(), Binary.ADD, c); :}
+        {: RESULT = parser.nf.JL5Binary(parser.pos(a, c), a.toExpr(), Binary.ADD, c); :}
 	|	additive_expression_nn:a PLUS:b multiplicative_expression:c
-        {: RESULT = parser.nf.Binary(parser.pos(a, c), a, Binary.ADD, c); :}
+        {: RESULT = parser.nf.JL5Binary(parser.pos(a, c), a, Binary.ADD, c); :}
 	|	name:a MINUS:b multiplicative_expression:c
-        {: RESULT = parser.nf.Binary(parser.pos(a, c), a.toExpr(), Binary.SUB, c); :}
+        {: RESULT = parser.nf.JL5Binary(parser.pos(a, c), a.toExpr(), Binary.SUB, c); :}
 	|	additive_expression_nn:a MINUS:b multiplicative_expression:c
-        {: RESULT = parser.nf.Binary(parser.pos(a, c), a, Binary.SUB, c); :}
+        {: RESULT = parser.nf.JL5Binary(parser.pos(a, c), a, Binary.SUB, c); :}
 	;
 shift_expression_nn ::=
 		additive_expression_nn:a
         {: RESULT = a; :}
 	|	name:a LSHIFT:b additive_expression:c
-        {: RESULT = parser.nf.Binary(parser.pos(a, c), a.toExpr(), Binary.SHL, c); :}
+        {: RESULT = parser.nf.JL5Binary(parser.pos(a, c), a.toExpr(), Binary.SHL, c); :}
 	|	shift_expression_nn:a LSHIFT:b additive_expression:c
-        {: RESULT = parser.nf.Binary(parser.pos(a, c), a, Binary.SHL, c); :}
+        {: RESULT = parser.nf.JL5Binary(parser.pos(a, c), a, Binary.SHL, c); :}
 	|	name:a RSHIFT:b additive_expression:c
-        {: RESULT = parser.nf.Binary(parser.pos(a, c), a.toExpr(), Binary.SHR, c); :}
+        {: RESULT = parser.nf.JL5Binary(parser.pos(a, c), a.toExpr(), Binary.SHR, c); :}
 	|	shift_expression_nn:a RSHIFT:b additive_expression:c
-        {: RESULT = parser.nf.Binary(parser.pos(a, c), a, Binary.SHR, c); :}
+        {: RESULT = parser.nf.JL5Binary(parser.pos(a, c), a, Binary.SHR, c); :}
 	|	name:a URSHIFT:b additive_expression:c
-        {: RESULT = parser.nf.Binary(parser.pos(a, c), a.toExpr(), Binary.USHR, c); :}
+        {: RESULT = parser.nf.JL5Binary(parser.pos(a, c), a.toExpr(), Binary.USHR, c); :}
 	|	shift_expression_nn:a URSHIFT:b additive_expression:c
-        {: RESULT = parser.nf.Binary(parser.pos(a, c), a, Binary.USHR, c); :}
+        {: RESULT = parser.nf.JL5Binary(parser.pos(a, c), a, Binary.USHR, c); :}
 	;
 relational_expression_nn ::=
 		shift_expression_nn:a
@@ -1132,21 +1132,21 @@ relational_expression_nn ::=
 	//  a<b<c as a valid expression.  This avoids ambiguity with
 	//  parameterized types in casts.
 	|	name:a LT:b shift_expression:c
-        {: RESULT = parser.nf.Binary(parser.pos(a, c), a.toExpr(), Binary.LT, c); :}
+        {: RESULT = parser.nf.JL5Binary(parser.pos(a, c), a.toExpr(), Binary.LT, c); :}
 	|	shift_expression_nn:a LT:b shift_expression:c
-        {: RESULT = parser.nf.Binary(parser.pos(a, c), a, Binary.LT, c); :}
+        {: RESULT = parser.nf.JL5Binary(parser.pos(a, c), a, Binary.LT, c); :}
 	|	name:a GT:b shift_expression:c
         {: RESULT = parser.nf.Binary(parser.pos(a, c), a.toExpr(), Binary.GT, c); :}
 	|	shift_expression_nn:a GT:b shift_expression:c
-        {: RESULT = parser.nf.Binary(parser.pos(a, c), a, Binary.GT, c); :}
+        {: RESULT = parser.nf.JL5Binary(parser.pos(a, c), a, Binary.GT, c); :}
 	|	name:a LTEQ:b shift_expression:c
-        {: RESULT = parser.nf.Binary(parser.pos(a, c), a.toExpr(), Binary.LE, c); :}
+        {: RESULT = parser.nf.JL5Binary(parser.pos(a, c), a.toExpr(), Binary.LE, c); :}
 	|	relational_expression_nn:a LTEQ:b shift_expression:c
-        {: RESULT = parser.nf.Binary(parser.pos(a, c), a, Binary.LE, c); :}
+        {: RESULT = parser.nf.JL5Binary(parser.pos(a, c), a, Binary.LE, c); :}
 	|	name:a GTEQ:b shift_expression:c
-        {: RESULT = parser.nf.Binary(parser.pos(a, c), a.toExpr(), Binary.GE, c); :}
+        {: RESULT = parser.nf.JL5Binary(parser.pos(a, c), a.toExpr(), Binary.GE, c); :}
 	|	relational_expression_nn:a GTEQ:b shift_expression:c
-        {: RESULT = parser.nf.Binary(parser.pos(a, c), a, Binary.GE, c); :}
+        {: RESULT = parser.nf.JL5Binary(parser.pos(a, c), a, Binary.GE, c); :}
 	;
 instanceof_expression_nn ::=
 		relational_expression_nn:a
@@ -1160,65 +1160,74 @@ equality_expression_nn ::=
 		instanceof_expression_nn:a
         {: RESULT = a; :}
 	|	name:a EQEQ:b instanceof_expression:c
-        {: RESULT = parser.nf.Binary(parser.pos(a, c), a.toExpr(), Binary.EQ, c); :}
+        {: RESULT = parser.nf.JL5Binary(parser.pos(a, c), a.toExpr(), Binary.EQ, c); :}
 	|	equality_expression_nn:a EQEQ:b instanceof_expression:c
-        {: RESULT = parser.nf.Binary(parser.pos(a, c), a, Binary.EQ, c); :}
+        {: RESULT = parser.nf.JL5Binary(parser.pos(a, c), a, Binary.EQ, c); :}
 	|	name:a NOTEQ:b instanceof_expression:c
-        {: RESULT = parser.nf.Binary(parser.pos(a, c), a.toExpr(), Binary.NE, c); :}
+        {: RESULT = parser.nf.JL5Binary(parser.pos(a, c), a.toExpr(), Binary.NE, c); :}
 	|	equality_expression_nn:a NOTEQ:b instanceof_expression:c
-        {: RESULT = parser.nf.Binary(parser.pos(a, c), a, Binary.NE, c); :}
+        {: RESULT = parser.nf.JL5Binary(parser.pos(a, c), a, Binary.NE, c); :}
 	;
 and_expression_nn ::=
 		equality_expression_nn:a
         {: RESULT = a; :}
 	|	name:a AND:b equality_expression:c
-        {: RESULT = parser.nf.Binary(parser.pos(a, c), a.toExpr(), Binary.BIT_AND, c); :}
+        {: RESULT = parser.nf.JL5Binary(parser.pos(a, c), a.toExpr(), Binary.BIT_AND, c); :}
 	|	and_expression_nn:a AND:b equality_expression:c
-        {: RESULT = parser.nf.Binary(parser.pos(a, c), a, Binary.BIT_AND, c); :}
+        {: RESULT = parser.nf.JL5Binary(parser.pos(a, c), a, Binary.BIT_AND, c); :}
 	;
 exclusive_or_expression_nn ::=
 		and_expression_nn:a
         {: RESULT = a; :}
 	|	name:a XOR:b and_expression:c
-        {: RESULT = parser.nf.Binary(parser.pos(a, c), a.toExpr(), Binary.BIT_XOR, c); :}
+        {: RESULT = parser.nf.JL5Binary(parser.pos(a, c), a.toExpr(), Binary.BIT_XOR, c); :}
 	|	exclusive_or_expression_nn:a XOR:b and_expression:c
-        {: RESULT = parser.nf.Binary(parser.pos(a, c), a, Binary.BIT_XOR, c); :}
+        {: RESULT = parser.nf.JL5Binary(parser.pos(a, c), a, Binary.BIT_XOR, c); :}
 	;
 inclusive_or_expression_nn ::=
 		exclusive_or_expression_nn:a
         {: RESULT = a; :}
 	|	name:a OR:b exclusive_or_expression:c
-        {: RESULT = parser.nf.Binary(parser.pos(a, c), a.toExpr(), Binary.BIT_OR, c); :}
+        {: RESULT = parser.nf.JL5Binary(parser.pos(a, c), a.toExpr(), Binary.BIT_OR, c); :}
 	|	inclusive_or_expression_nn:a OR:b exclusive_or_expression:c
-        {: RESULT = parser.nf.Binary(parser.pos(a, c), a, Binary.BIT_OR, c); :}
+        {: RESULT = parser.nf.JL5Binary(parser.pos(a, c), a, Binary.BIT_OR, c); :}
 	;
 conditional_and_expression_nn ::=
 		inclusive_or_expression_nn:a
         {: RESULT = a; :}
 	|	name:a ANDAND:b inclusive_or_expression:c
-        {: RESULT = parser.nf.Binary(parser.pos(a, c), a.toExpr(), Binary.COND_AND, c); :}
+        {: RESULT = parser.nf.JL5Binary(parser.pos(a, c), a.toExpr(), Binary.COND_AND, c); :}
 	|	conditional_and_expression_nn:a ANDAND:b inclusive_or_expression:c
-        {: RESULT = parser.nf.Binary(parser.pos(a, c), a, Binary.COND_AND, c); :}
+        {: RESULT = parser.nf.JL5Binary(parser.pos(a, c), a, Binary.COND_AND, c); :}
 	;
 conditional_or_expression_nn ::=
 		conditional_and_expression_nn:a
         {: RESULT = a; :}
 	|	name:a OROR:b conditional_and_expression:c
-        {: RESULT = parser.nf.Binary(parser.pos(a, c), a.toExpr(), Binary.COND_OR, c); :}
+        {: RESULT = parser.nf.JL5Binary(parser.pos(a, c), a.toExpr(), Binary.COND_OR, c); :}
 	|	conditional_or_expression_nn:a OROR:b conditional_and_expression:c
-        {: RESULT = parser.nf.Binary(parser.pos(a, c), a, Binary.COND_OR, c); :}
+        {: RESULT = parser.nf.JL5Binary(parser.pos(a, c), a, Binary.COND_OR, c); :}
 	;
 
 conditional_expression_nn ::=
 		conditional_or_expression_nn:a
         {: RESULT = a; :}
 	|	name:a QUESTION:b expression:c COLON:d conditional_expression:e
-        {: RESULT = parser.nf.Conditional(parser.pos(a, e), a.toExpr(), c, e); :}
+        {: RESULT = parser.nf.JL5Conditional(parser.pos(a, e), a.toExpr(), c, e); :}
 	|	conditional_or_expression_nn:a QUESTION:b expression:c 
 			COLON:d conditional_expression:e
-        {: RESULT = parser.nf.Conditional(parser.pos(a, e), a, c, e); :}
+        {: RESULT = parser.nf.JL5Conditional(parser.pos(a, e), a, c, e); :}
             
 	;
+override conditional_expression ::=
+                    // Expr
+    conditional_or_expression:a
+    {: RESULT = a; :}
+    |   conditional_or_expression:a QUESTION expression:b
+        COLON conditional_expression:c
+    {: RESULT = parser.nf.JL5Conditional(parser.pos(a, c), a, b, c); :}
+;
+
 assignment_expression_nn ::=
 		conditional_expression_nn:a
         {: RESULT = a; :}
@@ -1420,4 +1429,185 @@ default_value_opt ::=
 override catch_clause ::=
     CATCH:n LPAREN formal_parameter:a RPAREN block:b
         {: RESULT = parser.nf.JL5Catch(parser.pos(n, b), a, b); :}
+;
+
+override switch_statement ::=
+    SWITCH:n LPAREN expression:a RPAREN switch_block:b
+        {: RESULT = parser.nf.JL5Switch(parser.pos(n, b), a, b); :}
+;
+
+override switch_label ::=
+    CASE:n constant_expression:a COLON:d
+        {: RESULT = parser.nf.JL5Case(parser.pos(n, d), a); :}
+    |
+    DEFAULT:n COLON:d
+        {: RESULT = parser.nf.Default(parser.pos(n, d)); :}
 ;        
+override if_then_statement ::=
+                    // If
+        IF:n LPAREN expression:a RPAREN statement:b
+            {: RESULT = parser.nf.JL5If(parser.pos(n, b), a, b, null); :}
+    ;
+override if_then_else_statement ::=
+                    // If
+        IF:n LPAREN expression:a RPAREN statement_no_short_if:b 
+            ELSE statement:c
+            {: RESULT = parser.nf.JL5If(parser.pos(n, c), a, b, c); :}
+    ;
+override if_then_else_statement_no_short_if ::=
+                    // If
+        IF:n LPAREN expression:a RPAREN statement_no_short_if:b
+            ELSE statement_no_short_if:c
+            {: RESULT = parser.nf.JL5If(parser.pos(n, c), a, b, c); :}
+    ;
+override assert_statement ::=
+                    // Assert
+        ASSERT:x expression:a SEMICOLON:d
+                {: RESULT = parser.nf.JL5Assert(parser.pos(x, d), a, null); :}
+    |   ASSERT:x expression:a COLON expression:b SEMICOLON:d
+                {: RESULT = parser.nf.JL5Assert(parser.pos(x, d), a, b); :}
+    ;
+
+override multiplicative_expression ::=
+                    // Expr
+        unary_expression:a
+            {: RESULT = a; :}
+    |   multiplicative_expression:a MULT unary_expression:b
+            {: RESULT = parser.nf.JL5Binary(parser.pos(a, b), a, 
+                Binary.MUL, b); :}
+    |   multiplicative_expression:a DIV unary_expression:b
+            {: RESULT = parser.nf.JL5Binary(parser.pos(a, b), a, 
+                Binary.DIV, b); :}
+    |   multiplicative_expression:a MOD unary_expression:b
+            {: RESULT = parser.nf.JL5Binary(parser.pos(a, b), a, 
+                Binary.MOD, b); :}
+    ;
+override additive_expression ::=
+                    // Expr
+        multiplicative_expression:a
+            {: RESULT = a; :}
+    |   additive_expression:a PLUS multiplicative_expression:b
+            {: RESULT = parser.nf.JL5Binary(parser.pos(a, b), a, 
+                Binary.ADD, b); :}
+    |   additive_expression:a MINUS multiplicative_expression:b
+            {: RESULT = parser.nf.JL5Binary(parser.pos(a, b), a, 
+                Binary.SUB, b); :}
+    ;
+override shift_expression ::=
+                    // Expr
+        additive_expression:a
+            {: RESULT = a; :}
+    |   shift_expression:a LSHIFT additive_expression:b
+            {: RESULT = parser.nf.JL5Binary(parser.pos(a, b), a, 
+                Binary.SHL, b); :}
+    |   shift_expression:a RSHIFT additive_expression:b
+            {: RESULT = parser.nf.JL5Binary(parser.pos(a, b), a, 
+                Binary.SHR, b); :}
+    |   shift_expression:a URSHIFT additive_expression:b
+            {: RESULT = parser.nf.JL5Binary(parser.pos(a, b), a, 
+                Binary.USHR, b); :}
+    ;
+    
+override equality_expression ::=
+                    // Expr
+        relational_expression:a
+            {: RESULT = a; :}
+    |   equality_expression:a EQEQ relational_expression:b
+            {: RESULT = parser.nf.JL5Binary(parser.pos(a, b), a, 
+                Binary.EQ, b); :}
+    |   equality_expression:a NOTEQ relational_expression:b
+            {: RESULT = parser.nf.JL5Binary(parser.pos(a, b), a, 
+                Binary.NE, b); :}
+    ;
+override and_expression ::=
+                    // Expr
+        equality_expression:a
+            {: RESULT = a; :}
+    |   and_expression:a AND equality_expression:b
+            {: RESULT = parser.nf.JL5Binary(parser.pos(a, b), a, 
+                Binary.BIT_AND, b); :}
+    ;
+override exclusive_or_expression ::=
+                    // Expr
+        and_expression:a
+            {: RESULT = a; :}
+    |   exclusive_or_expression:a XOR and_expression:b
+            {: RESULT = parser.nf.JL5Binary(parser.pos(a, b), a, 
+                Binary.BIT_XOR, b); :}
+    ;
+override inclusive_or_expression ::=
+                    // Expr
+        exclusive_or_expression:a
+            {: RESULT = a; :}
+    |   inclusive_or_expression:a OR exclusive_or_expression:b
+            {: RESULT = parser.nf.JL5Binary(parser.pos(a, b), a, 
+                Binary.BIT_OR, b); :}
+    ;
+override conditional_and_expression ::=
+                    // Expr
+        inclusive_or_expression:a
+            {: RESULT = a; :}
+    |   conditional_and_expression:a ANDAND inclusive_or_expression:b
+            {: RESULT = parser.nf.JL5Binary(parser.pos(a, b), a, 
+                Binary.COND_AND, b); :}
+    ;
+override conditional_or_expression ::=
+                    // Expr
+        conditional_and_expression:a
+            {: RESULT = a; :}
+    |   conditional_or_expression:a OROR conditional_and_expression:b
+            {: RESULT = parser.nf.JL5Binary(parser.pos(a, b), a, 
+                Binary.COND_OR, b); :}
+    ;
+override postincrement_expression ::=
+                    // Unary
+        postfix_expression:a PLUSPLUS:b
+            {: RESULT = parser.nf.JL5Unary(parser.pos(a,b), Unary.POST_INC, a); :}
+    ;    
+override postdecrement_expression ::=
+                    // Unary
+        postfix_expression:a MINUSMINUS:b
+            {: RESULT = parser.nf.JL5Unary(parser.pos(a,b), Unary.POST_DEC, a); :}
+    ;
+override unary_expression ::=
+                    // Expr
+        preincrement_expression:a
+            {: RESULT = a; :}
+    |   predecrement_expression:a
+            {: RESULT = a; :}
+    |   PLUS:b unary_expression:a
+            {: RESULT = parser.nf.JL5Unary(parser.pos(b,a,a), Unary.POS, a); :}
+    |   MINUS:b unary_expression:a
+            {: RESULT = parser.nf.JL5Unary(parser.pos(b,a,a), Unary.NEG, a); :}
+    |   MINUS:b boundary_literal:a
+            {: RESULT = parser.nf.JL5Unary(parser.pos(b,a,a), Unary.NEG, a); :}
+    |   unary_expression_not_plus_minus:a
+            {: RESULT = a; :}
+    ;
+override preincrement_expression ::=
+                    // Unary
+        PLUSPLUS:b unary_expression:a
+            {: RESULT = parser.nf.JL5Unary(parser.pos(b,a,a), Unary.PRE_INC, a); :}
+    ;
+override predecrement_expression ::=
+                    // Unary
+        MINUSMINUS:b unary_expression:a
+            {: RESULT = parser.nf.JL5Unary(parser.pos(b,a,a), Unary.PRE_DEC, a); :}
+    ;
+override unary_expression_not_plus_minus ::=
+                    // Expr
+        postfix_expression:a
+            {: RESULT = a; :}
+    |   COMP:b unary_expression:a
+            {: RESULT = parser.nf.JL5Unary(parser.pos(b,a,a), Unary.BIT_NOT, a); :}
+    |   NOT:b unary_expression:a
+            {: RESULT = parser.nf.JL5Unary(parser.pos(b,a,a), Unary.NOT, a); :}
+    |   cast_expression:a
+            {: RESULT = a; :}
+    ;
+override assignment ::=
+                    // Expr
+        left_hand_side:a assignment_operator:b assignment_expression:c
+            {: RESULT = parser.nf.JL5Assign(parser.pos(a, c), a, b, c); :}
+    ;
+

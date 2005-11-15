@@ -20,6 +20,8 @@ public interface IntersectionType extends ClassType {
     List restrictions();
     TypeNode restriction();*/
 
+    boolean equivalentImpl(TypeObject arg2);
+
     Type erasureType();
 
     Type upperBound();

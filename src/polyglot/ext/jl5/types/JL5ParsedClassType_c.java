@@ -284,7 +284,7 @@ public class JL5ParsedClassType_c extends ParsedClassType_c implements JL5Parsed
         return false;
     }
 
-    public boolean equalsImpl(TypeObject t){
+    /*public boolean equalsImpl(TypeObject t){
         JL5TypeSystem ts = (JL5TypeSystem)typeSystem();
         if (t instanceof PrimitiveType){ 
             if (this.isBoolean() && ((Type)t).isBoolean()) return true;
@@ -297,6 +297,21 @@ public class JL5ParsedClassType_c extends ParsedClassType_c implements JL5Parsed
             if (this.isDouble() && ((Type)t).isDouble()) return true;
         }
         return super.equalsImpl(t);
+    }*/
+
+    public boolean equivalentImpl(TypeObject t){
+        JL5TypeSystem ts = (JL5TypeSystem)typeSystem();
+        if (t instanceof PrimitiveType){ 
+            if (this.isBoolean() && ((Type)t).isBoolean()) return true;
+            if (this.isInt() && ((Type)t).isInt()) return true;
+            if (this.isByte() && ((Type)t).isByte()) return true;
+            if (this.isShort() && ((Type)t).isShort()) return true;
+            if (this.isChar() && ((Type)t).isChar()) return true;
+            if (this.isLong() && ((Type)t).isLong()) return true;
+            if (this.isFloat() && ((Type)t).isFloat()) return true;
+            if (this.isDouble() && ((Type)t).isDouble()) return true;
+        }
+        return false;
     }
 
     public boolean isNumeric(){

@@ -7,6 +7,7 @@ import polyglot.ext.jl.ast.*;
 import polyglot.visit.*;
 import polyglot.util.*;
 import polyglot.ext.jl5.types.*;
+import polyglot.frontend.*;
 
 public class EnumConstantDecl_c extends Term_c implements EnumConstantDecl
 {   
@@ -15,7 +16,9 @@ public class EnumConstantDecl_c extends Term_c implements EnumConstantDecl
     protected Flags flags;
     protected List annotations;
     protected ClassBody body;
-    protected EnumInstance ei;
+    protected EnumInstance enumInstance;
+    protected ConstructorInstance constructorInstance;
+    protected ParsedClassType anonType;
     
     public EnumConstantDecl_c(Position pos, FlagAnnotations flags, String name, List args, ClassBody body){
         super(pos);
@@ -67,14 +70,38 @@ public class EnumConstantDecl_c extends Term_c implements EnumConstantDecl
         return body;
     }
 
+    public ParsedClassType anonType(){
+        return anonType;
+    }
+
+    public Flags flags(){
+        return flags;
+    }
+    
+    public EnumConstantDecl anonType(ParsedClassType pct){
+        EnumConstantDecl_c n = (EnumConstantDecl_c) copy();
+        n.anonType = pct;
+        return n;
+    }
+    
     public EnumConstantDecl enumInstance(EnumInstance ei){
         EnumConstantDecl_c n = (EnumConstantDecl_c) copy();
-        n.ei = ei;
+        n.enumInstance = ei;
         return n;
     }
 
     public EnumInstance enumInstance(){
-        return ei;
+        return enumInstance;
+    }
+    
+    public EnumConstantDecl constructorInstance(ConstructorInstance ci){
+        EnumConstantDecl_c n = (EnumConstantDecl_c) copy();
+        n.constructorInstance = ci;
+        return n;
+    }
+
+    public ConstructorInstance constructorInstance(){
+        return constructorInstance;
     }
     
     protected EnumConstantDecl_c reconstruct(List args, ClassBody body){
@@ -106,21 +133,55 @@ public class EnumConstantDecl_c extends Term_c implements EnumConstantDecl
         return reconstruct(args, body, annotations);
     }
 
+    public Context enterScope(Node child, Context c) {
+        if (child == body && anonType != null && body != null){
+            c = c.pushClass(anonType, anonType);
+        }
+        return super.enterScope(child, c);
+    }
+    
     public NodeVisitor buildTypesEnter(TypeBuilder tb) throws SemanticException {
-        return tb.pushCode();
+        tb = (TypeBuilder)tb.pushCode();
+        if (body != null){
+            tb = (TypeBuilder) tb.bypass(body);
+        }
+        return tb;
     }
 
     public Node buildTypes(TypeBuilder tb) throws SemanticException {
         JL5TypeSystem ts = (JL5TypeSystem)tb.typeSystem();
 
         EnumConstantDecl n = this;
+        
+        if (n.body() != null){
+            TypeBuilder bodyTB = (TypeBuilder)tb.visitChildren();
+            bodyTB = bodyTB.pushAnonClass(position());
 
-        EnumInstance ei = ts.enumInstance(n.position(), ts.Enum(), JL5Flags.NONE, n.name());
+            n = (EnumConstantDecl)n.body((ClassBody)n.body().visit(bodyTB));
+            ParsedClassType bodyType = (ParsedClassType) bodyTB.currentClass();
+            n = (EnumConstantDecl)n.anonType(bodyType);
+        }
+            
+        EnumInstance ei = ts.enumInstance(n.position(), ts.Enum(), JL5Flags.NONE, n.name(), n.anonType());
 
+        List l = new ArrayList(n.args().size());
+        for (int i = 0; i < n.args().size(); i++){
+            l.add(ts.unknownType(position()));
+        }
+
+        ConstructorInstance ci = ts.constructorInstance(position(), ts.Object(), Flags.NONE, l, Collections.EMPTY_LIST);
+
+        n = (EnumConstantDecl)n.constructorInstance(ci);
+        
         return n.enumInstance(ei);
     }
 
     public NodeVisitor disambiguateEnter(AmbiguityRemover ar) throws SemanticException {
+
+        if (body != null){
+            return ar.bypass(body);
+        }
+        
         if (ar.kind() == AmbiguityRemover.SUPER) {
             return ar.bypassChildren(this);
         }
@@ -137,12 +198,20 @@ public class EnumConstantDecl_c extends Term_c implements EnumConstantDecl
 
             ParsedClassType ct = c.currentClassScope();
             
-            EnumInstance ei = ts.enumInstance(position(), ct, JL5Flags.NONE, name);
+            EnumInstance ei = ts.enumInstance(position(), ct, JL5Flags.NONE, name, anonType);
             return enumInstance(ei);
         }
 
         return this;
     }
+
+    public NodeVisitor typeCheckEnter(TypeChecker tc) throws SemanticException {
+        if (body != null){
+            return tc.bypass(body);
+        }
+        return tc;
+    }
+    
     public Node typeCheck(TypeChecker tc) throws SemanticException {
         JL5TypeSystem ts = (JL5TypeSystem)tc.typeSystem();
         Context c = tc.context();
@@ -155,14 +224,46 @@ public class EnumConstantDecl_c extends Term_c implements EnumConstantDecl
         }
         
         ConstructorInstance ci = ts.findConstructor(ct, argTypes, c.currentClass());
-        if (flags != Flags.NONE){
+        EnumConstantDecl_c n = (EnumConstantDecl_c)this.constructorInstance(ci);
+        
+        if (n.flags() != Flags.NONE){
             throw new SemanticException("Cannot have modifier(s): "+flags+" on enum constant declaration", this.position());
         }
+        
+        ts.checkDuplicateAnnotations(n.annotations());
 
-        ts.checkDuplicateAnnotations(annotations);
-        return this;
+        // set superType for anon class
+        if (body != null){
+            anonType().superType(ct);
+            ClassBody body = n.typeCheckBody(tc, ct);
+            return n.body(body);
+        }
+
+        
+        return n;
     }
 
+    protected ClassBody typeCheckBody(TypeChecker tc, ClassType superType) throws SemanticException {
+        Context bodyCtxt = tc.context().pushClass(anonType, anonType);
+        Job sj = tc.job().spawn(bodyCtxt, body, Pass.CLEAN_SUPER, Pass.DISAM_ALL);
+        if (!sj.status()){
+            if (!sj.reportedErrors()){
+                throw new SemanticException("Could not disambiguate body of anonymous subclass "+name+" of "+superType+".");
+                            
+            }
+            throw new SemanticException();
+        }
+
+        ClassBody b = (ClassBody)sj.ast();
+
+        TypeChecker bodyTC = (TypeChecker)tc.context(bodyCtxt);
+        b = (ClassBody) visitChild(b, bodyTC.visitChildren());
+
+        bodyTC.typeSystem().checkClassConformance(anonType());
+
+        return b;
+    }
+    
     public String toString(){
         return name + "(" + args + ")" + body != null ? "..." : "";
     }
@@ -200,7 +301,7 @@ public class EnumConstantDecl_c extends Term_c implements EnumConstantDecl
     public NodeVisitor addMembersEnter(AddMemberVisitor am){
         JL5ParsedClassType ct = (JL5ParsedClassType_c)am.context().currentClassScope();
 
-        ct.addEnumConstant(ei);
+        ct.addEnumConstant(enumInstance);
         return am.bypassChildren(this);
     }
 }

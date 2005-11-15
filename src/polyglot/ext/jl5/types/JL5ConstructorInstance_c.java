@@ -54,7 +54,48 @@ public class JL5ConstructorInstance_c extends ConstructorInstance_c implements J
     }
     
     public boolean callValidImpl(List argTypes){
+        /*if (this.isGeneric()){
+            try {
+                List inferredTypes = ((JL5TypeSystem)typeSystem()).inferTypesFromArgs(typeVariables(), formalTypes(), argTypes, new ArrayList());
+                return genericCallValidImpl(argTypes, inferredTypes);
+            }
+            catch(SemanticException e){
+                return false;
+            }
+        }*/
         List l1 = this.formalTypes();
+        List l2 = argTypes;
+
+        int i = 0; 
+        for (i = 0; i < l1.size(); i++){
+            Type t1 = (Type)l1.get(i);
+
+            if (t1 instanceof JL5ArrayType && ((JL5ArrayType)t1).isVariable()){
+                // go through rest of args
+                for (int j = i; j < l2.size(); j++){
+                    Type t2 = (Type)l2.get(j);
+                    if (!ts.isImplicitCastValid(t2, t1) && !ts.isImplicitCastValid(t2, ((ArrayType)t1).base())){
+                        return false;
+                    }
+                }
+                return true;
+            }
+            else {
+                if (l2.size() <= i) return false;
+                Type t2 = (Type)l2.get(i);
+                if (!ts.isImplicitCastValid(t2, t1)){
+                    return false;
+                }
+            }
+        }
+        if (i < l2.size()){
+            return false;
+        }
+        else {
+            return true;
+        }
+
+        /*List l1 = this.formalTypes();
         List l2 = argTypes;
 
         for (int i = 0; i < l1.size(); i++){
@@ -90,6 +131,6 @@ public class JL5ConstructorInstance_c extends ConstructorInstance_c implements J
             }
         }
 
-        return true; 
+        return true; */
     }
 }

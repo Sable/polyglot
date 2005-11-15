@@ -32,7 +32,7 @@ public class JL5PrimitiveType_c extends PrimitiveType_c implements JL5PrimitiveT
         return false;
     }
 
-    public boolean equalsImpl(TypeObject t) {
+    /*public boolean equalsImpl(TypeObject t) {
         JL5TypeSystem ts = (JL5TypeSystem)typeSystem();
         if (t.equals(ts.BooleanWrapper()) && this.isBoolean()) return true;
         if (t.equals(ts.IntegerWrapper()) && this.isInt()) return true;
@@ -43,11 +43,24 @@ public class JL5PrimitiveType_c extends PrimitiveType_c implements JL5PrimitiveT
         if (t.equals(ts.FloatWrapper()) && this.isFloat()) return true;
         if (t.equals(ts.DoubleWrapper()) && this.isDouble()) return true;
         return super.equalsImpl(t); 
+    }*/
+
+    public boolean equivalentImpl(TypeObject t) {
+        JL5TypeSystem ts = (JL5TypeSystem)typeSystem();
+        if (t.equals(ts.BooleanWrapper()) && this.isBoolean()) return true;
+        if (t.equals(ts.IntegerWrapper()) && this.isInt()) return true;
+        if (t.equals(ts.ByteWrapper()) && this.isByte()) return true;
+        if (t.equals(ts.ShortWrapper()) && this.isShort()) return true;
+        if (t.equals(ts.CharacterWrapper()) && this.isChar()) return true;
+        if (t.equals(ts.LongWrapper()) && this.isLong()) return true;
+        if (t.equals(ts.FloatWrapper()) && this.isFloat()) return true;
+        if (t.equals(ts.DoubleWrapper()) && this.isDouble()) return true;
+        return false; 
     }
 
     public boolean isCastValidImpl(Type toType){
         if (isVoid() || toType.isVoid()) return false;
-        if (ts.equals(this, toType)) return true;
+        if (ts.equals(this, toType) || ((JL5TypeSystem)ts).equivalent(this, toType)) return true;
         if (toType.isClass()){
             /*if (this.isShort() && (toType.isInt() || toType.isLong() || toType.isFloat() || toType.isDouble())) return true;
             if (this.isInt() && (toType.isLong() || toType.isFloat() || toType.isDouble())) return true;
@@ -60,4 +73,10 @@ public class JL5PrimitiveType_c extends PrimitiveType_c implements JL5PrimitiveT
         }
         return false;
     }
+
+   /* public Type toWrappedClass(){
+        if (isInt()) return ts.IntegerWrapper();
+        if (isByte()) return ts.ByteWrapper();
+        if (isBoolean()) return ts.BooleanWrapper();
+    }*/
 }

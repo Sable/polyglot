@@ -9,7 +9,7 @@ import polyglot.util.*;
 import polyglot.visit.*;
 import polyglot.types.*;
 
-public class JL5LocalDecl_c extends LocalDecl_c implements JL5LocalDecl, ApplicationCheck, SimplifyVisit {
+public class JL5LocalDecl_c extends LocalDecl_c implements JL5LocalDecl, ApplicationCheck, BoxingVisit, UnboxingVisit {
 
     protected List annotations;
     
@@ -104,13 +104,27 @@ public class JL5LocalDecl_c extends LocalDecl_c implements JL5LocalDecl, Applica
         super.prettyPrint(w, tr);
     }
 
-    public Node simplify(SimplifyVisitor sv) throws SemanticException{
-        /*if (init() != null){
-            if (this.type().isPrimitive() && init().type().isClass()){
-                
-            }
+    public Node unboxing(UnboxingVisitor sv) throws SemanticException{
+        JL5TypeSystem ts = (JL5TypeSystem)sv.typeSystem();
+        JL5NodeFactory nf = (JL5NodeFactory)sv.nodeFactory();
         
-        }*/
+        if (init() != null){
+            if (ts.needsUnboxing(this.type().type(), init().type())){
+                return init(nf.createUnboxed(init.position(), init, ts, sv.context()));
+            }
+        }
+        return this;
+    }
+    
+    public Node boxing(BoxingVisitor sv) throws SemanticException{
+        JL5TypeSystem ts = (JL5TypeSystem)sv.typeSystem();
+        JL5NodeFactory nf = (JL5NodeFactory)sv.nodeFactory();
+        
+        if (init() != null){
+            if (ts.needsBoxing(this.type().type(), init().type())){
+                return init(nf.createBoxed(init.position(), init, ts, sv.context()));
+            }
+        }
         return this;
     }
 }

@@ -130,7 +130,7 @@ public class JL5ClassDecl_c extends ClassDecl_c implements JL5ClassDecl, Applica
         if (JL5Flags.isEnumModifier(flags()) && flags().isAbstract()){
             throw new SemanticException("Enum types cannot have abstract modifier", this.position());
         }
-        if (JL5Flags.isEnumModifier(flags()) && flags().isPrivate()){
+        if (JL5Flags.isEnumModifier(flags()) && flags().isPrivate() && !type().isInnerClass()){
             throw new SemanticException("Enum types cannot have explicit private modifier", this.position());
         }
         if (JL5Flags.isEnumModifier(flags()) && flags().isFinal()){
@@ -476,7 +476,6 @@ public class JL5ClassDecl_c extends ClassDecl_c implements JL5ClassDecl, Applica
         for (Iterator it = body().members().iterator(); it.hasNext(); ){
             ClassMember next = (ClassMember)it.next();
             if (next instanceof MethodDecl && ((MethodDecl)next).name().equals("values")){
-                System.out.println("found values meth");
                 Block block = nf.Block(position());
                 JL5Field field = nf.JL5Field(position(), nf.CanonicalTypeNode(position(), this.type()), "$VALUES");
                 field = (JL5Field)field.type(ts.arrayOf(this.type()));
@@ -492,7 +491,6 @@ public class JL5ClassDecl_c extends ClassDecl_c implements JL5ClassDecl, Applica
                 newMembers.add(md);
             }
             else if (next instanceof MethodDecl && ((MethodDecl)next).name().equals("valueOf")){
-                System.out.println("found valueOf meth");
                 Block block = nf.Block(position());
                 ArrayList args = new ArrayList();
                 ArrayList argTypes = new ArrayList();
@@ -584,9 +582,13 @@ public class JL5ClassDecl_c extends ClassDecl_c implements JL5ClassDecl, Applica
                 ArrayList initArgs = new ArrayList();
                 ArrayList initArgTypes = new ArrayList();
                 
-                initArgs.add(nf.StringLit(position(), ecd.name()));
+                Expr arg0 = nf.StringLit(position(), ecd.name());
+                arg0 = arg0.type(ts.String());
+                Expr arg1 = nf.IntLit(position(), IntLit.INT, count++);
+                arg1 = arg1.type(ts.Int());
+                initArgs.add(arg0);
                 initArgTypes.add(ts.String());
-                initArgs.add(nf.IntLit(position(), IntLit.INT, count++));
+                initArgs.add(arg1);
                 initArgTypes.add(ts.Int());
                 for (Iterator at = ecd.args().iterator(); at.hasNext(); ){
                     Expr n = (Expr)at.next();
@@ -595,6 +597,8 @@ public class JL5ClassDecl_c extends ClassDecl_c implements JL5ClassDecl, Applica
                 }
                 //initArgs.addAll(ecd.args());
                 JL5New initNew = (JL5New)nf.JL5New(position(), nf.CanonicalTypeNode(position(), this.type()), initArgs, ecd.body(), null);
+                initNew = (JL5New)initNew.anonType(ecd.anonType());
+                initNew = (JL5New)initNew.type(ecd.anonType());
                 initNew = (JL5New)initNew.constructorInstance(ts.findConstructor(this.type(), initArgTypes, this.type()));
                 JL5FieldDecl newField = nf.JL5FieldDecl(ecd.position(), fn, nf.CanonicalTypeNode(position(), this.type()), ecd.name(), initNew);
                 FieldInstance newFi = ts.fieldInstance(position(), this.type(), fn.classicFlags(), this.type(), ecd.name());
