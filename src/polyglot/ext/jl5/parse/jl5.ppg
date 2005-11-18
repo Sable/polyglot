@@ -877,9 +877,16 @@ override method_invocation ::=
     name:a DOT:b SUPER:c DOT:d type_arguments:e IDENTIFIER:f LPAREN:g argument_list_opt:h RPAREN:i
         {: RESULT = parser.nf.JL5Call(parser.pos(f, i), parser.nf.Super(parser.pos(c), a.toType()), f.getIdentifier(), h, e); :}
 	;
-extend array_access ::=
+override array_access ::=
+              // ArrayAccess
+    name:a LBRACK expression:b RBRACK:d
+        {: RESULT = parser.nf.JL5ArrayAccess(parser.pos(a, d), a.toExpr(), b); :}
+    |   
+    primary_no_new_array:a LBRACK expression:b RBRACK:d
+        {: RESULT = parser.nf.JL5ArrayAccess(parser.pos(a, d), a, b); :}
+    |
 	array_creation_init:a LBRACK:b expression:c RBRACK:d
-    {: RESULT = parser.nf.ArrayAccess(parser.pos(a, d), a, c); :}
+        {: RESULT = parser.nf.JL5ArrayAccess(parser.pos(a, d), a, c); :}
 	;
 // This parsing technique was discovered by Eric Blake <ebb9@email.byu.edu>
 // We solving grammar ambiguities with between parenthesized less-than
@@ -1508,7 +1515,7 @@ override shift_expression ::=
                 Binary.USHR, b); :}
     ;
     
-override equality_expression ::=
+/*override equality_expression ::=
                     // Expr
         relational_expression:a
             {: RESULT = a; :}
@@ -1518,7 +1525,7 @@ override equality_expression ::=
     |   equality_expression:a NOTEQ relational_expression:b
             {: RESULT = parser.nf.JL5Binary(parser.pos(a, b), a, 
                 Binary.NE, b); :}
-    ;
+    ;*/
 override and_expression ::=
                     // Expr
         equality_expression:a
@@ -1610,4 +1617,7 @@ override assignment ::=
         left_hand_side:a assignment_operator:b assignment_expression:c
             {: RESULT = parser.nf.JL5Assign(parser.pos(a, c), a, b, c); :}
     ;
-
+override return_statement ::=
+    RETURN:n expression_opt:a SEMICOLON:d
+        {: RESULT = parser.nf.JL5Return(parser.pos(n, d), a); :}
+;        

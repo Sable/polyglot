@@ -28,6 +28,7 @@ public interface JL5TypeSystem extends TypeSystem {
     ClassType DoubleWrapper();
     ClassType FloatWrapper();
 
+    PrimitiveType primitiveOf(Type t);
     boolean equivalent(TypeObject t1, TypeObject t2);
     boolean isAutoEquivalent(Type t1, Type t2);
     public boolean isNumericWrapper(Type t);

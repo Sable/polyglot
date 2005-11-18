@@ -280,6 +280,41 @@ public class JL5MethodDecl_c extends MethodDecl_c implements JL5MethodDecl, Appl
         classAnnotations = new ArrayList();
         sourceAnnotations = new ArrayList();
         ((JL5TypeSystem)sv.typeSystem()).sortAnnotations(annotations, runtimeAnnotations, classAnnotations, sourceAnnotations);
+
+        /*JL5TypeSystem ts = (JL5TypeSystem)sv.typeSystem();
+        JL5NodeFactory nf = (JL5NodeFactory)sv.nodeFactory();
+        
+        ArrayList newFormals = new ArrayList();
+        ArrayList newFormalTypes = new ArrayList();
+        for (Iterator it = formals().iterator(); it.hasNext(); ){
+            JL5Formal formal = (JL5Formal)it.next();
+            if (formal.type().type() instanceof ParameterizedType){
+                newFormalTypes.add(((ParameterizedType)formal.type().type()).baseType());
+                FlagAnnotations fl = new FlagAnnotations();
+                fl.classicFlags(formal.flags());
+                fl.annotations(formal.annotations());
+                JL5Formal newFormal = nf.JL5Formal(formal.position(), fl, nf.CanonicalTypeNode(formal.type().position(), ((ParameterizedType)formal.type().type()).baseType()), formal.name());
+                newFormal = (JL5Formal)newFormal.localInstance(ts.localInstance(formal.localInstance().position(), formal.localInstance().flags(), ((ParameterizedType)formal.type().type()).baseType(), formal.name()));
+                newFormals.add(newFormal);
+            }
+            else {
+                newFormalTypes.add(formal.type().type());
+                newFormals.add(formal);
+            }
+        }
+        Type newReturnType = methodInstance().returnType();
+        if (newReturnType instanceof ParameterizedType){
+            newReturnType = ((ParameterizedType)newReturnType).baseType();
+        }
+        
+        JL5MethodInstance mi = (JL5MethodInstance)ts.methodInstance(methodInstance().position(), methodInstance().container(), methodInstance().flags(), newReturnType, methodInstance().name(), newFormalTypes, methodInstance().throwTypes());
+       
+        FlagAnnotations mfl = new FlagAnnotations();
+        mfl.classicFlags(flags());
+        mfl.annotations(annotations());
+        JL5MethodDecl md = nf.JL5MethodDecl(position(), mfl, nf.CanonicalTypeNode(returnType().position(), newReturnType), name(), newFormals, throwTypes(), body(), paramTypes());
+        md = (JL5MethodDecl)md.methodInstance(mi);
+        return md;*/
         return this;
     }
 

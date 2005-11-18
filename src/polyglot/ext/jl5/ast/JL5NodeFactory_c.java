@@ -243,7 +243,6 @@ public class JL5NodeFactory_c extends NodeFactory_c implements JL5NodeFactory {
         return n;
     }   
     public Assign JL5Assign(Position pos, Expr left, Assign.Operator op, Expr right){
-        System.out.println("jl5 assign: left is: "+left.getClass());
         if (left instanceof Local){
             return JL5LocalAssign(pos, left, op, right);
         }
@@ -258,7 +257,6 @@ public class JL5NodeFactory_c extends NodeFactory_c implements JL5NodeFactory {
         }
     }
     public JL5LocalAssign JL5LocalAssign(Position pos, Expr left, Assign.Operator op, Expr right){
-        System.out.println("making local assign");
         JL5LocalAssign n = new JL5LocalAssign_c(pos, (Local)left, op, right);
         return n;
     }
@@ -274,9 +272,36 @@ public class JL5NodeFactory_c extends NodeFactory_c implements JL5NodeFactory {
         JL5AmbAssign n = new JL5AmbAssign_c(pos, left, op, right);
         return n;
     }
-    
+    public JL5Return JL5Return(Position pos, Expr expr){
+        JL5Return n = new JL5Return_c(pos, expr);
+        return n;
+    }
+    public JL5ArrayAccess JL5ArrayAccess(Position pos, Expr array, Expr index){
+        JL5ArrayAccess n = new JL5ArrayAccess_c(pos, array, index);
+        return n;
+    }
 
-    public Expr createUnboxed(Position pos, Expr orig, TypeSystem typeSystem, Context context) throws SemanticException {
+    public JL5Let JL5Let(Position pos, LocalDecl localDecl, Expr beta){
+        JL5Let n = new JL5Let_c(pos, localDecl, beta);
+        return n;
+    }
+    
+    public Binary.Operator getBinOpFromAssignOp(Assign.Operator op){
+        if (op == Assign.ADD_ASSIGN) return Binary.ADD;
+        if (op == Assign.BIT_OR_ASSIGN) return Binary.BIT_OR;
+        if (op == Assign.BIT_AND_ASSIGN) return Binary.BIT_AND;
+        if (op == Assign.BIT_XOR_ASSIGN) return Binary.BIT_XOR;
+        if (op == Assign.DIV_ASSIGN) return Binary.DIV;
+        if (op == Assign.MOD_ASSIGN) return Binary.MOD;
+        if (op == Assign.MUL_ASSIGN) return Binary.MUL;
+        if (op == Assign.SHL_ASSIGN) return Binary.SHL;
+        if (op == Assign.SHR_ASSIGN) return Binary.SHR;
+        if (op == Assign.SUB_ASSIGN) return Binary.SUB;
+        if (op == Assign.USHR_ASSIGN) return Binary.USHR;
+        else throw new RuntimeException("Unknown op: "+op); 
+    }
+    
+    public Expr createUnboxed(Position pos, Expr orig, Type toType, TypeSystem typeSystem, Context context) throws SemanticException {
         JL5TypeSystem ts = (JL5TypeSystem)typeSystem;
         String mName = null;
         Type type = null;
@@ -317,17 +342,30 @@ public class JL5NodeFactory_c extends NodeFactory_c implements JL5NodeFactory {
         }
         JL5Call node = JL5Call(pos, orig, mName, new ArrayList(), new ArrayList());
         node = (JL5Call)node.type(type);
-        System.out.println("unboxing expr type: "+node.type());
         return node.methodInstance(ts.findMethod(orig.type().toReference(), mName, new ArrayList(), context.currentClass()));
     }
 
-    public Expr createBoxed(Position pos, Expr orig, TypeSystem typeSystem, Context context) throws SemanticException {
+    public Expr createBoxed(Position pos, Expr orig, Type toType, TypeSystem typeSystem, Context context) throws SemanticException {
 
         JL5TypeSystem ts = (JL5TypeSystem)typeSystem;
         ClassType container = null;
+        Type argType = orig.type();
         
         if (ts.equals(orig.type(), ts.Int())){
             container = ts.IntegerWrapper();
+            if (ts.equals(toType, ts.ByteWrapper())){
+                argType = ts.Byte();
+                container = ts.ByteWrapper();
+            }
+            else if (ts.equals(toType, ts.ShortWrapper())){
+                argType = ts.Short();
+                container = ts.ShortWrapper();
+            }
+            else if (ts.equals(toType, ts.CharacterWrapper())){
+                argType = ts.Char();
+                container = ts.CharacterWrapper();
+            }
+            //container = ts.IntegerWrapper();
         }
         else if (ts.equals(orig.type(), ts.Short())){
             container = ts.ShortWrapper();
@@ -357,10 +395,14 @@ public class JL5NodeFactory_c extends NodeFactory_c implements JL5NodeFactory {
         ArrayList args = new ArrayList();
         ArrayList argTypes = new ArrayList();
         args.add(orig);
-        argTypes.add(orig.type());
+        argTypes.add(argType);
         
-        JL5New node = JL5New(pos, null, CanonicalTypeNode(pos, container), args, null, new ArrayList());
-        return node.constructorInstance(ts.findConstructor(container, argTypes, context.currentClass())).type(container);
+        JL5Call node = JL5Call(pos, CanonicalTypeNode(pos, container), "valueOf", args, new ArrayList());
+        node = (JL5Call)node.type(container);
+        return node.methodInstance(ts.findMethod(container, "valueOf", argTypes, context.currentClass()));
+        
+        /*JL5New node = JL5New(pos, null, CanonicalTypeNode(pos, container), args, null, new ArrayList());
+        return node.constructorInstance(ts.findConstructor(container, argTypes, context.currentClass())).type(container);*/
     }
 
     

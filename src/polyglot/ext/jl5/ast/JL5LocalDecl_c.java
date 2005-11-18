@@ -110,7 +110,7 @@ public class JL5LocalDecl_c extends LocalDecl_c implements JL5LocalDecl, Applica
         
         if (init() != null){
             if (ts.needsUnboxing(this.type().type(), init().type())){
-                return init(nf.createUnboxed(init.position(), init, ts, sv.context()));
+                return init(nf.createUnboxed(init.position(), init, type().type(), ts, sv.context()));
             }
         }
         return this;
@@ -122,7 +122,7 @@ public class JL5LocalDecl_c extends LocalDecl_c implements JL5LocalDecl, Applica
         
         if (init() != null){
             if (ts.needsBoxing(this.type().type(), init().type())){
-                return init(nf.createBoxed(init.position(), init, ts, sv.context()));
+                return init(nf.createBoxed(init.position(), init, type().type(), ts, sv.context()));
             }
         }
         return this;

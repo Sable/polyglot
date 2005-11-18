@@ -103,9 +103,14 @@ public interface JL5NodeFactory extends NodeFactory {
     public JL5FieldAssign JL5FieldAssign(Position pos, Expr left, Assign.Operator op, Expr right);
     public JL5ArrayAccessAssign JL5ArrayAccessAssign(Position pos, Expr left, Assign.Operator op, Expr right);
     public JL5AmbAssign JL5AmbAssign(Position pos, Expr left, Assign.Operator op, Expr right);
+    public JL5Return JL5Return(Position pos, Expr expr);
+    public JL5ArrayAccess JL5ArrayAccess(Position pos, Expr array, Expr index);
     
     // for rewriting:
-    public Expr createUnboxed(Position pos, Expr orig, TypeSystem ts, Context context) throws SemanticException;
-    public Expr createBoxed(Position pos, Expr orig, TypeSystem ts, Context context) throws SemanticException;
+    public JL5Let JL5Let(Position pos, LocalDecl localDecl, Expr beta);
+    public Binary.Operator getBinOpFromAssignOp(Assign.Operator op);
+    
+    public Expr createUnboxed(Position pos, Expr orig, Type toType, TypeSystem ts, Context context) throws SemanticException;
+    public Expr createBoxed(Position pos, Expr orig, Type toType, TypeSystem ts, Context context) throws SemanticException;
 }
 

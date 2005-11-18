@@ -16,7 +16,6 @@ public class JL5LocalAssign_c extends LocalAssign_c implements JL5LocalAssign, B
     }
 
     public Node typeCheck(TypeChecker tc) throws SemanticException {
-        System.out.println("type check local assign" );
         JL5TypeSystem ts = (JL5TypeSystem)tc.typeSystem();
         if (right() instanceof Call && ((JL5MethodInstance)((Call)right()).methodInstance()).isGeneric()){
             if (!ts.isImplicitCastValid(right.type(), left.type()) && 
@@ -54,7 +53,7 @@ public class JL5LocalAssign_c extends LocalAssign_c implements JL5LocalAssign, B
             node = (JL5LocalAssign)node.left(nf.createBoxed(node.left().position(), node.left(), ts, sv.context()));
         }*/
         if (ts.needsBoxing(node.type(), node.right().type())){
-            node = (JL5LocalAssign)node.right(nf.createBoxed(node.right().position(), node.right(), ts, sv.context()));
+            node = (JL5LocalAssign)node.right(nf.createBoxed(node.right().position(), node.right(), node.type(), ts, sv.context()));
         }
         
         return node;
@@ -66,14 +65,8 @@ public class JL5LocalAssign_c extends LocalAssign_c implements JL5LocalAssign, B
         JL5NodeFactory nf = (JL5NodeFactory)sv.nodeFactory();
 
         JL5LocalAssign node = this;
-        System.out.println("node type: "+node.type());
-        System.out.println("left type: "+node.left().type());
-        System.out.println("right type: "+node.right().type());
-        /*if (ts.needsUnboxing(node.type(), node.left().type())){
-            node = (JL5LocalAssign)node.left(nf.createUnboxed(node.left().position(), node.left(), ts, sv.context()));
-        }*/
         if (ts.needsUnboxing(node.type(), node.right().type())){
-            node = (JL5LocalAssign)node.right(nf.createUnboxed(node.right().position(), node.right(), ts, sv.context()));
+            node = (JL5LocalAssign)node.right(nf.createUnboxed(node.right().position(), node.right(), node.type(), ts, sv.context()));
         }
         return node;
                 

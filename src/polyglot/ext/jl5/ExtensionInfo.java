@@ -36,6 +36,7 @@ public class ExtensionInfo extends polyglot.ext.jl.ExtensionInfo {
     public static final polyglot.frontend.Pass.ID SIMPLIFY = new polyglot.frontend.Pass.ID("simplify");
     public static final polyglot.frontend.Pass.ID BOXING = new polyglot.frontend.Pass.ID("boxing");
     public static final polyglot.frontend.Pass.ID UNBOXING = new polyglot.frontend.Pass.ID("unboxing");
+    public static final polyglot.frontend.Pass.ID LET_INSERTER = new polyglot.frontend.Pass.ID("let-inserter");
     //public static final polyglot.frontend.Pass.ID GENERIC_ARGS = new polyglot.frontend.Pass.ID("generic-args");
     //public static final polyglot.frontend.Pass.ID GENERIC_RESET = new polyglot.frontend.Pass.ID("generic-reset");
    
@@ -84,6 +85,8 @@ public class ExtensionInfo extends polyglot.ext.jl.ExtensionInfo {
         beforePass(passes, BOXING, new VisitorPass(UNBOXING, job, new UnboxingVisitor(job, ts, nf)));
         
         beforePass(passes, UNBOXING, new VisitorPass(SIMPLIFY, job, new SimplifyVisitor(job, ts, nf)));
+
+        beforePass(passes, SIMPLIFY, new VisitorPass(LET_INSERTER, job, new LetInsertionVisitor(job, ts, nf)));
         return passes;
     }
     

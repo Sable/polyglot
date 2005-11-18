@@ -141,12 +141,13 @@ public class ExtendedFor_c extends Loop_c implements ExtendedFor, SimplifyVisit
             iters.add(nf.Eval(position(), iter));
             
             ArrayAccess aa = nf.ArrayAccess(position(), expr, local);
-            aa = (ArrayAccess)aa.type(expr.type());
+            aa = (ArrayAccess)aa.type(expr.type().toArray().base());
             Local orig = nf.Local(position(), origLd.name());
             orig = orig.localInstance(origLd.localInstance());
             orig = (Local)orig.type(origLd.type().type());
             
-            LocalAssign la = nf.LocalAssign(position(), orig, Assign.ASSIGN, aa);
+            JL5LocalAssign la = nf.JL5LocalAssign(position(), orig, Assign.ASSIGN, aa);
+            la = (JL5LocalAssign)la.type(orig.type());
             Block b = null;
             if (body() instanceof Block){
                 b = ((Block)body()).prepend(nf.Eval(position(), la)).prepend(origLd);
@@ -194,7 +195,9 @@ public class ExtendedFor_c extends Loop_c implements ExtendedFor, SimplifyVisit
                 cast = (Cast)cast.type(orig.localInstance().type());
                 assignExpr = cast;
             }
-            LocalAssign la = nf.LocalAssign(position(), orig, Assign.ASSIGN, assignExpr);
+            JL5LocalAssign la = nf.JL5LocalAssign(position(), orig, Assign.ASSIGN, assignExpr);
+            // really the type of next() call - generics
+            la = (JL5LocalAssign)la.type(ts.Object());
             Block b = null;
             if (body() instanceof Block){
                 b = ((Block)body()).prepend(nf.Eval(position(), la)).prepend(origLd);

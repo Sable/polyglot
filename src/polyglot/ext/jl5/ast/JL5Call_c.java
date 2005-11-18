@@ -228,8 +228,9 @@ public class JL5Call_c extends Call_c implements JL5Call, SimplifyVisit, BoxingV
         for (int i = 0; i < methodInstance().formalTypes().size(); i++){
             Type t1 = (Type)methodInstance().formalTypes().get(i);
             Expr ex = (Expr)arguments().get(i);    
+            System.out.println("call: "+this+" t1: "+t1+" ex: "+ex+" ex.type: "+ex.type());
             if (ts.needsBoxing(t1, ex.type())){
-                newArgs.add(nf.createBoxed(ex.position(), ex, ts, bv.context()));
+                newArgs.add(nf.createBoxed(ex.position(), ex, t1, ts, bv.context()));
             }
             else {
                 newArgs.add(ex);
@@ -246,7 +247,7 @@ public class JL5Call_c extends Call_c implements JL5Call, SimplifyVisit, BoxingV
             Type t1 = (Type)methodInstance().formalTypes().get(i);
             Expr ex = (Expr)arguments().get(i);    
             if (ts.needsUnboxing(t1, ex.type())){
-                newArgs.add(nf.createUnboxed(ex.position(), ex, ts, bv.context()));
+                newArgs.add(nf.createUnboxed(ex.position(), ex, t1, ts, bv.context()));
             }
             else {
                 newArgs.add(ex);
@@ -259,7 +260,14 @@ public class JL5Call_c extends Call_c implements JL5Call, SimplifyVisit, BoxingV
     public Node simplify(SimplifyVisitor sv) throws SemanticException {
         JL5TypeSystem ts = (JL5TypeSystem)sv.typeSystem();
         JL5NodeFactory nf = (JL5NodeFactory)sv.nodeFactory();
-      
+    
+        /*System.out.println("call: "+this+" type: "+type());
+        System.out.println("mi ret type: "+methodInstance().returnType());
+        if (methodInstance().returnType() instanceof IntersectionType){
+            JL5Cast node = nf.JL5Cast(position(), type(), this);
+            node = (JL5Cast)node.type(type());
+            node = (JL5Cast)methodInstance(m
+        }*/
         List newArgs = new ArrayList();
         for (int i = 0; i < methodInstance().formalTypes().size(); i++){
             Type t = (Type)methodInstance().formalTypes().get(i);
@@ -267,7 +275,8 @@ public class JL5Call_c extends Call_c implements JL5Call, SimplifyVisit, BoxingV
                 if (arguments().size() == i+1  && arguments().get(i) instanceof NullLit){
                     newArgs.add(arguments().get(i));
                 }
-                else if (arguments().size() == i+1 && arguments().get(i) instanceof NewArray){
+                else if (arguments().size() == i+1 && arguments().get(i) instanceof NewArray && !(((NewArray)arguments().get(i)).baseType().type().isPrimitive() && ((ArrayType)t).base().isClass()) ){
+                    // not sure about this 
                     newArgs.add(arguments().get(i));
                 }
                 else {
@@ -279,7 +288,7 @@ public class JL5Call_c extends Call_c implements JL5Call, SimplifyVisit, BoxingV
                     ai = (ArrayInit)ai.type(((JL5ArrayType)t).base());
                     /*List dims = new ArrayList();
                     dims.add(nf.IntLit(position(), IntLit.INT, elements.size()));*/
-                    NewArray na = nf.NewArray(position(), nf.CanonicalTypeNode(position(), ((JL5ArrayType)t).base()), Collections.EMPTY_LIST, 1, ai); 
+                    NewArray na = nf.JL5NewArray(position(), nf.CanonicalTypeNode(position(), ((JL5ArrayType)t).base()), Collections.EMPTY_LIST, 1, ai); 
                     na = (NewArray)na.type(t);
                     newArgs.add(na);
                 }

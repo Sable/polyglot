@@ -1232,7 +1232,7 @@ continue_statement ::=
 
 return_statement ::=
     RETURN:n expression_opt:a SEMICOLON:d {:
-                                          RESULT = parser.nf.Return(parser.pos(n, d), a); 
+                                          RESULT = parser.nf.JL5Return(parser.pos(n, d), a); 
                                           :};
 
 throw_statement ::=
@@ -1440,13 +1440,13 @@ method_invocation ::=
 
 array_access ::=
     name:a LBRACK expression:b RBRACK:d {:
-                                        RESULT = parser.nf.ArrayAccess(parser.pos(a, d), a.toExpr(), b); 
+                                        RESULT = parser.nf.JL5ArrayAccess(parser.pos(a, d), a.toExpr(), b); 
                                         :}
  |  primary_no_new_array:a LBRACK expression:b RBRACK:d {:
-                                                        RESULT = parser.nf.ArrayAccess(parser.pos(a, d), a, b); 
+                                                        RESULT = parser.nf.JL5ArrayAccess(parser.pos(a, d), a, b); 
                                                         :}
  |  array_creation_init:a LBRACK:b expression:c RBRACK:d {:
-                                                         RESULT = parser.nf.ArrayAccess(parser.pos(a, d), a, c); 
+                                                         RESULT = parser.nf.JL5ArrayAccess(parser.pos(a, d), a, c); 
                                                          :};
 
 postfix_expression ::=
@@ -1576,15 +1576,13 @@ relational_expression ::=
                                                       :};
 
 equality_expression ::=
-    relational_expression:a {:  RESULT = a;  :}
- |  equality_expression:a EQEQ relational_expression:b {:
-                                                       RESULT = parser.nf.JL5Binary(parser.pos(a, b), a, 
-                Binary.EQ, b); 
-                                                       :}
- |  equality_expression:a NOTEQ relational_expression:b {:
-                                                        RESULT = parser.nf.JL5Binary(parser.pos(a, b), a, 
-                Binary.NE, b); 
-                                                        :};
+    instanceof_expression:a {:  RESULT = a;  :}
+ |  equality_expression:a EQEQ:b instanceof_expression:c {:
+                                                         RESULT = parser.nf.JL5Binary(parser.pos(a, c), a, Binary.EQ, c); 
+                                                         :}
+ |  equality_expression:a NOTEQ:b instanceof_expression:c {:
+                                                          RESULT = parser.nf.JL5Binary(parser.pos(a, c), a, Binary.NE, c); 
+                                                          :};
 
 and_expression ::=
     equality_expression:a {:  RESULT = a;  :}

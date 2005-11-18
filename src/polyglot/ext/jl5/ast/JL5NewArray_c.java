@@ -6,9 +6,10 @@ import polyglot.visit.*;
 import polyglot.types.*;
 import polyglot.util.*;
 import polyglot.ext.jl5.types.*;
+import polyglot.ext.jl5.visit.*;
 import java.util.*;
 
-public class JL5NewArray_c extends NewArray_c implements JL5NewArray{
+public class JL5NewArray_c extends NewArray_c implements JL5NewArray, UnboxingVisit, BoxingVisit{
 
     public JL5NewArray_c(Position pos, TypeNode baseType, List dims, int addDims, ArrayInit init){
         super(pos, baseType, dims, addDims, init);
@@ -37,5 +38,43 @@ public class JL5NewArray_c extends NewArray_c implements JL5NewArray{
             }
         }
         return super.typeCheck(tc);
+    }
+
+    public Node unboxing(UnboxingVisitor bv) throws SemanticException {
+        JL5TypeSystem ts = (JL5TypeSystem)bv.typeSystem();
+        JL5NodeFactory nf = (JL5NodeFactory)bv.nodeFactory();
+        if (init != null){
+            ArrayList list = new ArrayList();
+            for (Iterator it = init.elements().iterator(); it.hasNext(); ){
+                Expr next = (Expr)it.next();
+                if (ts.needsUnboxing(baseType().type(), next.type())){
+                    list.add(nf.createUnboxed(next.position(), next, baseType().type(), ts, bv.context()));
+                }
+                else {
+                    list.add(next);
+                }
+            }
+            return init(init().elements(list));
+        }
+        return this;
+    }
+    
+    public Node boxing(BoxingVisitor bv) throws SemanticException {
+        JL5TypeSystem ts = (JL5TypeSystem)bv.typeSystem();
+        JL5NodeFactory nf = (JL5NodeFactory)bv.nodeFactory();
+        if (init() != null){
+            ArrayList list = new ArrayList();
+            for (Iterator it = init().elements().iterator(); it.hasNext(); ){
+                Expr next = (Expr)it.next();
+                if (ts.needsBoxing(baseType().type(), next.type())){
+                    list.add(nf.createBoxed(next.position(), next, baseType().type(), ts, bv.context()));
+                }
+                else {
+                    list.add(next);
+                }
+            }
+            return init(init().elements(list));
+        }
+        return this;
     }
 }

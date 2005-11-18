@@ -9,14 +9,14 @@ import polyglot.types.*;
 import java.util.*;
 import polyglot.visit.*;
 
-public class JL5FieldDecl_c extends FieldDecl_c implements JL5FieldDecl, ApplicationCheck, SimplifyVisit {
+public class JL5FieldDecl_c extends FieldDecl_c implements JL5FieldDecl, ApplicationCheck, SimplifyVisit, UnboxingVisit, BoxingVisit {
 
     protected boolean compilerGenerated;
     protected List annotations;
     protected List runtimeAnnotations;
     protected List classAnnotations;
     protected List sourceAnnotations;
-    
+       
     public JL5FieldDecl_c(Position pos, FlagAnnotations flags, TypeNode type, String name, Expr init){
         super(pos, flags.classicFlags(), type, name, init);
         if (flags.annotations() != null){
@@ -111,4 +111,21 @@ public class JL5FieldDecl_c extends FieldDecl_c implements JL5FieldDecl, Applica
         return n;
     }
 
+    public Node unboxing(UnboxingVisitor v) throws SemanticException{
+        JL5TypeSystem ts = (JL5TypeSystem)v.typeSystem();
+        JL5NodeFactory nf = (JL5NodeFactory)v.nodeFactory();
+        if (ts.needsUnboxing(fieldInstance().type(), init().type())){
+            return init(nf.createUnboxed(init().position(), init(), fieldInstance().type(), ts, v.context()));
+        }
+        return this;
+    }
+    
+    public Node boxing(BoxingVisitor v) throws SemanticException{
+        JL5TypeSystem ts = (JL5TypeSystem)v.typeSystem();
+        JL5NodeFactory nf = (JL5NodeFactory)v.nodeFactory();
+        if (ts.needsBoxing(fieldInstance().type(), init().type())){
+            return init(nf.createBoxed(init().position(), init(), fieldInstance().type(), ts, v.context()));
+        }
+        return this;
+    }
 }

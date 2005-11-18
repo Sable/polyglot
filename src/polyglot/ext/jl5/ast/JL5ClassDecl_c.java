@@ -495,11 +495,13 @@ public class JL5ClassDecl_c extends ClassDecl_c implements JL5ClassDecl, Applica
                 ArrayList args = new ArrayList();
                 ArrayList argTypes = new ArrayList();
                 ClassLit cl = nf.ClassLit(position(), nf.CanonicalTypeNode(position(), this.type()));
+                cl = (ClassLit)cl.type(ts.Class());
                 args.add(cl);
                 argTypes.add(ts.Class());
                 Formal formal = (Formal)((MethodDecl)next).formals().get(0);
                 Local local = nf.Local(formal.position(), formal.name());
                 local = local.localInstance(formal.localInstance());
+                local = (Local)local.type(local.localInstance().type());
                 args.add(local);
                 argTypes.add(ts.String());
                 JL5Call call = (JL5Call)nf.JL5Call(position(), nf.CanonicalTypeNode(position(), ts.Enum()), "valueOf", args, Collections.EMPTY_LIST);
@@ -535,9 +537,11 @@ public class JL5ClassDecl_c extends ClassDecl_c implements JL5ClassDecl, Applica
                 ArrayList superList = new ArrayList();
                 Local l1 = nf.Local(arg1.position(), arg1.name());
                 l1 = l1.localInstance(arg1.localInstance());
+                l1 = (Local)l1.type(l1.localInstance().type());
                 superList.add(l1);
                 Local l2 = nf.Local(arg2.position(), arg2.name());
                 l2 = l2.localInstance(arg2.localInstance());
+                l2 = (Local)l2.type(l2.localInstance().type());
                 superList.add(l2);
                 
                 ConstructorCall cc = nf.SuperCall(position(), superList);
@@ -616,7 +620,22 @@ public class JL5ClassDecl_c extends ClassDecl_c implements JL5ClassDecl, Applica
         
         fd = (JL5FieldDecl)fd.init(nf.ArrayInit(position(), valuesInit));
         newMembers.add(fd);
-        return body(body.members(newMembers)).flags(this.flags().Final());      
+        
+        boolean hasAbstractMem = false;
+        for (Iterator it = enumConstants.iterator(); it.hasNext(); ){
+            EnumConstantDecl ed = (EnumConstantDecl)it.next();
+            if (ed.body() != null){
+                hasAbstractMem = true;
+                break;
+            }
+        }
+        
+        if (hasAbstractMem){
+            return body(body.members(newMembers));
+        }
+        else {
+            return body(body.members(newMembers)).flags(this.flags().Final());      
+        }
     }
 
     public List runtimeAnnotations(){
