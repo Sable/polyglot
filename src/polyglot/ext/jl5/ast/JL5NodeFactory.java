@@ -53,8 +53,6 @@ public interface JL5NodeFactory extends NodeFactory {
     
     public JL5LocalDecl JL5LocalDecl(Position pos, FlagAnnotations flags, TypeNode type, String name, Expr init);
    
-    public JL5Local JL5Local(Position pos, String name);
-
     public JL5PackageNode JL5PackageNode(Position pos, FlagAnnotations flags, Package package_);
 
     public ParamTypeNode ParamTypeNode(Position pos, List bounds, String id);

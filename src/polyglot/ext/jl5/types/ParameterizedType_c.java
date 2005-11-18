@@ -7,7 +7,7 @@ import polyglot.util.*;
 import polyglot.frontend.*;
 
 
-public class ParameterizedType_c extends JL5ParsedClassType_c implements ParameterizedType {
+public class ParameterizedType_c extends JL5ParsedClassType_c implements ParameterizedType, SignatureType {
 
     protected List typeArguments;
     protected JL5ParsedClassType baseType;
@@ -332,5 +332,17 @@ public class ParameterizedType_c extends JL5ParsedClassType_c implements Paramet
         ParameterizedType converted = ((JL5TypeSystem)typeSystem()).parameterizedType(this.baseType());
         converted.typeArguments(newBounds);
         return converted;
+    }
+
+    public String signature(){
+        StringBuffer signature = new StringBuffer();
+        // no trailing ; for base type before the type args
+        signature.append("L"+((Named)baseType).fullName().replaceAll(".", "/")+"<");
+        for (Iterator it = typeArguments.iterator(); it.hasNext();){
+            SignatureType next = (SignatureType)it.next();
+            signature.append(next.signature()+",");
+        }
+        signature.append(">;");
+        return signature.toString();
     }
 }

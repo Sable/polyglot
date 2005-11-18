@@ -6,9 +6,10 @@ import polyglot.util.*;
 import polyglot.types.*;
 import polyglot.visit.*;
 import polyglot.ext.jl5.types.*;
+import polyglot.ext.jl5.visit.*;
 import polyglot.main.Options;
 
-public class JL5Assert_c extends Assert_c implements JL5Assert {
+public class JL5Assert_c extends Assert_c implements JL5Assert, UnboxingVisit {
 
     public JL5Assert_c(Position pos, Expr cond, Expr errorMsg){
         super(pos, cond, errorMsg);
@@ -40,4 +41,13 @@ public class JL5Assert_c extends Assert_c implements JL5Assert {
         return this;
     }
     
+    public Node unboxing(UnboxingVisitor v) throws SemanticException {
+        JL5TypeSystem ts = (JL5TypeSystem)v.typeSystem();
+        JL5NodeFactory nf = (JL5NodeFactory)v.nodeFactory();
+
+        if (cond().type().isClass()){
+            return cond(nf.createUnboxed(cond().position(), cond(), ts.Boolean(), ts, v.context()));
+        }
+        return this;
+    }
 }

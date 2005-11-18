@@ -114,8 +114,10 @@ public class JL5FieldDecl_c extends FieldDecl_c implements JL5FieldDecl, Applica
     public Node unboxing(UnboxingVisitor v) throws SemanticException{
         JL5TypeSystem ts = (JL5TypeSystem)v.typeSystem();
         JL5NodeFactory nf = (JL5NodeFactory)v.nodeFactory();
-        if (ts.needsUnboxing(fieldInstance().type(), init().type())){
-            return init(nf.createUnboxed(init().position(), init(), fieldInstance().type(), ts, v.context()));
+        if (init() != null){
+            if (ts.needsUnboxing(fieldInstance().type(), init().type())){
+                return init(nf.createUnboxed(init().position(), init(), fieldInstance().type(), ts, v.context()));
+            }
         }
         return this;
     }
@@ -123,8 +125,10 @@ public class JL5FieldDecl_c extends FieldDecl_c implements JL5FieldDecl, Applica
     public Node boxing(BoxingVisitor v) throws SemanticException{
         JL5TypeSystem ts = (JL5TypeSystem)v.typeSystem();
         JL5NodeFactory nf = (JL5NodeFactory)v.nodeFactory();
-        if (ts.needsBoxing(fieldInstance().type(), init().type())){
-            return init(nf.createBoxed(init().position(), init(), fieldInstance().type(), ts, v.context()));
+        if (init() != null){
+            if (ts.needsBoxing(fieldInstance().type(), init().type())){
+                return init(nf.createBoxed(init().position(), init(), fieldInstance().type(), ts, v.context()));
+            }
         }
         return this;
     }

@@ -5,7 +5,7 @@ import polyglot.ast.*;
 import polyglot.types.*;
 import polyglot.util.*;
 
-public class JL5ArrayType_c extends ArrayType_c implements JL5ArrayType {
+public class JL5ArrayType_c extends ArrayType_c implements JL5ArrayType, SignatureType {
 
     protected boolean  variable;
 
@@ -19,5 +19,9 @@ public class JL5ArrayType_c extends ArrayType_c implements JL5ArrayType {
 
     public boolean isVariable(){
         return this.variable;
+    }
+
+    public String signature(){
+        return "["+((SignatureType)base).signature()+";";
     }
 }

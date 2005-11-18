@@ -8,7 +8,7 @@ import polyglot.ast.*;
 import polyglot.frontend.*;
 import polyglot.ext.jl.types.*;
 
-public class JL5ParsedClassType_c extends ParsedClassType_c implements JL5ParsedClassType{
+public class JL5ParsedClassType_c extends ParsedClassType_c implements JL5ParsedClassType, SignatureType{
     
     protected List enumConstants;
     // these are annotation elements in the annotation type
@@ -463,4 +463,7 @@ public class JL5ParsedClassType_c extends ParsedClassType_c implements JL5Parsed
         }
     }
 
+    public String signature(){
+        return "L"+fullName().replaceAll(".", "/")+";";
+    }
 }

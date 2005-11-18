@@ -6,4 +6,5 @@ public interface JL5ArrayType extends ArrayType{
     
     void setVariable();
     boolean isVariable();
+
 }

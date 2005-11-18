@@ -9,13 +9,11 @@ import java.util.*;
 public class JL5Let_c extends Expr_c implements JL5Let {
 
     protected LocalDecl localDecl;
-    //protected Expr alpha;
     protected Expr beta;
     
     public JL5Let_c(Position pos, LocalDecl localDecl, Expr beta){
         super(pos);
         this.localDecl = localDecl;
-        //this.alpha = alpha;
         this.beta = beta;
     }
     
@@ -23,17 +21,6 @@ public class JL5Let_c extends Expr_c implements JL5Let {
         return this.localDecl;
     }
  
-    /*public Expr alpha(){
-        return this.alpha;
-    }
-    
-    public JL5Let alpha(Expr e){
-        JL5Let_c n = (JL5Let_c)copy();
-        n.alpha = e;
-        return n;
-    }*/
-    
-    
     public Expr beta(){
         return this.beta;
     }
@@ -46,7 +33,6 @@ public class JL5Let_c extends Expr_c implements JL5Let {
     
     public Node visitChildren(NodeVisitor v){
         LocalDecl localDecl = (LocalDecl)visitChild(this.localDecl, v);
-        //Expr alpha = (Expr)visitChild(this.alpha, v);
         Expr beta = (Expr)visitChild(this.beta, v);
         return reconstruct(localDecl, beta);
     }
@@ -55,7 +41,6 @@ public class JL5Let_c extends Expr_c implements JL5Let {
         if (localDecl != this.localDecl || beta != this.beta){
             JL5Let_c n = (JL5Let_c)copy();
             n.localDecl = localDecl;
-            //n.alpha = alpha;
             n.beta = beta;    
             return n;
         }
@@ -67,7 +52,6 @@ public class JL5Let_c extends Expr_c implements JL5Let {
     }
 
     public List acceptCFG(CFGBuilder v, List succs){
-        //v.visitCFG(alpha, beta.entry());
         v.visitCFG(beta, this);
         return succs;
     }
@@ -76,8 +60,6 @@ public class JL5Let_c extends Expr_c implements JL5Let {
         w.write("(");
         print(localDecl, w, tr);
         w.write(" ");
-        //print(alpha, w, tr);
-        //w.write(", ");
         print(beta, w, tr);
         w.write(")");
     }

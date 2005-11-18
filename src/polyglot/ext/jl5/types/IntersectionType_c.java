@@ -7,7 +7,7 @@ import polyglot.ast.*;
 import java.util.*;
 import polyglot.util.*;
 
-public class IntersectionType_c extends ClassType_c implements IntersectionType {
+public class IntersectionType_c extends ClassType_c implements IntersectionType , SignatureType{
     protected String name;
     protected polyglot.types.Package package_; // package is same as reified type
     protected List bounds;
@@ -221,5 +221,9 @@ public class IntersectionType_c extends ClassType_c implements IntersectionType 
 
     public ClassType toClass(){
         return this;
+    }
+
+    public String signature(){
+        return "T"+name+";";
     }
 }

@@ -3,7 +3,7 @@ package polyglot.ext.jl5.types;
 import polyglot.types.*;
 import polyglot.ext.jl.types.*;
 
-public class JL5PrimitiveType_c extends PrimitiveType_c implements JL5PrimitiveType {
+public class JL5PrimitiveType_c extends PrimitiveType_c implements JL5PrimitiveType, SignatureType {
    
     public JL5PrimitiveType_c(TypeSystem ts, Kind kind){
         super(ts, kind);
@@ -79,4 +79,17 @@ public class JL5PrimitiveType_c extends PrimitiveType_c implements JL5PrimitiveT
         if (isByte()) return ts.ByteWrapper();
         if (isBoolean()) return ts.BooleanWrapper();
     }*/
+
+    public String signature(){
+        if (this.isInt()) return "I";
+        if (this.isByte()) return "B";
+        if (this.isShort()) return "S";
+        if (this.isChar()) return "C";
+        if (this.isBoolean()) return "Z";
+        if (this.isLong()) return "J";
+        if (this.isDouble()) return "D";
+        if (this.isFloat()) return "F";
+        if (this.isVoid()) return "V";
+        throw new RuntimeException("Unknown primitive type: "+this);
+    }
 }

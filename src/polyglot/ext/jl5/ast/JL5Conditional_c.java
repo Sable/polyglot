@@ -75,8 +75,8 @@ public class JL5Conditional_c extends Conditional_c implements JL5Conditional, U
 
         // if one is null and other is primitive return 
         // type will need rewriting later
-        if (t1.isNull() && t2.isPrimitive()) return type(t2);
-        if (t2.isNull() && t1.isPrimitive()) return type(t1);
+        if (t1.isNull() && t2.isPrimitive()) return type(((JL5TypeSystem)ts).classOf(t2));
+        if (t2.isNull() && t1.isPrimitive()) return type(((JL5TypeSystem)ts).classOf(t1));
         
         // If the second and third operands are of different reference types,
         // then it must be possible to convert one of the types to the other

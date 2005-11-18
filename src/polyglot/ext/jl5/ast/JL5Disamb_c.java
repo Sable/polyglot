@@ -50,7 +50,7 @@ public class JL5Disamb_c extends Disamb_c implements JL5Disamb {
             return ((JL5NodeFactory)nf).JL5Field(pos, r, name).fieldInstance(fi).targetImplicit(true);
         } else if (vi instanceof LocalInstance) {
             LocalInstance li = (LocalInstance) vi;
-            return ((JL5NodeFactory)nf).JL5Local(pos, name).localInstance(li);
+            return nf.Local(pos, name).localInstance(li);
         }
         return null;
     }

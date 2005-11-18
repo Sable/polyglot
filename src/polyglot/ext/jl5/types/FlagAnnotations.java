@@ -10,6 +10,11 @@ public class FlagAnnotations {
     protected Flags classicFlags;
     protected List annotations;
 
+    public FlagAnnotations(Flags classic, List annots){
+        this.classicFlags = classic;
+        this.annotations = annots;
+    }
+
     public FlagAnnotations(){
     }
 

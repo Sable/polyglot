@@ -54,30 +54,16 @@ public class JL5ArrayAccessAssign_c extends ArrayAccessAssign_c implements JL5Ar
         
         ArrayAccess aa = (ArrayAccess)left();
 
-        FlagAnnotations fl = new FlagAnnotations();
-        fl.classicFlags(Flags.NONE);
-        fl.annotations(new ArrayList());
-        
-        JL5LocalDecl ld = nf.JL5LocalDecl(aa.position(), fl, nf.CanonicalTypeNode(aa.position(), aa.index().type()), "$arg", (Expr)aa.index());
-        ld = (JL5LocalDecl)ld.localInstance(ts.localInstance(aa.position(), Flags.NONE, aa.index().type(), "$arg"));
+        LocalDecl ld = nf.JL5LocalDecl(aa.position(), new FlagAnnotations(Flags.NONE, new ArrayList()), nf.CanonicalTypeNode(aa.position(), aa.index().type()), "$arg", (Expr)aa.index()).localInstance(ts.localInstance(aa.position(), Flags.NONE, aa.index().type(), "$arg"));
 
-        JL5Local local = nf.JL5Local(aa.position(), "$arg");
-        local = (JL5Local)local.localInstance(ld.localInstance());
-        local = (JL5Local)local.type(aa.index().type());
+        Expr local = nf.Local(aa.position(), "$arg").localInstance(ld.localInstance()).type(aa.index().type());
 
-        // make alpha
-        //JL5LocalAssign lAssign = nf.JL5LocalAssign(aa.position(), local, Assign.ASSIGN, (Expr)aa.index());
-        //lAssign = (JL5LocalAssign)lAssign.type(aa.index().type());
-        
         // make beta
-        JL5ArrayAccess array = nf.JL5ArrayAccess(aa.position(), aa.array(), local);
-        array = (JL5ArrayAccess)array.type(aa.type());
+        ArrayAccess array = (ArrayAccess)nf.JL5ArrayAccess(aa.position(), aa.array(), local).type(aa.type());
         
-        JL5Binary bin = nf.JL5Binary(aa.position(), array, nf.getBinOpFromAssignOp(operator()), right());
-        bin = (JL5Binary)bin.type(aa.type());
+        Expr bin = nf.JL5Binary(aa.position(), array, nf.getBinOpFromAssignOp(operator()), right()).type(aa.type());
 
-        JL5ArrayAccessAssign aAssign = nf.JL5ArrayAccessAssign(aa.position(), array, Assign.ASSIGN, bin);
-        aAssign = (JL5ArrayAccessAssign)aAssign.type(aa.type());
+        Expr aAssign = nf.JL5ArrayAccessAssign(aa.position(), array, Assign.ASSIGN, bin).type(aa.type());
         
         return nf.JL5Let(aa.position(), ld, aAssign).type(aa.type()); 
     }

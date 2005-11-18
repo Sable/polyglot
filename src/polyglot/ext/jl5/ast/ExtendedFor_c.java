@@ -115,22 +115,14 @@ public class ExtendedFor_c extends Loop_c implements ExtendedFor, SimplifyVisit
         Type t = expr.type();
         if (t.isArray()){
             JL5LocalDecl origLd = (JL5LocalDecl)varDecls.get(0);
-            FlagAnnotations fl = new FlagAnnotations();
-            fl.classicFlags(origLd.flags());
-            fl.annotations(origLd.annotations());
-            IntLit il = nf.IntLit(position(), polyglot.ast.IntLit.INT, 0);
-            il = (IntLit)il.type(ts.Int());
-            JL5LocalDecl ld = nf.JL5LocalDecl(position(), fl, nf.CanonicalTypeNode(position(), ts.Int()), "$arg0", il);
+            Expr il = nf.IntLit(position(), polyglot.ast.IntLit.INT, 0).type(ts.Int());
             LocalInstance li = ts.localInstance(position(), Flags.NONE, ts.Int(), "$arg0");
-            ld = (JL5LocalDecl)ld.localInstance(li);
-            Local local = nf.Local(position(), "$arg0");
-            local = local.localInstance(li);
-            local = (Local)local.type(ts.Int());
+            LocalDecl ld = nf.JL5LocalDecl(position(), new FlagAnnotations(origLd.flags(), origLd.annotations()), nf.CanonicalTypeNode(position(), ts.Int()), "$arg0", il).localInstance(li);
             
-            JL5Field field = nf.JL5Field(position(), expr, "length");
+            Expr local = nf.Local(position(), "$arg0").localInstance(li).type(ts.Int());
+            
             FieldInstance fi = ts.fieldInstance(position(), t.toReference(), Flags.NONE, ts.Int(), "length");
-            field = (JL5Field)field.fieldInstance(fi);
-            field = (JL5Field)field.type(ts.Int());
+            Expr field = nf.JL5Field(position(), expr, "length").fieldInstance(fi).type(ts.Int());
 
             Binary cond = nf.Binary(position(), local, polyglot.ast.Binary.LT, field);
             cond = (Binary)cond.type(ts.Boolean());
@@ -140,21 +132,13 @@ public class ExtendedFor_c extends Loop_c implements ExtendedFor, SimplifyVisit
             List iters = new ArrayList();
             iters.add(nf.Eval(position(), iter));
             
-            ArrayAccess aa = nf.ArrayAccess(position(), expr, local);
-            aa = (ArrayAccess)aa.type(expr.type().toArray().base());
-            Local orig = nf.Local(position(), origLd.name());
-            orig = orig.localInstance(origLd.localInstance());
-            orig = (Local)orig.type(origLd.type().type());
+            Expr aa = nf.ArrayAccess(position(), expr, local).type(expr.type().toArray().base());
+           
+            Local orig = (Local)nf.Local(position(), origLd.name()).localInstance(origLd.localInstance()).type(origLd.type().type());
             
-            JL5LocalAssign la = nf.JL5LocalAssign(position(), orig, Assign.ASSIGN, aa);
-            la = (JL5LocalAssign)la.type(orig.type());
-            Block b = null;
-            if (body() instanceof Block){
-                b = ((Block)body()).prepend(nf.Eval(position(), la)).prepend(origLd);
-            }
-            else {
-                b = nf.Block(position()).prepend(body()).prepend(nf.Eval(position(), la)).prepend(origLd);
-            }
+            Expr la = nf.JL5LocalAssign(position(), orig, Assign.ASSIGN, aa).type(orig.type());
+            
+            Block b = updateBody(la, origLd, nf);
            
             ArrayList inits = new ArrayList();
             inits.add(ld);
@@ -162,49 +146,28 @@ public class ExtendedFor_c extends Loop_c implements ExtendedFor, SimplifyVisit
         }
         else if (ts.isSubtype(t, ts.Iterable())){
             JL5LocalDecl origLd = (JL5LocalDecl)varDecls.get(0);
-            FlagAnnotations fl = new FlagAnnotations();
-            fl.classicFlags(origLd.flags());
-            fl.annotations(origLd.annotations());
             
-            JL5Call initCall = (JL5Call)nf.JL5Call(position(), expr, "iterator", new ArrayList(), new ArrayList());
-            initCall = (JL5Call)initCall.type(ts.Iterator());
-            initCall = (JL5Call)initCall.methodInstance(ts.methodInstance(position(), expr.type().toReference(), Flags.NONE, ts.Iterator(), "iterator", new ArrayList(), new ArrayList()));
-            JL5LocalDecl ld = nf.JL5LocalDecl(position(), fl, nf.CanonicalTypeNode(position(), ts.Iterator()), "$arg0", initCall);
+            Expr initCall = nf.JL5Call(position(), expr, "iterator", new ArrayList(), new ArrayList()).methodInstance(ts.methodInstance(position(), expr.type().toReference(), Flags.NONE, ts.Iterator(), "iterator", new ArrayList(), new ArrayList())).type(ts.Iterator());
+            
             LocalInstance li = ts.localInstance(position(), Flags.NONE, ts.Iterator(), "$arg0");
-            ld = (JL5LocalDecl)ld.localInstance(li);
-            Local local = nf.Local(position(), "$arg0");
-            local = local.localInstance(li);
-            local = (Local)local.type(ts.Iterator());
+            LocalDecl ld = nf.JL5LocalDecl(position(), new FlagAnnotations(origLd.flags(), origLd.annotations()), nf.CanonicalTypeNode(position(), ts.Iterator()), "$arg0", initCall).localInstance(li);
             
-            JL5Call condCall = (JL5Call)nf.JL5Call(position(), local, "hasNext", new ArrayList(), new ArrayList());
-            condCall = (JL5Call)condCall.type(ts.Boolean());
-            condCall = (JL5Call)condCall.methodInstance(ts.methodInstance(position(), ts.Iterator(), Flags.NONE, ts.Boolean(), "hasNext", new ArrayList(), new ArrayList()));
+            Expr local = nf.Local(position(), "$arg0").localInstance(li).type(ts.Iterator());
             
-            JL5Call resultCall = (JL5Call)nf.JL5Call(position(), local, "next", new ArrayList(), new ArrayList());
-            resultCall = (JL5Call)resultCall.type(ts.Object());
-            resultCall = (JL5Call)resultCall.methodInstance(ts.methodInstance(position(), ts.Iterator(), Flags.NONE, ts.Object(), "next", new ArrayList(),new ArrayList()));
+            Expr condCall = nf.JL5Call(position(), local, "hasNext", new ArrayList(), new ArrayList()).methodInstance(ts.methodInstance(position(), ts.Iterator(), Flags.NONE, ts.Boolean(), "hasNext", new ArrayList(), new ArrayList())).type(ts.Boolean());
             
+            Expr resultCall = nf.JL5Call(position(), local, "next", new ArrayList(), new ArrayList()).methodInstance(ts.methodInstance(position(), ts.Iterator(), Flags.NONE, ts.Object(), "next", new ArrayList(),new ArrayList())).type(ts.Object());
             Expr assignExpr = resultCall;
             
-            Local orig = nf.Local(position(), origLd.name());
-            orig = orig.localInstance(origLd.localInstance());
-            orig = (Local)orig.type(origLd.type().type());
+            Local orig = (Local)nf.Local(position(), origLd.name()).localInstance(origLd.localInstance()).type(origLd.type().type());
             
             if (!ts.equals(orig.localInstance().type(), ts.Object())){
-                Cast cast = nf.Cast(position(), nf.CanonicalTypeNode(position(), orig.localInstance().type()), resultCall);
-                cast = (Cast)cast.type(orig.localInstance().type());
-                assignExpr = cast;
+                Expr cast = nf.JL5Cast(position(), nf.CanonicalTypeNode(position(), orig.localInstance().type()), resultCall).type(orig.localInstance().type());
             }
-            JL5LocalAssign la = nf.JL5LocalAssign(position(), orig, Assign.ASSIGN, assignExpr);
+            
+            Expr la = nf.JL5LocalAssign(position(), orig, Assign.ASSIGN, assignExpr).type(ts.Object());
             // really the type of next() call - generics
-            la = (JL5LocalAssign)la.type(ts.Object());
-            Block b = null;
-            if (body() instanceof Block){
-                b = ((Block)body()).prepend(nf.Eval(position(), la)).prepend(origLd);
-            }
-            else {
-                b = nf.Block(position()).prepend(body()).prepend(nf.Eval(position(), la)).prepend(origLd);
-            }
+            Block b = updateBody(la, origLd, nf);
            
             ArrayList inits = new ArrayList();
             inits.add(ld);
@@ -212,6 +175,17 @@ public class ExtendedFor_c extends Loop_c implements ExtendedFor, SimplifyVisit
             return nf.For(position(), inits, condCall, new ArrayList(), b);
         }
         return this;
+    }
+
+    public Block updateBody(Expr la, Stmt origLd, NodeFactory nf){
+        Block b = null;
+        if (body() instanceof Block){
+            b = ((Block)body()).prepend(nf.Eval(position(), la)).prepend(origLd);
+        }
+        else {
+            b = nf.Block(position()).prepend(body()).prepend(nf.Eval(position(), la)).prepend(origLd);
+        }
+        return b;
     }
     
     public Type childExpectedType(Expr child, AscriptionVisitor av) {

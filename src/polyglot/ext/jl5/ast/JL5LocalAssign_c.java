@@ -9,7 +9,7 @@ import polyglot.ext.jl5.types.*;
 import polyglot.ext.jl5.visit.*;
 import java.util.*;
 
-public class JL5LocalAssign_c extends LocalAssign_c implements JL5LocalAssign, BoxingVisit, UnboxingVisit {
+public class JL5LocalAssign_c extends LocalAssign_c implements JL5LocalAssign, BoxingVisit, UnboxingVisit, LetInsertionVisit {
 
     public JL5LocalAssign_c(Position pos, Local left, Operator op, Expr right){
         super(pos, left, op, right);
@@ -72,4 +72,32 @@ public class JL5LocalAssign_c extends LocalAssign_c implements JL5LocalAssign, B
                 
     }
     
+    public Node insertLet(LetInsertionVisitor v) throws SemanticException{
+        // don't do anything for regular assigns
+        if (operator() == Assign.ASSIGN) return this;
+        
+        // only care about op assigns
+        JL5TypeSystem ts = (JL5TypeSystem)v.typeSystem();
+        JL5NodeFactory nf = (JL5NodeFactory)v.nodeFactory();
+
+        FlagAnnotations fl = new FlagAnnotations();
+        fl.classicFlags(Flags.NONE);
+        fl.annotations(new ArrayList());
+
+        Local e = (Local)left();
+
+        JL5LocalDecl ld = nf.JL5LocalDecl(e.position(), fl, nf.CanonicalTypeNode(e.position(), e.type()), "$arg", e);
+        ld = (JL5LocalDecl)ld.localInstance(ts.localInstance(e.position(), Flags.NONE, e.type(), "$arg"));
+
+        Local local = nf.Local(e.position(), "$arg");
+        local = (Local)local.localInstance(ld.localInstance());
+        local = (Local)local.type(e.type());
+
+        JL5Binary binary = (JL5Binary)nf.JL5Binary(e.position(), local, nf.getBinOpFromAssignOp(operator()), right());
+
+        Assign assign = (Assign)nf.JL5LocalAssign(e.position(), e, Assign.ASSIGN, binary).type(e.type());
+
+        return nf.JL5Let(e.position(), ld, assign).type(e.type());
+    }
+
 }

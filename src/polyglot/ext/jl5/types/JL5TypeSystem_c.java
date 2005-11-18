@@ -151,6 +151,18 @@ public class JL5TypeSystem_c extends TypeSystem_c implements JL5TypeSystem {
         return null;
     }
     
+    public ClassType classOf(Type t){
+        if (t.isClass()) return (ClassType)t;
+        if (equals(t, Float())) return FloatWrapper();
+        if (equals(t, Double())) return DoubleWrapper();
+        if (equals(t, Long())) return LongWrapper();
+        if (equals(t, Int())) return IntegerWrapper();
+        if (equals(t, Short())) return ShortWrapper();
+        if (equals(t, Byte())) return ByteWrapper();
+        if (equals(t, Char())) return CharacterWrapper();
+        return null;
+    }
+    
     public boolean isAutoEquivalent(Type t1, Type t2){
         if (t1.isPrimitive()){
             if (t1.isInt() && equals(INTEGER_WRAPPER, t2)) return true;

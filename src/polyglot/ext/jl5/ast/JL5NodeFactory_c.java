@@ -130,10 +130,6 @@ public class JL5NodeFactory_c extends NodeFactory_c implements JL5NodeFactory {
         JL5LocalDecl n = new JL5LocalDecl_c(pos, flags, type, name, init);
         return n;
     }
-    public JL5Local JL5Local(Position pos, String name){
-        JL5Local n = new JL5Local_c(pos, name);
-        return n;
-    }
     public JL5PackageNode JL5PackageNode(Position pos, FlagAnnotations fl, Package package_){
         JL5PackageNode n = new JL5PackageNode_c(pos, fl, package_);
         return n;

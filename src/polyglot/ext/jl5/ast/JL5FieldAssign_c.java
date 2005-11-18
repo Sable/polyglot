@@ -97,9 +97,9 @@ public class JL5FieldAssign_c extends FieldAssign_c implements JL5FieldAssign, L
             JL5LocalDecl ld = nf.JL5LocalDecl(f.position(), fl, nf.CanonicalTypeNode(f.position(), f.target().type()), "$arg", (Expr)f.target());
             ld = (JL5LocalDecl)ld.localInstance(ts.localInstance(f.position(), Flags.NONE, f.target().type(), "$arg"));
 
-            JL5Local local = nf.JL5Local(f.position(), "$arg");
-            local = (JL5Local)local.localInstance(ld.localInstance());
-            local = (JL5Local)local.type(f.target().type());
+            Local local = nf.Local(f.position(), "$arg");
+            local = (Local)local.localInstance(ld.localInstance());
+            local = (Local)local.type(f.target().type());
 
             // make alpha
             //JL5LocalAssign lAssign = nf.JL5LocalAssign(f.position(), local, Assign.ASSIGN, (Expr)f.target());

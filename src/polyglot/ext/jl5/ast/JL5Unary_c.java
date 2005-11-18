@@ -27,22 +27,14 @@ public class JL5Unary_c extends Unary_c implements JL5Unary, LetInsertionVisit, 
                 return makeInner(expr(), operator(), nf, ts);
             }
             else if (expr() instanceof Field){
-                FlagAnnotations fl = new FlagAnnotations();
-                fl.classicFlags(Flags.NONE);
-                fl.annotations(new ArrayList());
-                
                 Field field = (Field)expr();
+                
                 if (field.target() instanceof Expr){
-                    JL5LocalDecl ld = nf.JL5LocalDecl(field.target().position(), fl, nf.CanonicalTypeNode(field.target().position(), field.target().type()), "$arg", (Expr)field.target());
-                    ld = (JL5LocalDecl)ld.localInstance(ts.localInstance(field.target().position(), Flags.NONE, field.target().type(), "$arg"));
+                    LocalDecl ld = nf.JL5LocalDecl(field.target().position(), new FlagAnnotations(Flags.NONE, new ArrayList()), nf.CanonicalTypeNode(field.target().position(), field.target().type()), "$arg", (Expr)field.target()).localInstance(ts.localInstance(field.target().position(), Flags.NONE, field.target().type(), "$arg"));
 
-                    JL5Local local = nf.JL5Local(field.target().position(), "$arg");
-                    local = (JL5Local)local.localInstance(ld.localInstance());
-                    local = (JL5Local)local.type(field.target().type());
+                    Expr local = nf.Local(field.target().position(), "$arg").localInstance(ld.localInstance()).type(field.target().type());
                     
-                    Field baseField = nf.JL5Field(field.position(), local, field.name());
-                    baseField = (JL5Field)baseField.fieldInstance(field.fieldInstance());
-                    baseField = (JL5Field)baseField.type(field.type());
+                    Expr baseField = nf.JL5Field(field.position(), local, field.name()).fieldInstance(field.fieldInstance()).type(field.type());
 
                     Expr newExpr = makeInner(baseField, operator(), nf, ts);
 
@@ -58,22 +50,15 @@ public class JL5Unary_c extends Unary_c implements JL5Unary, LetInsertionVisit, 
                 fl.annotations(new ArrayList());
                 
                 ArrayAccess aa = (ArrayAccess)expr();
-                JL5LocalDecl ld = nf.JL5LocalDecl(aa.array().position(), fl, nf.CanonicalTypeNode(aa.array().position(), aa.array().type()), "$arg", aa.array());
-                ld = (JL5LocalDecl)ld.localInstance(ts.localInstance(aa.array().position(), Flags.NONE, aa.array().type(), "$arg"));
+                LocalDecl ld = nf.JL5LocalDecl(aa.array().position(), new FlagAnnotations(Flags.NONE, new ArrayList()), nf.CanonicalTypeNode(aa.array().position(), aa.array().type()), "$arg", aa.array()).localInstance(ts.localInstance(aa.array().position(), Flags.NONE, aa.array().type(), "$arg"));
                 
-                JL5Local baseLocal = nf.JL5Local(aa.array().position(), "$arg");
-                baseLocal = (JL5Local)baseLocal.localInstance(ld.localInstance());
-                baseLocal = (JL5Local)baseLocal.type(aa.array().type());
+                Expr baseLocal = nf.Local(aa.array().position(), "$arg").localInstance(ld.localInstance()).type(aa.array().type());
                 
-                    JL5LocalDecl ldindex = nf.JL5LocalDecl(aa.index().position(), fl, nf.CanonicalTypeNode(aa.index().position(), aa.index().type()), "$arg2", aa.array());
-                    ldindex = (JL5LocalDecl)ldindex.localInstance(ts.localInstance(aa.index().position(), Flags.NONE, aa.index().type(), "$arg2"));
+                    LocalDecl ldindex = nf.JL5LocalDecl(aa.index().position(), new FlagAnnotations(Flags.NONE, new ArrayList()), nf.CanonicalTypeNode(aa.index().position(), aa.index().type()), "$arg2", aa.array()).localInstance(ts.localInstance(aa.index().position(), Flags.NONE, aa.index().type(), "$arg2"));
                     
-                    JL5Local indexLocal = nf.JL5Local(aa.index().position(), "$arg2");
-                    indexLocal = (JL5Local)indexLocal.localInstance(ldindex.localInstance());
-                    indexLocal = (JL5Local)indexLocal.type(aa.index().type());
+                    Expr indexLocal = nf.Local(aa.index().position(), "$arg2").localInstance(ldindex.localInstance()).type(aa.index().type());
                     
-                    ArrayAccess baseAccess = nf.JL5ArrayAccess(aa.position(), baseLocal, indexLocal);
-                    baseAccess = (JL5ArrayAccess)baseAccess.type(aa.type());
+                    Expr baseAccess = nf.JL5ArrayAccess(aa.position(), baseLocal, indexLocal).type(aa.type());
 
                     Expr newExpr = makeInner(baseAccess, operator(), nf, ts);
 
@@ -95,16 +80,10 @@ public class JL5Unary_c extends Unary_c implements JL5Unary, LetInsertionVisit, 
         throw new RuntimeException("Unknown unary operator: "+op); 
     }
     private Expr makeInnerPost(Expr e, Unary.Operator op, JL5NodeFactory nf, JL5TypeSystem ts){
-        FlagAnnotations fl = new FlagAnnotations();
-        fl.classicFlags(Flags.NONE);
-        fl.annotations(new ArrayList());
 
-        JL5LocalDecl ld = nf.JL5LocalDecl(e.position(), fl, nf.CanonicalTypeNode(e.position(), e.type()), "$arg", e);
-        ld = (JL5LocalDecl)ld.localInstance(ts.localInstance(e.position(), Flags.NONE, e.type(), "$arg"));
+        LocalDecl ld = nf.JL5LocalDecl(e.position(), new FlagAnnotations(Flags.NONE, new ArrayList()), nf.CanonicalTypeNode(e.position(), e.type()), "$arg", e).localInstance(ts.localInstance(e.position(), Flags.NONE, e.type(), "$arg"));
 
-        JL5Local local = nf.JL5Local(e.position(), "$arg");
-        local = (JL5Local)local.localInstance(ld.localInstance());
-        local = (JL5Local)local.type(e.type());
+        Expr local = nf.Local(e.position(), "$arg").localInstance(ld.localInstance()).type(e.type());
         
         JL5Binary binary = (JL5Binary)nf.JL5Binary(e.position(), local, op == Unary.POST_INC ? Binary.ADD : Binary.SUB, makeLit(e, nf, ts)).type(e.type());
         
@@ -119,8 +98,7 @@ public class JL5Unary_c extends Unary_c implements JL5Unary, LetInsertionVisit, 
             assign = (Assign)nf.JL5ArrayAccessAssign(e.position(), e, Assign.ASSIGN, binary).type(e.type());
         }
         
-        JL5LocalDecl outerld = nf.JL5LocalDecl(e.position(), fl, nf.CanonicalTypeNode(e.position(), e.type()), "$arg2", assign);
-        outerld = (JL5LocalDecl)outerld.localInstance(ts.localInstance(e.position(), Flags.NONE, e.type(), "$arg2"));
+        LocalDecl outerld = nf.JL5LocalDecl(e.position(), new FlagAnnotations(Flags.NONE, new ArrayList()), nf.CanonicalTypeNode(e.position(), e.type()), "$arg2", assign).localInstance(ts.localInstance(e.position(), Flags.NONE, e.type(), "$arg2"));
 
         JL5Let inner = (JL5Let)nf.JL5Let(e.position(), outerld, local).type(e.type());
         return nf.JL5Let(e.position(), ld, inner).type(e.type());
@@ -128,16 +106,10 @@ public class JL5Unary_c extends Unary_c implements JL5Unary, LetInsertionVisit, 
     }
 
     private Expr makeInnerPre(Expr e, Unary.Operator op, JL5NodeFactory nf, JL5TypeSystem ts){
-        FlagAnnotations fl = new FlagAnnotations();
-        fl.classicFlags(Flags.NONE);
-        fl.annotations(new ArrayList());
 
-        JL5LocalDecl ld = nf.JL5LocalDecl(e.position(), fl, nf.CanonicalTypeNode(e.position(), e.type()), "$arg", e);
-        ld = (JL5LocalDecl)ld.localInstance(ts.localInstance(e.position(), Flags.NONE, e.type(), "$arg"));
+        LocalDecl ld = nf.JL5LocalDecl(e.position(), new FlagAnnotations(Flags.NONE, new ArrayList()), nf.CanonicalTypeNode(e.position(), e.type()), "$arg", e).localInstance(ts.localInstance(e.position(), Flags.NONE, e.type(), "$arg"));
 
-        JL5Local local = nf.JL5Local(e.position(), "$arg");
-        local = (JL5Local)local.localInstance(ld.localInstance());
-        local = (JL5Local)local.type(e.type());
+        Expr local = nf.Local(e.position(), "$arg").localInstance(ld.localInstance()).type(e.type());
         
         JL5Binary binary = (JL5Binary)nf.JL5Binary(e.position(), local, op == Unary.PRE_INC ? Binary.ADD : Binary.SUB, makeLit(e, nf, ts)).type(e.type());
         
@@ -162,16 +134,6 @@ public class JL5Unary_c extends Unary_c implements JL5Unary, LetInsertionVisit, 
         return nf.IntLit(e.position(), IntLit.INT, 1).type(ts.Int());
     }
     
-    /*public Node boxing(BoxingVisitor sv) throws SemanticException {
-        JL5TypeSystem ts = (JL5TypeSystem)sv.typeSystem();
-        JL5NodeFactory nf = (JL5NodeFactory)sv.nodeFactory();
-
-        if (ts.needsBoxing(type(), expr().type())){
-            return expr(nf.createBoxed(expr.position(), expr(), ts, sv.context()));
-        }
-        
-        return this;
-    }*/
    
     // for +x, -x, ~x and !x x must be unboxed (if necessary) to a 
     // primitive
