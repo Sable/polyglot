@@ -174,7 +174,9 @@ public class JL5ParsedClassType_c extends ParsedClassType_c implements JL5Parsed
         if (typeVariables == null){
             typeVariables = new TypedList(new LinkedList(), IntersectionType.class, false);
         }
-        typeVariables.add(type);
+        if (!typeVariables.contains(type)){
+            typeVariables.add(type);
+        }
     }
 
     // this is used when coming from class files
@@ -464,6 +466,6 @@ public class JL5ParsedClassType_c extends ParsedClassType_c implements JL5Parsed
     }
 
     public String signature(){
-        return "L"+fullName().replaceAll(".", "/")+";";
+        return "L"+fullName().replaceAll("\\.", "/")+";";
     }
 }

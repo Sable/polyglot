@@ -4,7 +4,7 @@ import polyglot.ext.jl.types.*;
 import polyglot.types.*;
 import java.util.*;
 
-public class AnySuperType_c extends ReferenceType_c implements AnySuperType{
+public class AnySuperType_c extends ReferenceType_c implements AnySuperType, SignatureType{
 
     protected Type bound;
     protected Type upperBound;
@@ -104,5 +104,9 @@ public class AnySuperType_c extends ReferenceType_c implements AnySuperType{
             return typeSystem().isSubtype(bound(), ancestor);
         }
         return false;
+    }
+
+    public String signature(){
+        return "-"+((SignatureType)bound).signature();
     }
 }

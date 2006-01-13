@@ -31,6 +31,7 @@ public interface JL5TypeSystem extends TypeSystem {
     PrimitiveType primitiveOf(Type t);
     ClassType classOf(Type t);
     boolean equivalent(TypeObject t1, TypeObject t2);
+    boolean alreadyInResultSet(Set results, Type t);
     boolean isAutoEquivalent(Type t1, Type t2);
     public boolean isNumericWrapper(Type t);
     public boolean isIntOrLessWrapper(Type t1);
@@ -92,4 +93,6 @@ public interface JL5TypeSystem extends TypeSystem {
     void sortAnnotations(List annots, List runtimeAnnots, List classAnnots, List sourceAnnots);
     public boolean needsUnboxing(Type to, Type from);
     public boolean needsBoxing(Type to, Type from);
+
+    public Set superTypesOf(ReferenceType t);
 }

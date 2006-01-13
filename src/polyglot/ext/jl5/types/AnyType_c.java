@@ -4,7 +4,7 @@ import polyglot.ext.jl.types.*;
 import polyglot.types.*;
 import java.util.*;
 
-public class AnyType_c extends ReferenceType_c implements AnyType{
+public class AnyType_c extends ReferenceType_c implements AnyType, SignatureType{
 
     protected Type upperBound;
     
@@ -70,7 +70,10 @@ public class AnyType_c extends ReferenceType_c implements AnyType{
     }
 
     public boolean descendsFromImpl(Type ancestor){
-        // fix this
-       return super.descendsFromImpl(ancestor); 
+        return true; // ? is descends from everything
+    }
+
+    public String signature(){
+        return "*";
     }
 }

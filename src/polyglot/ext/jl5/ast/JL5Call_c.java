@@ -9,7 +9,7 @@ import polyglot.visit.*;
 import polyglot.ext.jl5.types.*;
 import polyglot.ext.jl5.visit.*;
 
-public class JL5Call_c extends Call_c implements JL5Call, SimplifyVisit, BoxingVisit, UnboxingVisit {
+public class JL5Call_c extends Call_c implements JL5Call, SimplifyVisit, BoxingVisit, UnboxingVisit, GenericCastInsertionVisit {
 
     protected List typeArguments;
 
@@ -90,6 +90,7 @@ public class JL5Call_c extends Call_c implements JL5Call, SimplifyVisit, BoxingV
         else {
             n = (JL5Call_c)super.typeCheck(tc);
         }
+
 
         return checkTypeArguments(tc, n);
     }
@@ -228,7 +229,6 @@ public class JL5Call_c extends Call_c implements JL5Call, SimplifyVisit, BoxingV
         for (int i = 0; i < methodInstance().formalTypes().size(); i++){
             Type t1 = (Type)methodInstance().formalTypes().get(i);
             Expr ex = (Expr)arguments().get(i);    
-            System.out.println("call: "+this+" t1: "+t1+" ex: "+ex+" ex.type: "+ex.type());
             if (ts.needsBoxing(t1, ex.type())){
                 newArgs.add(nf.createBoxed(ex.position(), ex, t1, ts, bv.context()));
             }
@@ -298,5 +298,25 @@ public class JL5Call_c extends Call_c implements JL5Call, SimplifyVisit, BoxingV
             }
         }
         return arguments(newArgs);
+    }
+
+    public Node genCastIns(GenericCastInsertionVisitor sv) throws SemanticException {
+        JL5TypeSystem ts = (JL5TypeSystem)sv.typeSystem();
+        JL5NodeFactory nf = (JL5NodeFactory)sv.nodeFactory();
+
+        if (!ts.equals(methodInstance().returnType(), type())){
+            Type castType = type();
+            if (type() instanceof AnyType) {
+                castType = ((AnyType)type).upperBound();
+            }
+            else if (type() instanceof AnySuperType){
+                castType = ((AnySuperType)type).upperBound();
+            }
+            else if (type() instanceof AnySubType){
+                castType = ((AnySubType)type).bound();
+            }
+            return nf.JL5Cast(position(), nf.CanonicalTypeNode(position(), castType), this).type(type());
+        }
+        return this;
     }
 }

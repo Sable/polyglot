@@ -137,7 +137,6 @@ public class ClassSerializer extends NodeVisitor
 	    return cn.body(body);
 	}
 	catch (IOException e) {
-        e.printStackTrace();
 	    eq.enqueue(ErrorInfo.IO_ERROR,
 		       "Unable to encode Polyglot type information.");
 	    return n;

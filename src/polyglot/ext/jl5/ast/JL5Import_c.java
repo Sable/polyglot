@@ -72,7 +72,6 @@ public class JL5Import_c extends Import_c implements JL5Import{
                 String next = (String)it.next();
                 String nextId = StringUtil.getShortNameComponent(next);
                 //if (nextId.equals(id) && !next.equals(name)){
-                System.out.println("name: "+name+" next: "+next);
                 if (next.equals(name)){
                     throw new SemanticException("The import statement "+this+" collides with another import statement.", position());
                 }

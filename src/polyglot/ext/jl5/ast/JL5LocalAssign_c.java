@@ -93,7 +93,7 @@ public class JL5LocalAssign_c extends LocalAssign_c implements JL5LocalAssign, B
         local = (Local)local.localInstance(ld.localInstance());
         local = (Local)local.type(e.type());
 
-        JL5Binary binary = (JL5Binary)nf.JL5Binary(e.position(), local, nf.getBinOpFromAssignOp(operator()), right());
+        Expr binary = (JL5Binary)nf.JL5Binary(e.position(), local, nf.getBinOpFromAssignOp(operator()), right()).type(e.type());
 
         Assign assign = (Assign)nf.JL5LocalAssign(e.position(), e, Assign.ASSIGN, binary).type(e.type());
 

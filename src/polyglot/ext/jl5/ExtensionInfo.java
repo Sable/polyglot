@@ -32,11 +32,13 @@ public class ExtensionInfo extends polyglot.ext.jl.ExtensionInfo {
     public static final polyglot.frontend.Pass.ID TYPE_CHECK_ALL = new polyglot.frontend.Pass.ID("type-check-all");
     public static final polyglot.frontend.Pass.ID APPLICATION_CHECK = new polyglot.frontend.Pass.ID("application-check");
     public static final polyglot.frontend.Pass.ID GENERIC_TYPE_HANDLER = new polyglot.frontend.Pass.ID("generic-type-handler");
+    public static final polyglot.frontend.Pass.ID TYPE_VARS_ALL = new polyglot.frontend.Pass.ID("type-vars-all");
     public static final polyglot.frontend.Pass.ID ADD_TYPE_VARS = new polyglot.frontend.Pass.ID("add-type-vars");
     public static final polyglot.frontend.Pass.ID SIMPLIFY = new polyglot.frontend.Pass.ID("simplify");
     public static final polyglot.frontend.Pass.ID BOXING = new polyglot.frontend.Pass.ID("boxing");
     public static final polyglot.frontend.Pass.ID UNBOXING = new polyglot.frontend.Pass.ID("unboxing");
     public static final polyglot.frontend.Pass.ID LET_INSERTER = new polyglot.frontend.Pass.ID("let-inserter");
+    public static final polyglot.frontend.Pass.ID GENERIC_CAST_INSERTER = new polyglot.frontend.Pass.ID("generic-cast-inserter");
     //public static final polyglot.frontend.Pass.ID GENERIC_ARGS = new polyglot.frontend.Pass.ID("generic-args");
     //public static final polyglot.frontend.Pass.ID GENERIC_RESET = new polyglot.frontend.Pass.ID("generic-reset");
    
@@ -71,16 +73,19 @@ public class ExtensionInfo extends polyglot.ext.jl.ExtensionInfo {
         
         //replacePass(passes, Pass.BUILD_TYPES, new VisitorPass(Pass.BUILD_TYPES, job, new JL5TypeBuilder(job, ts, nf)));
         
-        beforePass(passes, Pass.CLEAN_SUPER, new VisitorPass(GENERIC_TYPE_HANDLER, job, new JL5AmbiguityRemover(job, ts, nf, JL5AmbiguityRemover.TYPE_VARS)));
+        afterPass(passes, Pass.BUILD_TYPES_ALL, new VisitorPass(GENERIC_TYPE_HANDLER, job, new JL5AmbiguityRemover(job, ts, nf, JL5AmbiguityRemover.TYPE_VARS)));
         
-        afterPass(passes, GENERIC_TYPE_HANDLER, new VisitorPass(ADD_TYPE_VARS, job, new AddTypeVarsVisitor(job, ts, nf)));
+        afterPass(passes, GENERIC_TYPE_HANDLER, new GlobalBarrierPass(TYPE_VARS_ALL, job));
+        
+        //afterPass(passes, GENERIC_TYPE_HANDLER, new VisitorPass(ADD_TYPE_VARS, job, new AddTypeVarsVisitor(job, ts, nf)));
         
         //beforePass(passes, Pass.TYPE_CHECK, new VisitorPass(GENERIC_ARGS, job, new GenericTypeHandler(job, ts, nf)));
         //afterPass(passes, Pass.TYPE_CHECK, new VisitorPass(GENERIC_RESET, job, new GenericTypeReseter(job, ts, nf)));
         afterPass(passes, Pass.TYPE_CHECK, new BarrierPass(TYPE_CHECK_ALL, job));
         beforePass(passes, Pass.REACH_CHECK, new VisitorPass(APPLICATION_CHECK, job, new ApplicationChecker(job, ts, nf)));
         
-        beforePass(passes, Pass.PRE_OUTPUT_ALL, new VisitorPass(BOXING, job, new BoxingVisitor(job, ts, nf)));
+        beforePass(passes, Pass.PRE_OUTPUT_ALL, new VisitorPass(GENERIC_CAST_INSERTER, job, new GenericCastInsertionVisitor(job, ts, nf)));
+        beforePass(passes, GENERIC_CAST_INSERTER, new VisitorPass(BOXING, job, new BoxingVisitor(job, ts, nf)));
 
         beforePass(passes, BOXING, new VisitorPass(UNBOXING, job, new UnboxingVisitor(job, ts, nf)));
         

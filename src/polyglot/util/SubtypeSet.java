@@ -73,7 +73,6 @@ public class SubtypeSet implements java.util.Set
 		    Type t = (Type) i.next();
 
 		    if (ts.descendsFrom(t, type)) {
-                //System.out.println("here is remove: "+t+" and "+type);
 			//i.remove();
 		    }
 

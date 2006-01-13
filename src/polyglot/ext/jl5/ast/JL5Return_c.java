@@ -29,7 +29,7 @@ public class JL5Return_c extends Return_c implements JL5Return, UnboxingVisit, B
         JL5NodeFactory nf = (JL5NodeFactory)bv.nodeFactory();
         Context c = bv.context();
         
-        if (c.currentCode() instanceof MethodInstance){
+        if (c.currentCode() instanceof MethodInstance && expr != null){
             if (ts.needsUnboxing(((MethodInstance)c.currentCode()).returnType(), expr.type())){
                 return expr(nf.createUnboxed(expr().position(), expr(), ((MethodInstance)c.currentCode()).returnType(), ts, c));
             }
@@ -42,7 +42,7 @@ public class JL5Return_c extends Return_c implements JL5Return, UnboxingVisit, B
         JL5NodeFactory nf = (JL5NodeFactory)bv.nodeFactory();
         Context c = bv.context();
         
-        if (c.currentCode() instanceof MethodInstance){
+        if (c.currentCode() instanceof MethodInstance && expr != null){
             if (ts.needsBoxing(((MethodInstance)c.currentCode()).returnType(), expr.type())){
                 return expr(nf.createBoxed(expr().position(), expr(), ((MethodInstance)c.currentCode()).returnType(), ts, c));
             }

@@ -14,4 +14,6 @@ public interface JL5ClassDecl extends ClassDecl {
     public List classAnnotations();
     public List sourceAnnotations();
     Node addDefaultConstructorIfNeeded(TypeSystem ts, NodeFactory nf);
+
+    public List paramTypes();
 }

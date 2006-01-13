@@ -1094,4 +1094,186 @@ public class JL5TypeSystem_c extends TypeSystem_c implements JL5TypeSystem {
         if (to.isClass() && from.isPrimitive()) return true;
         return false;
     }
+
+    private List listOf(Type t){
+        List l = new ArrayList();
+        l.add(t);
+        return l;
+    }
+    
+    private List getSuperList(ReferenceType t){
+        List result = new ArrayList();
+        if (t instanceof AnyType || t instanceof AnySubType || t instanceof AnySuperType){
+            return result;
+        }
+        //result.add(listOf(t));
+        result.add(listOf(anySubType(t)));
+        result.add(listOf(anySuperType(t)));
+        result.add(listOf(anyType()));
+        return result;
+    }
+
+    private List mergeSuperLists(List l1, List l2){
+        List result = new ArrayList();
+        for (Iterator it = l1.iterator(); it.hasNext(); ){
+            List next = (List)it.next();
+            for (Iterator jt = l2.iterator(); jt.hasNext(); ){
+                List other = (List)jt.next();
+                List merged = new ArrayList();
+                merged.addAll(next);
+                merged.addAll(other);
+                result.add(merged);
+            }
+        }
+        return result;
+    }
+    
+    private Set handleContains(ParameterizedType pt){
+        Set res = new HashSet();
+        
+        List typeArgs = pt.typeArguments();
+        Iterator it = typeArgs.iterator();
+        // always at least one
+        List first = getSuperList((ReferenceType)it.next());
+        while (it.hasNext()){
+            List next = getSuperList((ReferenceType)it.next());
+            first = mergeSuperLists(first, next);
+        }
+        for (Iterator jt = first.iterator(); jt.hasNext(); ){
+            List l = (List)jt.next();
+            ParameterizedType conPt = parameterizedType(pt.baseType());
+            conPt.typeArguments(l);
+            res.add(conPt);    
+        }
+        return res;
+    }
+
+    private ParameterizedType handleCapture(ParameterizedType pt){
+        List capTypeArgs = new ArrayList();
+        for (Iterator it = pt.typeArguments().iterator(); it.hasNext(); ){
+            Type typeArg = (Type)it.next();
+            if (typeArg instanceof AnySubType) {
+                capTypeArgs.add(((AnySubType)typeArg).bound());
+            }
+            else if (typeArg instanceof AnySuperType){
+                capTypeArgs.add(((AnySuperType)typeArg).upperBound());
+            }
+            else if (typeArg instanceof AnyType){
+                capTypeArgs.add(((AnyType)typeArg).upperBound());
+            }
+            else {
+                capTypeArgs.add(typeArg);
+            }
+        }
+        ParameterizedType capPt = parameterizedType(pt.baseType());
+        capPt.typeArguments(capTypeArgs);
+        return capPt;
+    }
+
+    private Type getSubstitution(ParameterizedType orig, Type curr){
+        Type sub = curr;
+        if (curr instanceof IntersectionType){
+            if (orig.typeVariables().contains(curr)){
+                sub = (Type)orig.typeArguments().get(orig.typeVariables().indexOf(curr));
+            }
+        }
+        else if (curr instanceof ParameterizedType){
+            ParameterizedType nextP = (ParameterizedType)curr;
+            for (Iterator it = nextP.typeArguments().iterator(); it.hasNext(); ){
+                sub = getSubstitution(orig, (Type)it.next());
+            }
+        }
+        return sub;
+    }
+
+    private Type getThetaSubstitution(ParameterizedType pt, Type superType){
+        if (superType == null || !(superType instanceof ParameterizedType)) return null;
+        ParameterizedType pSuper = (ParameterizedType)superType;
+        List superArgs = new ArrayList();
+        for (Iterator it = pSuper.typeArguments().iterator(); it.hasNext(); ){
+            Type next = (Type)it.next();
+            superArgs.add(getSubstitution(pt, next));
+        }
+        ParameterizedType sub = parameterizedType(pt.baseType());
+        sub.typeArguments(superArgs);
+        return sub;
+    }
+    
+    private List directSupersOf(ReferenceType t){
+        List results = new ArrayList();
+        // direct superclass
+        if (t.superType() != null){
+            results.add(t.superType());
+        }
+        // direst superinterfaces
+        for (Iterator it = t.interfaces().iterator(); it.hasNext(); ){
+            ReferenceType next = (ReferenceType)it.next();
+            results.add(next);
+        }
+        // Object, if t is an interface type with no direct superinterfaces.
+        if (t.toClass().flags().isInterface() && t.interfaces().isEmpty()){
+            results.add(Object());
+        }
+        // raw type if t is a param type
+        if (t instanceof ParameterizedType){
+            results.add(((ParameterizedType)t).baseType());
+        
+            // theta substitution
+            Type theta = getThetaSubstitution((ParameterizedType)t, t.superType());
+            if (theta != null){
+                results.add(theta);
+            }
+
+            for (Iterator it = t.interfaces().iterator(); it.hasNext(); ){
+                ReferenceType next = (ReferenceType)it.next();
+                Type itheta = getThetaSubstitution((ParameterizedType)t, next);
+                if (itheta != null){
+                    results.add(itheta);
+                }
+            }
+
+            // contains 
+            results.addAll(handleContains((ParameterizedType)t));
+
+            // capture
+            results.add(handleCapture((ParameterizedType)t));
+
+        }
+        System.out.println("direct supers of: "+t+" are: "+results);
+        return results;
+    }
+    
+    public Set superTypesOf(ReferenceType t){
+        LinkedList queue = new LinkedList();
+        queue.add(t);
+        Set result = new HashSet();
+        result.add(t);
+        while (!queue.isEmpty()){
+            ReferenceType ref = (ReferenceType)queue.removeFirst();
+            for (Iterator it = directSupersOf(ref).iterator(); it.hasNext(); ){
+                ReferenceType next = (ReferenceType)it.next();
+                if (!next.equals(ref) && !alreadyInResultSet(result, next)){
+                    //System.out.println("queueing: "+next);
+                    queue.add(next);
+                    result.add(next);
+                }
+            }
+        }
+        return result;
+    }
+
+    public boolean alreadyInResultSet(Set results, Type t){
+        if (t instanceof ParameterizedType){
+            for (Iterator it = results.iterator(); it.hasNext(); ){
+                Type next = (Type)it.next();
+                if (next instanceof ParameterizedType){
+                    if (equivalent(t, next)) return true;
+                }
+            }
+            return false;
+        }
+        else {
+            return results.contains(t);
+        }
+    }
 }

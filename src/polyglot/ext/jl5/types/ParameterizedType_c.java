@@ -142,28 +142,50 @@ public class ParameterizedType_c extends JL5ParsedClassType_c implements Paramet
     }
 
     public boolean descendsFromImpl(Type ancestor){
-        if (!(ancestor instanceof ParameterizedType)){
+        if (ancestor instanceof IntersectionType){
+            ancestor = ((IntersectionType)ancestor).erasureType();
+        }
+        Set supers = ((JL5TypeSystem)typeSystem()).superTypesOf(this);
+        if (((JL5TypeSystem)typeSystem()).alreadyInResultSet(supers, ancestor)) return true;
+        return false;
+        /*if (!(ancestor instanceof ParameterizedType)){
             return ts.isSubtype(baseType, ancestor);
         }
         else {
             // first the base types have to have a subtype relationship
             if (!typeSystem().isSubtype(baseType(), ((ParameterizedType)ancestor).baseType())) return false;
+            //ancestor type then need to compare the args of the super
+            //type of the base type who is actually equal to the ancestor
+            //base
+            if (typeSystem().equals(baseType(), ((ParameterizedType)ancestor).baseType())){
+                return argsDescend((ParameterizedType)ancestor);
+            }
+            else if (superType() instanceof ParameterizedType && typeSystem().equals(((ParameterizedType)superType()).baseType(), ((ParameterizedType)ancestor).baseType())){
+                return typeSystem().isSubtype(superType(), ancestor);
+            }
+            else {
+                for (Iterator it = baseType().interfaces().iterator(); it.hasNext();){
+                    Type next = (Type)it.next();
+                    if (next instanceof ParameterizedType && typeSystem().equals(((ParameterizedType)next).baseType(), ((ParameterizedType)ancestor).baseType())){
+                        return typeSystem().isSubtype(next, ancestor);
+                    }
+                }
+            }
+            return false;
             // if args match its okay 
-            return argsDescend((ParameterizedType)ancestor);
             // if args are subtypes its not okay unless one is a type var
             // if args are unrelated its not okay
             // if wildcards
-        }
+        }*/
     }
 
-    private boolean argsDescend(ParameterizedType ancestor){
+    /*private boolean argsDescend(ParameterizedType ancestor){
         for (int i = 0; i < ancestor.typeArguments().size(); i++){
             
             Type arg1 = (Type)ancestor.typeArguments().get(i);
             Type arg2 = (Type)typeArguments().get(i);
             IntersectionType cap1 = (IntersectionType)ancestor.typeVariables().get(i);
             IntersectionType cap2 = (IntersectionType)baseType().typeVariables().get(i);
-            
             // if both are AnySubType then arg2 bound must be subtype 
             // of arg1 bound
             if (arg1 instanceof AnySubType){
@@ -213,7 +235,7 @@ public class ParameterizedType_c extends JL5ParsedClassType_c implements Paramet
                     if (((IntersectionType)arg1).name().equals(((IntersectionType)arg2).name())) return true;
                     if (!typeSystem().isSubtype(arg1, arg2)) return false;
                 }*/
-            else if (arg1 instanceof ParameterizedType && arg2 instanceof ParameterizedType){
+            /*else if (arg1 instanceof ParameterizedType && arg2 instanceof ParameterizedType){
                     //if (arg1.equals(arg2)) return true;
                     if (!typeSystem().isSubtype(arg1, arg2)) return false;
             }
@@ -222,7 +244,7 @@ public class ParameterizedType_c extends JL5ParsedClassType_c implements Paramet
             }
         }
         return true;
-    }
+    }*/
 
     private boolean argsEquivalent(ParameterizedType ancestor){
         for (int i = 0; i < ancestor.typeArguments().size(); i++){
@@ -284,15 +306,74 @@ public class ParameterizedType_c extends JL5ParsedClassType_c implements Paramet
         return true;
     }
 
+    public boolean equivalentImpl(TypeObject t){
+        if (!(t instanceof ParameterizedType)) return false;
+        if (ts.equals(((ParameterizedType)t).baseType(), this.baseType())){
+            int i = 0;
+            for (i = 0; i < ((ParameterizedType)t).typeArguments().size() && i < this.typeArguments().size(); i++){
+                Type t1 = (Type)((ParameterizedType)t).typeArguments().get(i);
+                Type t2 = (Type)this.typeArguments().get(i);
+                if (t1 instanceof AnyType && t2 instanceof AnyType) {
+                    continue;
+                }
+                if (t1 instanceof AnySubType && t2 instanceof AnySubType){
+                    Type bound1 = ((AnySubType)t1).bound();
+                    if (bound1 instanceof IntersectionType){
+                        bound1 = ((IntersectionType)bound1).erasureType();
+                    }
+                    Type bound2 = ((AnySubType)t2).bound();
+                    if (bound2 instanceof IntersectionType){
+                        bound2 = ((IntersectionType)bound2).erasureType();
+                    }
+                    if (bound1 instanceof ParameterizedType && bound2 instanceof ParameterizedType){
+                        if (!((JL5TypeSystem)typeSystem()).equivalent(bound1, bound2)) return false;
+                    }
+                    else {
+                        if (!ts.equals(bound1, bound2)) return false;
+                    }
+                    continue;
+                }
+                if (t1 instanceof AnySuperType && t2 instanceof AnySuperType){
+                    Type bound1 = ((AnySuperType)t1).bound();
+                    if (bound1 instanceof IntersectionType){
+                        bound1 = ((IntersectionType)bound1).erasureType();
+                    }
+                    Type bound2 = ((AnySuperType)t2).bound();
+                    if (bound2 instanceof IntersectionType){
+                        bound2 = ((IntersectionType)bound2).erasureType();
+                    }
+                    if (bound1 instanceof ParameterizedType && bound2 instanceof ParameterizedType){
+                        if (!((JL5TypeSystem)typeSystem()).equivalent(bound1, bound2)) return false;
+                    }
+                    else {
+                        if (!ts.equals(bound1, bound2)) return false;
+                    }
+                    continue;
+                }
+                if (t1 instanceof ParameterizedType && t2 instanceof ParameterizedType) {
+                    if (!((JL5TypeSystem)typeSystem()).equivalent(t1, t2)) return false;
+                    continue;
+                }
+                else {
+                    if (!typeSystem().equals(t1, t2)) return false;
+                    continue;
+                }
+            }
+            if (i < ((ParameterizedType)t).typeArguments().size() || i < this.typeArguments().size()) return false;
+            return true;
+        }
+        return false;
+    }
+    
     /*public boolean equalsImpl(TypeObject t){
         if (!(t instanceof ParameterizedType)) return super.equalsImpl(t);
         return argsEqual((ParameterizedType)t);
     }*/
 
-    public boolean equivalentImpl(TypeObject t){
+    /*public boolean equivalentImpl(TypeObject t){
         //if (!(t instanceof ParameterizedType)) return super.equalsImpl(t);
         return argsEquivalent((ParameterizedType)t);
-    }
+    }*/
 
  
     public boolean isGeneric(){
@@ -337,10 +418,13 @@ public class ParameterizedType_c extends JL5ParsedClassType_c implements Paramet
     public String signature(){
         StringBuffer signature = new StringBuffer();
         // no trailing ; for base type before the type args
-        signature.append("L"+((Named)baseType).fullName().replaceAll(".", "/")+"<");
+        signature.append("L"+((Named)baseType).fullName().replaceAll("\\.", "/")+"<");
         for (Iterator it = typeArguments.iterator(); it.hasNext();){
             SignatureType next = (SignatureType)it.next();
-            signature.append(next.signature()+",");
+            signature.append(next.signature());
+            if (it.hasNext()){
+                signature.append(",");
+            }
         }
         signature.append(">;");
         return signature.toString();

@@ -113,7 +113,8 @@ public class JL5ClassDecl_c extends ClassDecl_c implements JL5ClassDecl, Applica
     // before they may be needed as args in superClass or interfaces
     public NodeVisitor disambiguateEnter(AmbiguityRemover ar) throws SemanticException {
         if (ar.kind() == JL5AmbiguityRemover.TYPE_VARS) {
-            return ar.bypass(superClass).bypass(interfaces).bypass(body);
+            NodeVisitor nv = ar.bypass(superClass).bypass(interfaces);
+            return nv;
         }
         else {
             return super.disambiguateEnter(ar);
@@ -122,7 +123,7 @@ public class JL5ClassDecl_c extends ClassDecl_c implements JL5ClassDecl, Applica
 
     public Node disambiguate(AmbiguityRemover ar) throws SemanticException {
         Node n = super.disambiguate(ar);
-        //addTypeParameters();
+        addTypeParameters();
         return n;
     }
     
@@ -247,7 +248,7 @@ public class JL5ClassDecl_c extends ClassDecl_c implements JL5ClassDecl, Applica
         TypeSystem ts = tc.typeSystem();
         NodeFactory nf = tc.nodeFactory();
         JL5ClassDecl n = (JL5ClassDecl)addGenEnumMethods(ts, nf);
-        addTypeParameters();
+        //addTypeParameters();
         return n.addDefaultConstructorIfNeeded(ts, nf);
     }
 

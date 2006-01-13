@@ -147,16 +147,16 @@ public class ExtendedFor_c extends Loop_c implements ExtendedFor, SimplifyVisit
         else if (ts.isSubtype(t, ts.Iterable())){
             JL5LocalDecl origLd = (JL5LocalDecl)varDecls.get(0);
             
-            Expr initCall = nf.JL5Call(position(), expr, "iterator", new ArrayList(), new ArrayList()).methodInstance(ts.methodInstance(position(), expr.type().toReference(), Flags.NONE, ts.Iterator(), "iterator", new ArrayList(), new ArrayList())).type(ts.Iterator());
+            Expr initCall = nf.JL5Call(position(), expr, "iterator", new ArrayList(), new ArrayList()).methodInstance(ts.methodInstance(position(), expr.type().toReference(), Flags.ABSTRACT, ts.Iterator(), "iterator", new ArrayList(), new ArrayList())).type(ts.Iterator());
             
             LocalInstance li = ts.localInstance(position(), Flags.NONE, ts.Iterator(), "$arg0");
             LocalDecl ld = nf.JL5LocalDecl(position(), new FlagAnnotations(origLd.flags(), origLd.annotations()), nf.CanonicalTypeNode(position(), ts.Iterator()), "$arg0", initCall).localInstance(li);
             
             Expr local = nf.Local(position(), "$arg0").localInstance(li).type(ts.Iterator());
             
-            Expr condCall = nf.JL5Call(position(), local, "hasNext", new ArrayList(), new ArrayList()).methodInstance(ts.methodInstance(position(), ts.Iterator(), Flags.NONE, ts.Boolean(), "hasNext", new ArrayList(), new ArrayList())).type(ts.Boolean());
+            Expr condCall = nf.JL5Call(position(), local, "hasNext", new ArrayList(), new ArrayList()).methodInstance(ts.methodInstance(position(), ts.Iterator(), Flags.ABSTRACT, ts.Boolean(), "hasNext", new ArrayList(), new ArrayList())).type(ts.Boolean());
             
-            Expr resultCall = nf.JL5Call(position(), local, "next", new ArrayList(), new ArrayList()).methodInstance(ts.methodInstance(position(), ts.Iterator(), Flags.NONE, ts.Object(), "next", new ArrayList(),new ArrayList())).type(ts.Object());
+            Expr resultCall = nf.JL5Call(position(), local, "next", new ArrayList(), new ArrayList()).methodInstance(ts.methodInstance(position(), ts.Iterator(), Flags.ABSTRACT, ts.Object(), "next", new ArrayList(),new ArrayList())).type(ts.classOf(origLd.type().type()));
             Expr assignExpr = resultCall;
             
             Local orig = (Local)nf.Local(position(), origLd.name()).localInstance(origLd.localInstance()).type(origLd.type().type());
@@ -165,7 +165,7 @@ public class ExtendedFor_c extends Loop_c implements ExtendedFor, SimplifyVisit
                 Expr cast = nf.JL5Cast(position(), nf.CanonicalTypeNode(position(), orig.localInstance().type()), resultCall).type(orig.localInstance().type());
             }
             
-            Expr la = nf.JL5LocalAssign(position(), orig, Assign.ASSIGN, assignExpr).type(ts.Object());
+            Expr la = nf.JL5LocalAssign(position(), orig, Assign.ASSIGN, assignExpr).type(origLd.type().type());
             // really the type of next() call - generics
             Block b = updateBody(la, origLd, nf);
            

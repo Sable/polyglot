@@ -255,8 +255,6 @@ public class TypeBuilder extends HaltingVisitor
 
         ParsedClassType ct = ts.createClassType(this.job().source());
         ct.kind(ClassType.ANONYMOUS);
-        
-        //System.out.println("creating anon current class: "+currentClass()+" is a : "+currentClass().getClass());
         ct.outer(currentClass());
         ct.position(pos);
 

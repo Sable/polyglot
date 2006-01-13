@@ -179,6 +179,7 @@ public class JL5MethodInstance_c extends MethodInstance_c implements JL5MethodIn
         List l1 = this.formalTypes();
         List l2 = formalTypes;
 
+        System.out.println("comparing formals: list1: "+l1+" list2: "+l2);
         Iterator i1 = l1.iterator();
         Iterator i2 = l2.iterator();
 

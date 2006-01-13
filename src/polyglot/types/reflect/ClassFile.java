@@ -146,8 +146,6 @@ public class ClassFile implements LazyClassInitializer {
      */
     void read(DataInputStream in) throws IOException {
         // Read in file contents from stream
-        //Throwable t = new Throwable();
-        //t.printStackTrace();
         readHeader(in);
         readConstantPool(in);
         readAccessFlags(in);

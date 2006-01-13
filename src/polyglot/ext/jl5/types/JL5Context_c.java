@@ -144,10 +144,10 @@ public class JL5Context_c extends Context_c implements JL5Context {
     }
    
     protected Context_c push(){
-        Context_c v = (Context_c) this.copy();
-        v.outer = this;
-        v.types = null;
-        v.vars = null;
+        Context_c v = super.push();//(Context_c) this.copy();
+        //v.outer = this;
+        //v.types = null;
+        //v.vars = null;
         ((JL5Context_c)v).typeVars = null;
         return v;
     }
